@@ -11,7 +11,7 @@
 ! -- PHYSICAL DESCRIPTION -------------- !
 ! -------------------------------------- !
 ! This does not represent a physical component of a Heat Pump system.
-! 
+!
 
 ! ************************************** !
 ! -- SIMULATION DATA RESPONSIBILITIES -- !
@@ -109,7 +109,7 @@
 !   XITERATE - Iterately solves for the value of X which satisfies F(X)=0
 !       TAIRSAT
 !       Wetbulb
-!   FTWB -  AIR WET BULB TEMPERATURES AS A FUNCTION OF THE AIR DRY BULB TEMPERATURE,THE HUMIDITY RATIO AND THE BAROMETRIC PRESSURE 
+!   FTWB -  AIR WET BULB TEMPERATURES AS A FUNCTION OF THE AIR DRY BULB TEMPERATURE,THE HUMIDITY RATIO AND THE BAROMETRIC PRESSURE
 !       TDB_H
 !       TDB_RH
 !       TDB_TWB
@@ -142,7 +142,7 @@
 ! -- CHANGELOG ------------------------- !
 ! -------------------------------------- !
 ! 2012-12-11 | ESL | Initial header
-! 2012-12-29 | JEH | Header completion 
+! 2012-12-29 | JEH | Header completion
 
 ! ************************************** !
 ! -- TODO/NOTES/RECOMMENDATIONS -------- !
@@ -235,7 +235,7 @@
     !*** dry bulb temperature and humidity ratio.
 
     TWB = WETBULB (TDB,W,BaroPressure,IsCvg)
-    IF (IsCvg .EQ. .FALSE.) THEN
+    IF (IsCvg .EQV. .FALSE.) THEN
         TWB = FTWB(TDB,W,BaroPressure) !Use HVACSIM+ psychrometric - ISI 01/20/04
     END IF
 
@@ -251,7 +251,7 @@
     RETURN
     !***************************
     !   EVOLUTIONARY HISTORY:
-    !   This subroutine is adapted from ASHRAE Toolkit for Secondary HVAC System 
+    !   This subroutine is adapted from ASHRAE Toolkit for Secondary HVAC System
     !   Energy Calculations which was originally written in FORTRAN 77.
     !***************************
     END SUBROUTINE TDB_H
@@ -347,7 +347,7 @@
     !*** temperature and humidity ratio.
 
     TWB = WETBULB (TDB,W,BaroPressure,IsCvg)
-    IF (IsCvg .EQ. .FALSE.) THEN
+    IF (IsCvg .eqv. .FALSE.) THEN
         TWB = FTWB(TDB,W,BaroPressure) !Use HVACSIM+ psychrometric - ISI 01/20/04
     END IF
 
@@ -364,7 +364,7 @@
     RETURN
     !***************************
     !   EVOLUTIONARY HISTORY:
-    !   This subroutine is adapted from ASHRAE Toolkit for Secondary HVAC System 
+    !   This subroutine is adapted from ASHRAE Toolkit for Secondary HVAC System
     !   Energy Calculations which was originally written in FORTRAN 77.
     !***************************
     END SUBROUTINE TDB_RH
@@ -493,7 +493,7 @@
     RETURN
     !***************************
     !   EVOLUTIONARY HISTORY:
-    !   This subroutine is adapted from ASHRAE Toolkit for Secondary HVAC System 
+    !   This subroutine is adapted from ASHRAE Toolkit for Secondary HVAC System
     !   Energy Calculations which was originally written in FORTRAN 77.
     !***************************
     END SUBROUTINE TDB_TWB
@@ -579,7 +579,7 @@
     !*** dry bulb temperature and humidity ratio.
 
     TWB = WETBULB (TDB,W,BaroPressure,IsCvg)
-    IF (IsCvg .EQ. .FALSE.) THEN
+    IF (IsCvg .EQV. .FALSE.) THEN
         TWB = FTWB(TDB,W,BaroPressure) !Use HVACSIM+ psychrometric - ISI 01/20/04
     END IF
 
@@ -596,7 +596,7 @@
     RETURN
     !***************************
     !   EVOLUTIONARY HISTORY:
-    !   This subroutine is adapted from ASHRAE Toolkit for Secondary HVAC System 
+    !   This subroutine is adapted from ASHRAE Toolkit for Secondary HVAC System
     !   Energy Calculations which was originally written in FORTRAN 77.
     !***************************
     END SUBROUTINE TDB_W
@@ -672,7 +672,7 @@
 999 RETURN
     !***************************
     !   EVOLUTIONARY HISTORY:
-    !   This subroutine is adapted from ASHRAE Toolkit for Secondary HVAC System 
+    !   This subroutine is adapted from ASHRAE Toolkit for Secondary HVAC System
     !   Energy Calculations which was originally written in FORTRAN 77.
     !***************************
     END FUNCTION DEWPOINT
@@ -738,7 +738,7 @@
     RETURN
     !***************************
     !   EVOLUTIONARY HISTORY:
-    !   This subroutine is adapted from ASHRAE Toolkit for Secondary HVAC System 
+    !   This subroutine is adapted from ASHRAE Toolkit for Secondary HVAC System
     !   Energy Calculations which was originally written in FORTRAN 77.
     !***************************
     END FUNCTION DRYBULB
@@ -803,7 +803,7 @@
     RETURN
     !***************************
     !   EVOLUTIONARY HISTORY:
-    !   This subroutine is adapted from ASHRAE Toolkit for Secondary HVAC System 
+    !   This subroutine is adapted from ASHRAE Toolkit for Secondary HVAC System
     !   Energy Calculations which was originally written in FORTRAN 77.
     !***************************
     END FUNCTION ENTHALPY
@@ -877,7 +877,7 @@
     RETURN
     !***************************
     !   EVOLUTIONARY HISTORY:
-    !   This subroutine is adapted from ASHRAE Toolkit for Secondary HVAC System 
+    !   This subroutine is adapted from ASHRAE Toolkit for Secondary HVAC System
     !   Energy Calculations which was originally written in FORTRAN 77.
     !***************************
     END FUNCTION ENTHSAT
@@ -931,7 +931,7 @@
     RETURN
     !***************************
     !   EVOLUTIONARY HISTORY:
-    !   This subroutine is adapted from ASHRAE Toolkit for Secondary HVAC System 
+    !   This subroutine is adapted from ASHRAE Toolkit for Secondary HVAC System
     !   Energy Calculations which was originally written in FORTRAN 77.
     !***************************
     END FUNCTION HUMRATIO
@@ -996,7 +996,7 @@
     RETURN
     !***************************
     !   EVOLUTIONARY HISTORY:
-    !   This subroutine is adapted from ASHRAE Toolkit for Secondary HVAC System 
+    !   This subroutine is adapted from ASHRAE Toolkit for Secondary HVAC System
     !   Energy Calculations which was originally written in FORTRAN 77.
     !***************************
     END FUNCTION HUMTH
@@ -1060,7 +1060,7 @@
     RETURN
     !***************************
     !   EVOLUTIONARY HISTORY:
-    !   This subroutine is adapted from ASHRAE Toolkit for Secondary HVAC System 
+    !   This subroutine is adapted from ASHRAE Toolkit for Secondary HVAC System
     !   Energy Calculations which was originally written in FORTRAN 77.
     !***************************
     END FUNCTION RELHUM
@@ -1126,7 +1126,7 @@
     RETURN
     !***************************
     !   EVOLUTIONARY HISTORY:
-    !   This subroutine is adapted from ASHRAE Toolkit for Secondary HVAC System 
+    !   This subroutine is adapted from ASHRAE Toolkit for Secondary HVAC System
     !   Energy Calculations which was originally written in FORTRAN 77.
     !***************************
     END FUNCTION RHODRY
@@ -1177,7 +1177,7 @@
     RETURN
     !***************************
     !   EVOLUTIONARY HISTORY:
-    !   This subroutine is adapted from ASHRAE Toolkit for Secondary HVAC System 
+    !   This subroutine is adapted from ASHRAE Toolkit for Secondary HVAC System
     !   Energy Calculations which was originally written in FORTRAN 77.
     !***************************
     END FUNCTION RHOMOIST
@@ -1268,7 +1268,7 @@
     RETURN
     !***************************
     !   EVOLUTIONARY HISTORY:
-    !   This subroutine is adapted from ASHRAE Toolkit for Secondary HVAC System 
+    !   This subroutine is adapted from ASHRAE Toolkit for Secondary HVAC System
     !   Energy Calculations which was originally written in FORTRAN 77.
     !***************************
     END FUNCTION SATPRESS
@@ -1324,7 +1324,7 @@
     REAL tSat,error,P,pSat,X1,F1,X2,F2
     REAL SATPRESS,XITERATE
     DATA itmax/50/
-    
+
     CHARACTER(LEN=117),PARAMETER :: FMT_1001 = "(/1X,'*** ERROR IN FUNCTION SatTemp ***'/ 1X,'    Saturation temperature has not converged after ',I2,' iterations'/)"
 
     !!*** Use an iterative process to determine the saturation temperature
@@ -1370,8 +1370,8 @@
     !!*** iterations. Print error message, set return error flag, and RETURN
 
     WRITE(77,FMT_1001) itmax
-    
-    !!VL: Previously: 
+
+    !!VL: Previously:
 !!1001 FORMAT(/1X,'*** ERROR IN FUNCTION SatTemp ***'/ 1X,'    Saturation temperature has not converged after ',I2,' iterations'/)
 
     !VL: Previously: 110 SatTemp = tSat
@@ -1380,7 +1380,7 @@
     RETURN
     !***************************
     !   EVOLUTIONARY HISTORY:
-    !   This subroutine is adapted from ASHRAE Toolkit for Secondary HVAC System 
+    !   This subroutine is adapted from ASHRAE Toolkit for Secondary HVAC System
     !   Energy Calculations which was originally written in FORTRAN 77.
     !***************************
     END FUNCTION SATTEMP
@@ -1433,7 +1433,7 @@
     REAL tSat,error,HSat,X1,F1,X2,F2,BaroPressure
     REAL ENTHSAT,XITERATE
     DATA itmax/20/,tSat/50./
-    
+
     CHARACTER(LEN=105),PARAMETER :: FMT_1001 = "(/1X,'*** ERROR IN FUNCTION TAIRSAT ***'/1X,'    Temperature has not converged after ',I2,' iterations'/)"
 
     !!*** Estimate saturation temperature if reasonable value not available
@@ -1469,7 +1469,7 @@
     !!*** iterations. Print error message and RETURN
 
     WRITE(77,FMT_1001) itmax
-    !!VL: Previously: 
+    !!VL: Previously:
 !!1001 FORMAT(/1X,'*** ERROR IN FUNCTION TAIRSAT ***'/1X,'    Temperature has not converged after ',I2,' iterations'/)
 
     !VL: Previously: 110 CONTINUE
@@ -1479,7 +1479,7 @@
     RETURN
     !***************************
     !   EVOLUTIONARY HISTORY:
-    !   This subroutine is adapted from ASHRAE Toolkit for Secondary HVAC System 
+    !   This subroutine is adapted from ASHRAE Toolkit for Secondary HVAC System
     !   Energy Calculations which was originally written in FORTRAN 77.
     !***************************
     END FUNCTION TAIRSAT
@@ -1550,7 +1550,7 @@
     REAL SATTEMP,SATPRESS,HUMRATIO,XITERATE
     LOGICAL IsCvg !Check if solution converged. Edited by ISI 01/20/04
     DATA itmax/20/
-    
+
     CHARACTER(LEN=114),PARAMETER :: FMT_1009 = "(/1X,'*** ERROR IN FUNCTION WetBulb ***'/1X,'    Wet bulb temperature has not converged after ',I2,' iterations'/)"
 
     Patms=BaroPressure*1000 !ISI 05-23-05
@@ -1615,7 +1615,7 @@
 
     WRITE(77,FMT_1009) itmax
     IsCvg=.FALSE.
-    
+
     !!VL: Previously:
 !!1009 FORMAT(/1X,'*** ERROR IN FUNCTION WetBulb ***'/1X,'    Wet bulb temperature has not converged after ',I2,' iterations'/)
 
@@ -1627,7 +1627,7 @@
 
     !***************************
     !   EVOLUTIONARY HISTORY:
-    !   This subroutine is adapted from ASHRAE Toolkit for Secondary HVAC System 
+    !   This subroutine is adapted from ASHRAE Toolkit for Secondary HVAC System
     !   Energy Calculations which was originally written in FORTRAN 77.
     !***************************
     END FUNCTION WETBULB
@@ -1862,14 +1862,14 @@
     RETURN
     !***************************
     !   EVOLUTIONARY HISTORY:
-    !   This subroutine is adapted from ASHRAE Toolkit for Secondary HVAC System 
+    !   This subroutine is adapted from ASHRAE Toolkit for Secondary HVAC System
     !   Energy Calculations which was originally written in FORTRAN 77.
     !***************************
 
     END FUNCTION Xiterate
 
     !   Notes:
-    !   Subroutines in this module are adapted from ASHRAE Toolkit for Secondary 
+    !   Subroutines in this module are adapted from ASHRAE Toolkit for Secondary
     !   HVAC System Energy Calculations which was originally written in FORTRAN 77,
     !   and put into a Loads Toolkit FORTRAN 90 module by Leon Dong, 1998.
 
@@ -1996,7 +1996,7 @@
     DP=ABS(PATM-101325.0)
     IF (HS.GT.9.473 .AND. HS.LT.236.759 .AND. DP.LE.500.0) THEN
         !
-        !  Temperature and pressure range OK for piecewise linear approximation 
+        !  Temperature and pressure range OK for piecewise linear approximation
         !  produced from ASHRAE Chap 6, Table 1 by GEK
         !
         IF (HS .GE. 9.4730 .AND. HS .LT. 18.639) THEN
@@ -2068,7 +2068,7 @@
                 DELTH1=DELTH2
                 TS2=TS
             END DO
-            
+
             FTSAT=TS2
 
         ENDIF
@@ -2129,12 +2129,12 @@
     FWPW=0.62198*PW/(PATM-PW)
     RETURN
     END FUNCTION
-    
+
     SUBROUTINE PsyChart(AirPropOpt,AirPropErr) !(AirProp,AirPropOpt,BaroPressure,AirPropErr)
 
 !-----------------------------------------------------------------------------------
 !
-!  Description:	
+!  Description:
 !  Given two moist air properties, calculates others
 !
 !  Input:
@@ -2150,24 +2150,24 @@
 !  AirProp(8)=Wet air density, kg/m^3
 !  AirPropOpt=Air property calc. options
 !         1:Given: Dry bulb temperature, C
-!                  and Enthalpy, kJ/kg                
+!                  and Enthalpy, kJ/kg
 !         2:Given: Dry bulb temperature, C
 !                  and Relative humidity, from 0 to 1
 !         3:Given: Dry bulb temperature, C
-!                  and Wet bulb temperature, C           
+!                  and Wet bulb temperature, C
 !         4:Given: Dry bulb temperature, C
 !                  and Humidity ratio, from 0 to 1
 !        *5:Given: Wet bulb temperataure, C *-not functioning
 !                  and enthalpy, kJ/kg
 !  AirPropErr=Error status: 1=error; 0=No error
 !
-!  Reference: 
+!  Reference:
 !  ASHRAE Building Loads Toolkit (2000)
 !
 !  Author:
 !  Ipseng Iu
 !  Mechanical and Aerospace Engineering
-!  Oklahoma State University, Stillwater	
+!  Oklahoma State University, Stillwater
 !
 !  Date: August 2002
 !
@@ -2184,7 +2184,7 @@ INTEGER(2), INTENT(OUT) :: AirPropErr
 
 !Subroutine local vairables
 !INTEGER, PARAMETER :: MaxIter=20 !Maximum number of iterations
-REAL, PARAMETER :: Small=1E-4 !Small number 
+REAL, PARAMETER :: Small=1E-4 !Small number
 REAL, PARAMETER :: DT=1.0 !Delta temperature, C
 REAL TDB  !Dry bulb temperature, C
 REAL W    !Humidity ratio
@@ -2197,7 +2197,7 @@ REAL RhoM !Moist air density, kg/m^3
 INTEGER ErrStat       !Error status
 
 !Flow**
-  
+
   OPEN (77,FILE='AirProp.err')
 
   TDB  = AirProp%APTDB !RS: Debugging: Formerly AirProp(1)
@@ -2208,7 +2208,7 @@ INTEGER ErrStat       !Error status
   TDP  = AirProp%APTDP !RS: Debugging: Formerly AirProp(6)
   RhoD = AirProp%APDryDens !RS: Debugging: Formerly AirProp(7)
   RhoM = AirProp%APWetDens !RS: Debugging: Formerly AirProp(8)
-  
+
   SELECT CASE (AirPropOpt)
   CASE (1)
 	CALL TDB_H (TDB,W,RH,H,TWB,TDP,RhoD,RhoM,BaroPressure,ErrStat)
@@ -2243,8 +2243,7 @@ INTEGER ErrStat       !Error status
 	  AirPropErr=1
 	END IF
   END IF
-  
+
   CLOSE (77)
 
 END SUBROUTINE
-

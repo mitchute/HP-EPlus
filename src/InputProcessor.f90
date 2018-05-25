@@ -339,11 +339,11 @@ SUBROUTINE ProcessInput
    INTEGER :: read_stat
 
    CALL InitSecretObjects
-   
+
    IF(DebugFile .EQ. 9 .OR. DebugFile .EQ. 10 .OR. DebugFile .EQ. 12) THEN
     WRITE(*,*) 'Error with DebugFile'    !RS: Debugging: Searching for a mis-set file number
    END IF
-      
+
    OPEN(unit=DebugFile,file='Debug.txt')    !RS: Debugging
 
    EchoInputFile=GetNewUnitNumber()
@@ -492,8 +492,8 @@ SUBROUTINE ProcessInput
    ListofSections=SectionDef(1:NumSectionDefs)%Name
 
    Close (unit=IDFFile)
-   
-      
+
+
    !!RS: Debugging: Testing to see if we can use more than one IDD and IDF here (9/22/14)
    !
    !EchoInputFile=GetNewUnitNumber()
@@ -602,7 +602,7 @@ SUBROUTINE ProcessInput
      IF (CountErr == 0) THEN
 !       CALL ShowSevereError('IP: Potential errors in IDF processing -- see .audit file for details.')  !RS: Secret Search String
        WRITE(EchoInputFile,fmta) ' Potential errors in IDF processing:'
-       WRITE(DebugFile,*) CountErr  !RS: Debugging 
+       WRITE(DebugFile,*) CountErr  !RS: Debugging
      ENDIF
      CountErr=CountErr+1
      Which=SectionsOnFile(Loop)%FirstRecord
@@ -647,7 +647,7 @@ SUBROUTINE ProcessInput
     IF(DebugFile .EQ. 9 .OR. DebugFile .EQ. 10) THEN
         WRITE(*,*) 'Error with OutputFileDebug'    !RS: Debugging: Searching for a mis-set file number
     END IF
-    WRITE(DebugFile,*) 'Required Object="'//TRIM(ObjectDef(Loop)%Name)//'" not found in IDF.'  
+    WRITE(DebugFile,*) 'Required Object="'//TRIM(ObjectDef(Loop)%Name)//'" not found in IDF.'
      NumMiscErrorsFound=NumMiscErrorsFound+1
    ENDDO
 
@@ -668,7 +668,7 @@ SUBROUTINE ProcessInput
 
    IF (NumMiscErrorsFound > 0) THEN
      !CALL ShowSevereError('IP: Other miscellaneous errors found in input') !RS: Secret Search String
-     WRITE(DebugFile,*) 'Other miscellaneous errors found in input'    
+     WRITE(DebugFile,*) 'Other miscellaneous errors found in input'
    ENDIF
 
    IF (OverallErrorFlag) THEN
@@ -748,16 +748,16 @@ SUBROUTINE ProcessInput2
    INTEGER :: endcol
    INTEGER :: write_stat
    INTEGER :: read_stat
-LOGICAL :: file_exists 
-    CHARACTER(LEN=500) :: & FolderPath
-    integer :: ios = 0
-    integer :: pos
+   LOGICAL :: file_exists
+   CHARACTER(LEN=500) :: FolderPath
+   INTEGER :: ios = 0
+   INTEGER :: pos
    !CALL InitSecretObjects
-   
+
    IF(DebugFile .EQ. 9 .OR. DebugFile .EQ. 10 .OR. DebugFile .EQ. 12) THEN
     WRITE(*,*) 'Error with DebugFile'    !RS: Debugging: Searching for a mis-set file number
    END IF
-      
+
    OPEN(unit=DebugFile,file='Debug.txt')    !RS: Debugging
 
    INQUIRE(FILE='HPSim_Vars.audit',EXIST=FileExists)
@@ -793,7 +793,7 @@ LOGICAL :: file_exists
    CacheIPErrorFile=GetNewUnitNumber()
    OPEN(unit=CacheIPErrorFile,file='HPSim_Vars.iperr',action='write',iostat=write_stat)
    ENDIF
-   
+
    !IF (write_stat /= 0) THEN
    !  CALL DisplayString('Could not open (write) eplusout.iperr.')
    !  CALL ShowFatalError('ProcessInput: Could not open file "eplusout.audit" for output (write).')
@@ -922,10 +922,10 @@ LOGICAL :: file_exists
    !ListofSections=SectionDef(1:NumSectionDefs)%Name
    !
    !Close (unit=IDFFile)
-   
-      
+
+
    !RS: Debugging: Testing to see if we can use more than one IDD and IDF here (9/22/14)
-   
+
    !INQUIRE(FILE='HPSimVar.audit',EXIST=FileExists)
    !IF (FileExists) THEN
    !  EchoInputFile=GetNewUnitNumber()
@@ -941,10 +941,10 @@ LOGICAL :: file_exists
    !  CALL DisplayString('Could not open (write) HPSimVar.audit.')
    !  CALL ShowFatalError('ProcessInput: Could not open file "eplusout.audit" for output (write).')
    !ENDIF
-   
+
    !EchoInputFile=GetNewUnitNumber()
    !OPEN(unit=EchoInputFile,file='eplusout.audit')
-   
+
    !EchoInputFile=GetNewUnitNumber()
    !OPEN(unit=EchoInputFile,file='HPSimVar.audit')
    !               FullName from StringGlobals is used to build file name with Path
@@ -953,7 +953,7 @@ LOGICAL :: file_exists
    ELSE
      FullName=ProgramPath(1:LEN_TRIM(ProgramPath))//'HPSim_Variables.idd'
    ENDIF
-   
+
    !FullName='C:/Users/lab303user/Desktop/GenOpt/HPSim/HPSim_Variables.idd'
 
    INQUIRE(file=FullName,EXIST=FileExists)
@@ -963,37 +963,37 @@ LOGICAL :: file_exists
    IDDFile=GetNewUnitNumber()
    Open (unit=IDDFile, file=FullName, action='READ')
    NumLines=0
-   
+
    WRITE(EchoInputFile,*) ' Processing Data Dictionary (Energy+.idd) File -- Start'
-   
+
    Call ProcessDataDicFile2(ErrorsInIDD)
-   
+
    IF ( .not. ALLOCATED(ListofSections2) .AND. .not. ALLOCATED(ListofObjects2)) THEN
    ALLOCATE (ListofSections2(NumSectionDefs2), ListofObjects2(NumObjectDefs2))
    END IF
    ListofSections2=SectionDef2(1:NumSectionDefs2)%Name
    ListofObjects2=ObjectDef2(1:NumObjectDefs2)%Name
-   
+
    Close (unit=IDDFile)
-   
+
    WRITE(EchoInputFile,*) ' Processing Data Dictionary (Energy+.idd) File -- Complete'
-   
+
    WRITE(EchoInputFile,*) ' Maximum number of Alpha Args=',MaxAlphaArgsFound
    WRITE(EchoInputFile,*) ' Maximum number of Numeric Args=',MaxNumericArgsFound
    WRITE(EchoInputFile,*) ' Number of Object Definitions=',NumObjectDefs2
    WRITE(EchoInputFile,*) ' Number of Section Definitions=',NumSectionDefs2
-   
+
    !If no fatal to here, rewind EchoInputFile -- only keep processing data...
    IF (.not. ErrorsInIDD) THEN
      REWIND(Unit=EchoInputFile)
    ENDIF
-   
+
    !IF (LEN_TRIM(ProgramPath) == 0) THEN
    !  FullName='HPSim_Variables.idf'
    !ELSE
    !  FullName=ProgramPath(1:LEN_TRIM(ProgramPath))//'HPSim_Variables.idf'
    !END IF
-   
+
     INQUIRE(FILE="FilePathBufferProgram.txt", EXIST=file_exists)
     if (file_exists) THEN
         OPEN (UNIT=580, FILE="FilePathBufferProgram.txt", STATUS="OLD")   ! Current directory
@@ -1004,26 +1004,26 @@ LOGICAL :: file_exists
         pos = scan(FolderPath, '\')
         FolderPath = TRIM(ADJUSTL(FolderPath(1:pos-1)))
     end if
-   
+
    FullName=TRIM(ADJUSTL(FolderPath(1:pos-1))) // '\\HPSim_Variables.idf'
    !FullName='C:/GenOptFiles/HPSim_Variables.idf'
-   
+
    !FileName = "in.idf"
    !FileName = "in_longtubes.idf"
-   
+
    INQUIRE(file=FullName,EXIST=FileExists)
    IF (.not. FileExists) THEN
       CALL ShowFatalError('Input file missing. Program terminates.')
    ENDIF
-   
+
    IDFFile=GetNewUnitNumber()
    Open (unit=IDFFile, file = FullName, action='READ')
    NumLines=0
-   
+
    Call ProcessInputDataFile2
-   
+
    Close (unit=IDFFile)
-   
+
    !RS: Debugging: End of duplication of IDF and IDD-reading code (9/22/14)
 
 !   ALLOCATE(cAlphaFieldNames(MaxAlphaIDFDefArgsFound))
@@ -1065,7 +1065,7 @@ LOGICAL :: file_exists
 !     IF (CountErr == 0) THEN
 !!       CALL ShowSevereError('IP: Potential errors in IDF processing -- see .audit file for details.')  !RS: Secret Search String
 !       WRITE(EchoInputFile,fmta) ' Potential errors in IDF processing:'
-!       WRITE(DebugFile,*) CountErr  !RS: Debugging 
+!       WRITE(DebugFile,*) CountErr  !RS: Debugging
 !     ENDIF
 !     CountErr=CountErr+1
 !     Which=SectionsOnFile(Loop)%FirstRecord
@@ -1110,7 +1110,7 @@ LOGICAL :: file_exists
     IF(DebugFile .EQ. 9 .OR. DebugFile .EQ. 10) THEN
         WRITE(*,*) 'Error with OutputFileDebug'    !RS: Debugging: Searching for a mis-set file number
     END IF
-    WRITE(DebugFile,*) 'Required Object="'//TRIM(ObjectDef(Loop)%Name)//'" not found in IDF.'  
+    WRITE(DebugFile,*) 'Required Object="'//TRIM(ObjectDef(Loop)%Name)//'" not found in IDF.'
      NumMiscErrorsFound=NumMiscErrorsFound+1
    ENDDO
 
@@ -1131,7 +1131,7 @@ LOGICAL :: file_exists
 
    IF (NumMiscErrorsFound > 0) THEN
      !CALL ShowSevereError('IP: Other miscellaneous errors found in input') !RS: Secret Search String
-     WRITE(DebugFile,*) 'Other miscellaneous errors found in input'    
+     WRITE(DebugFile,*) 'Other miscellaneous errors found in input'
    ENDIF
 
    IF (OverallErrorFlag) THEN
@@ -1417,7 +1417,7 @@ SUBROUTINE AddObjectDefandParse(ProposedObject,CurPos,EndofFile,ErrorsFound)
   INTEGER,SAVE :: PrevCount  = -1
   INTEGER,SAVE :: PrevSizeNumAlpha = -1
   INTEGER :: DebugFile       =150 !RS: Debugging file denotion, hopfully this works.
-    
+
   OPEN(unit=DebugFile,file='Debug.txt')    !RS: Debugging
 
   IF (.not. ALLOCATED(AlphaorNumeric)) THEN
@@ -1929,9 +1929,9 @@ SUBROUTINE ProcessInputDataFile
    LOGICAL :: EndofFile = .false.
    LOGICAL BlankLine
    INTEGER Pos
-   
+
      INTEGER :: DebugFile       =150 !RS: Debugging file denotion, hopfully this works.
-    
+
   OPEN(unit=DebugFile,file='Debug.txt')    !RS: Debugging
 
    MaxIDFRecords=ObjectsIDFAllocInc
@@ -2178,9 +2178,9 @@ SUBROUTINE ValidateObjectandParse(ProposedObject,CurPos,EndofFile)
   CHARACTER(len=32) :: String1
 
   INTEGER :: DebugFile       =150 !RS: Debugging file denotion, hopfully this works.
-    
+
   !OPEN(unit=DebugFile,file='Debug.txt')    !RS: Debugging
-  
+
   SqueezedObject=MakeUPPERCase(ADJUSTL(ProposedObject))
   IF (LEN_TRIM(ADJUSTL(ProposedObject)) > MaxObjectNameLength) THEN
     CALL ShowWarningError('IP: Object name length exceeds maximum, will be truncated='//TRIM(ProposedObject),EchoInputFile)
@@ -2756,7 +2756,7 @@ SUBROUTINE ValidateSectionsInput
 
           ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER Count
-  
+
   IF(EchoInputFile .EQ. 9 .OR. EchoInputFile .EQ. 10 .OR. EchoInputFile .EQ. 12) THEN
     WRITE(*,*) 'Error with OutputFileDebug'    !RS: Debugging: Searching for a mis-set file number
   END IF
@@ -3436,14 +3436,14 @@ SUBROUTINE ReadInputLine(UnitNumber,CurPos,BlankLine,InputLineLength,EndofFile, 
           INTEGER endcol
           CHARACTER(len=52) cNumLines
           LOGICAL LineTooLong
-          
+
       ErrFlag=.false.
       LineTooLong=.false.
-      
+
       !IF(UnitNumber .EQ. 9 .OR. UnitNumber .EQ. 10 .OR. UnitNumber .EQ. 12) THEN
       !  WRITE(*,*) 'Error with UnitNumber'    !RS: Debugging: Searching for a mis-set file number
       !END IF
-      
+
       READ(UnitNumber,fmta,IOSTAT=ReadStat) InputLine
 
       IF (ReadStat /= 0) InputLine=Blank
@@ -4459,7 +4459,7 @@ SUBROUTINE VerifyName(NameToVerify,NamesList,NumOfNames,ErrorFound,IsBlank,Strin
       IF(DebugFile .EQ. 9 .OR. DebugFile .EQ. 10) THEN
         WRITE(*,*) 'Error with DebugFile'    !RS: Debugging: Searching for a mis-set file number
       END IF
-      WRITE(DebugFile,*) TRIM(StringToDisplay)//', duplicate name='//TRIM(NameToVerify)  
+      WRITE(DebugFile,*) TRIM(StringToDisplay)//', duplicate name='//TRIM(NameToVerify)
       ErrorFound=.true.
     ENDIF
   ENDIF
@@ -4908,12 +4908,12 @@ SUBROUTINE ReportOrphanRecordObjects
   INTEGER Found
   INTEGER ObjFound
   INTEGER NumOrphObjNames
-  
+
   INTEGER :: DebugFile       =150 !RS: Debugging file denotion, hopefully this works.
-    
+
   !OPEN(unit=DebugFile,file='Debug.txt')    !RS: Debugging
-  
-  
+
+
   ALLOCATE(OrphanObjectNames(NumIDFRecords),OrphanNames(NumIDFRecords))
   OrphanObjectNames=Blank
   OrphanNames=Blank
@@ -4993,14 +4993,14 @@ SUBROUTINE ReportOrphanRecordObjects
   ELSEIF (NumOrphObjNames > 0) THEN
     !CALL ShowMessage('There are '//trim(IPTrimSigDigits(NumOrphObjNames))//' unused objects in input.')
     !CALL ShowMessage('Use Output:Diagnostics,DisplayUnusedObjects; to see them.')  !RS: Secret Search String
-    WRITE(DebugFile,*) 'There are '//TRIM(IPTrimSigDigits(NumOrphObjNames))//' unused objects in input.' 
-    WRITE(DebugFile,*) 'Use Output:Diagnostics,DisplayUnusedObjects; to see them.' 
+    WRITE(DebugFile,*) 'There are '//TRIM(IPTrimSigDigits(NumOrphObjNames))//' unused objects in input.'
+    WRITE(DebugFile,*) 'Use Output:Diagnostics,DisplayUnusedObjects; to see them.'
   ENDIF
-  
+
   IF(DebugFile .EQ. 9 .OR. DebugFile .EQ. 10) THEN
     WRITE(*,*) 'Error with DebugFile'    !RS: Debugging: Searching for a mis-set file number
   END IF
-  
+
   WRITE(DebugFile,*) 'EchoInputFile=',EchoInputFile    !RS: Debugging: Trying to find error in WeatherDataFileNumber
 
   DEALLOCATE(OrphanObjectNames)
@@ -5489,7 +5489,7 @@ SUBROUTINE PreProcessorCheck(PreP_Fatal)
           IF(DebugFile .EQ. 9 .OR. DebugFile .EQ. 10) THEN
             WRITE(*,*) 'Error with DebugFile'    !RS: Debugging: Searching for a mis-set file number
           END IF
-          WRITE(DebugFile,*) TRIM(cCurrentModuleObject), ', ', TRIM(cALphaArgs(1)), ', ', TRIM(Multiples) 
+          WRITE(DebugFile,*) TRIM(cCurrentModuleObject), ', ', TRIM(cALphaArgs(1)), ', ', TRIM(Multiples)
           PreP_Fatal=.true.
         CASE DEFAULT
           CALL ShowSevereError(TRIM(cCurrentModuleObject)//'="'//TRIM(cAlphaArgs(1))//  &
@@ -5509,7 +5509,7 @@ SUBROUTINE PreProcessorCheck(PreP_Fatal)
                 WRITE(*,*) 'Error with DebugFile'    !RS: Debugging: Searching for a mis-set file number
             END IF
           !CALL ShowContinueError(TRIM(cAlphaArgs(CountM))) !RS: Secret Search String
-          WRITE(DebugFile,*) TRIM(cAlphaArgs(CountM))  
+          WRITE(DebugFile,*) TRIM(cAlphaArgs(CountM))
           CountM=CountM+1
         ENDIF
       ENDDO
@@ -5558,7 +5558,7 @@ SUBROUTINE CompactObjectsCheck
           ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   LOGICAL :: CompactObjectsFound
   INTEGER :: DebugFile       =150 !RS: Debugging file denotion, hopefully this works.
-    
+
   OPEN(unit=DebugFile,file='Debug.txt')    !RS: Debugging
 
   CompactObjectsFound=.false.
@@ -5618,7 +5618,7 @@ SUBROUTINE ParametricObjectsCheck
 
           ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
     INTEGER :: DebugFile       =150 !RS: Debugging file denotion, hopfully this works.
-    
+
     OPEN(unit=DebugFile,file='Debug.txt')    !RS: Debugging
 
 
@@ -6792,7 +6792,7 @@ END SUBROUTINE DeallocateArrays
 !  ObjectDef2(NumObjectDefs2)%ObsPtr=0
 !  ObjectDef2(NumObjectDefs2)%UniqueObject=.false.
 !  ObjectDef2(NumObjectDefs2)%RequiredObject=.false.
-!  
+!
 !  AlphaorNumeric=.true.
 !  RequiredFields=.false.
 !  AlphFieldChecks=Blank
@@ -7244,7 +7244,7 @@ SUBROUTINE AddObjectDefandParse2(ProposedObject,CurPos,EndofFile,ErrorsFound)   
   INTEGER,SAVE :: PrevCount  = -1
   INTEGER,SAVE :: PrevSizeNumAlpha = -1
   INTEGER :: DebugFile       =150 !RS: Debugging file denotion, hopfully this works.
-    
+
   OPEN(unit=DebugFile,file='Debug.txt')    !RS: Debugging
 
   IF (.not. ALLOCATED(AlphaorNumeric)) THEN
@@ -7737,7 +7737,7 @@ SUBROUTINE GetObjectItem2(Object,Number,Alphas,NumAlphas,Numbers,NumNumbers,Stat
 
           ! USE STATEMENTS:
           ! na
-          
+
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
@@ -7945,7 +7945,7 @@ SUBROUTINE GetObjectItemfromFile2(Which,ObjectWord,AlphaArgs,NumAlpha,NumericArg
 
           ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   TYPE (LineDefinition):: xLineItem                        ! Description of current record
-  
+
   IF (Which > 0 .and. Which <= NumIDFRecords) THEN
     xLineItem=IDFRecords2(Which)
     ObjectWord=xLineItem%Name
@@ -8024,14 +8024,14 @@ SUBROUTINE ProcessDataDicFile2(ErrorsFound) !RS: Debugging: Testing to see if we
 
    MaxSectionDefs=SectionDefAllocInc
    MaxObjectDefs=ObjectDefAllocInc
-   
+
    IF (ALLOCATED(SectionDef2)) THEN !RS: Debugging: To handle multiple calls of this routine (10/7/14)
        DEALLOCATE(SectionDef2)
    END IF
-   
+
    IF (ALLOCATED(ObjectDef2)) THEN  !RS: Debugging: To handle multiple calls of this routine (10/7/14)
        DEALLOCATE(ObjectDef2)
-   END IF 
+   END IF
 
    ALLOCATE (SectionDef2(MaxSectionDefs))
    SectionDef2%Name=' '        ! Name of the section
@@ -8157,11 +8157,11 @@ SUBROUTINE ProcessInputDataFile2    !RS: Debugging: Testing to see if we can use
    IF (ALLOCATED(SectionsonFile2)) THEN !RS: Debugging: To handle multiple calls of this routine (10/7/14)
        DEALLOCATE(SectionsonFile2)
    END IF
-   
+
    IF (ALLOCATED(IDFRecords2)) THEN  !RS: Debugging: To handle multiple calls of this routine (10/7/14)
        DEALLOCATE(IDFRecords2)
-   END IF 
-   
+   END IF
+
    ALLOCATE (SectionsonFile2(MaxIDFSections))
    SectionsonFile2%Name=' '        ! Name of this section
    SectionsonFile2%FirstRecord=0   ! Record number of first object in section
@@ -8170,23 +8170,23 @@ SUBROUTINE ProcessInputDataFile2    !RS: Debugging: Testing to see if we can use
    IDFRecords2%Name=' '          ! Object name for this record
    IDFRecords2%NumAlphas=0       ! Number of alphas on this record
    IDFRecords2%NumNumbers=0      ! Number of numbers on this record
-   
+
    IF (ALLOCATED(LineItem2%Numbers)) THEN !RS: Debugging: To handle multiple calls of this routine (10/7/14)
        DEALLOCATE(LineItem2%Numbers)
    END IF
-   
+
    IF (ALLOCATED(LineItem2%NumBlank)) THEN  !RS: Debugging: To handle multiple calls of this routine (10/7/14)
        DEALLOCATE(LineItem2%NumBlank)
-   END IF 
-   
+   END IF
+
    IF (ALLOCATED(LineItem2%Alphas)) THEN !RS: Debugging: To handle multiple calls of this routine (10/7/14)
        DEALLOCATE(LineItem2%Alphas)
    END IF
-   
+
    IF (ALLOCATED(LineItem2%AlphBlank)) THEN  !RS: Debugging: To handle multiple calls of this routine (10/7/14)
        DEALLOCATE(LineItem2%AlphBlank)
-   END IF 
-   
+   END IF
+
    ALLOCATE (LineItem2%Numbers(MaxNumericArgsFound))
    ALLOCATE (LineItem2%NumBlank(MaxNumericArgsFound))
    ALLOCATE (LineItem2%Alphas(MaxAlphaArgsFound))
@@ -8334,9 +8334,9 @@ SUBROUTINE ValidateObjectandParse2(ProposedObject,CurPos,EndofFile) !RS: Debuggi
   CHARACTER(len=32) :: String1
 
   INTEGER :: DebugFile       =150 !RS: Debugging file denotion, hopfully this works.
-    
+
   !OPEN(unit=DebugFile,file='Debug.txt')    !RS: Debugging
-  
+
   SqueezedObject=MakeUPPERCase(ADJUSTL(ProposedObject))
   IF (LEN_TRIM(ADJUSTL(ProposedObject)) > MaxObjectNameLength) THEN
     CALL ShowWarningError('IP: Object name length exceeds maximum, will be truncated='//TRIM(ProposedObject),EchoInputFile)
@@ -8881,7 +8881,7 @@ END SUBROUTINE ValidateObjectandParse2  !RS: Debugging: Testing to see if we can
 
 !     NOTICE
 !
-!     Copyright © 1996-2012 The Board of Trustees of the University of Illinois
+!     Copyright ï¿½ 1996-2012 The Board of Trustees of the University of Illinois
 !     and The Regents of the University of California through Ernest Orlando Lawrence
 !     Berkeley National Laboratory.  All rights reserved.
 !
@@ -8904,4 +8904,3 @@ END SUBROUTINE ValidateObjectandParse2  !RS: Debugging: Testing to see if we can
 !
 
 END MODULE InputProcessor
-

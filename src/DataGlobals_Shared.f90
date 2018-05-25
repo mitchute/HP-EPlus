@@ -30,12 +30,12 @@ IMPLICIT NONE   ! Enforce explicit typing of all variables
 PUBLIC          ! By definition, all variables which are placed in this data
                 ! -only module should be available to other modules and routines.
                 ! Thus, all variables in this module must be PUBLIC.
-                
+
         !RS: Carrying over from DataGlobals_HPSimIntegrated
           !INTEGER, PARAMETER :: MaxNameLength = 200      ! Maximum Name Length in Characters
           REAL, PARAMETER    :: AutoSize = -99999.
-          CHARACTER(len=55), PARAMETER :: UpperCase='ABCDEFGHIJKLMNOPQRSTUVWXYZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝ'
-          CHARACTER(len=55), PARAMETER :: LowerCase='abcdefghijklmnopqrstuvwxyzàáâãäåæçèéêëìíîïðñòóôõöøùúûüý'
+          CHARACTER(len=55), PARAMETER :: UpperCase='ABCDEFGHIJKLMNOPQRSTUVWXYZï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½'
+          CHARACTER(len=55), PARAMETER :: LowerCase='abcdefghijklmnopqrstuvwxyzï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½'
           CHARACTER(len=270) :: FullName=' '        ! Full name of file to open, including path
           INTEGER :: TotalSevereErrors = 0 ! Counter
           INTEGER :: TotalWarningErrors = 0 ! Counter
@@ -49,7 +49,7 @@ PUBLIC          ! By definition, all variables which are placed in this data
 !REAL SigmaTest !RS: Debugging: Cavallini (2/14/14)
 !REAL hfgTest    !RS: Debugging: Cavallini (2/14/14)
 !REAL DTTest     !RS: Debugging: Cavallini (2/14/14)
-!INTEGER, PARAMETER :: r64=KIND(1.0D0)  !RS Comment: Currently needs to be used for integration with Energy+ Code (6/28/12) 
+!INTEGER, PARAMETER :: r64=KIND(1.0D0)  !RS Comment: Currently needs to be used for integration with Energy+ Code (6/28/12)
 !Karthik - Assumed r64 is same throughout the module. Need to verify during testing, if this cause any errors
 
           ! MODULE PARAMETER DEFINITIONS:
@@ -79,7 +79,7 @@ REAL(r64), PARAMETER    :: rTinyValue=EPSILON(1.0d0) ! Tiny value to replace use
 INTEGER, PARAMETER :: MaxNameLength = 200     ! Maximum Name Length in Characters -- should be the same
                                               ! as MaxAlphaArgLength in InputProcessor module
                                               !RS: Changed from 100 to 200 for integration with HPSim
-                                              
+
 REAL(r64), PARAMETER    :: KelvinConv = 273.15d0     ! Conversion factor for C to K and K to C
 REAL(r64), PARAMETER    :: InitConvTemp = 5.05d0     ! [deg C], standard init vol to mass flow conversion temp
 REAL(r64), PARAMETER    :: AutoCalculate = -99999.d0 ! automatically calculate some fields.
@@ -173,7 +173,7 @@ LOGICAL :: KickOffSizing=.false.      ! Kick off sizing -- meaning run each envi
 LOGICAL :: AnyEnergyManagementSystemInModel=.FALSE.  ! true if there is any EMS or Erl in model.  otherwise false
 LOGICAL :: AnyPlantInModel = .FALSE. ! true if there are any plant or condenser loops in model, otherwise false
 INTEGER :: CacheIPErrorFile    =0 ! Cache IP errors until IDF processing done.
-LOGICAL :: AnyIdealCondEntSetPointInModel=.FALSE.  ! true if there is any ideal condenser entering set point manager in model. 
+LOGICAL :: AnyIdealCondEntSetPointInModel=.FALSE.  ! true if there is any ideal condenser entering set point manager in model.
 LOGICAL :: RunOptCondEntTemp =.FALSE. ! true if the ideal condenser entering set point optimization is running
 INTEGER :: RefrigIndex = 0  !RS: Debugging: Removal of plethora of RefrigIndex definitions in the code
 INTEGER :: DOASFlag=0   !RS: This tells if the system has return air or is a DOAS
@@ -181,7 +181,7 @@ INTEGER :: DOASFlag=0   !RS: This tells if the system has return air or is a DOA
 
 !     NOTICE
 !
-!     Copyright © 1996-2012 The Board of Trustees of the University of Illinois
+!     Copyright ï¿½ 1996-2012 The Board of Trustees of the University of Illinois
 !     and The Regents of the University of California through Ernest Orlando Lawrence
 !     Berkeley National Laboratory.  All rights reserved.
 !
@@ -204,84 +204,3 @@ INTEGER :: DOASFlag=0   !RS: This tells if the system has return air or is a DOA
 !
 
     END MODULE DataGlobals_HPSimIntegrated
-    
-     MODULE DataPrecisionGlobals
-
-          ! Module containing the routines dealing with the precision of data in EnergyPlus
-
-          ! MODULE INFORMATION:
-          !       AUTHOR         Linda Lawrie
-          !       DATE WRITTEN   January 2008
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
-
-          ! PURPOSE OF THIS MODULE:
-          ! This module allows for setting the default precision to "double precision" using
-          ! F95 KIND and parameters.  Should it ever be necessary to try a higher precision, it
-          ! will be easy to switch for testing.
-
-          ! METHODOLOGY EMPLOYED:
-          ! na
-
-          ! REFERENCES:
-          ! na
-
-          ! OTHER NOTES:
-          ! na
-
-          ! USE STATEMENTS:
-          ! na
-
-IMPLICIT NONE ! Enforce explicit typing of all variables
-
-PUBLIC ! This data only module is public.
-
-          ! MODULE PARAMETER DEFINITIONS:
-    INTEGER, PARAMETER :: i32=Selected_Int_Kind(6)  ! 6 digits
-    INTEGER, PARAMETER :: i64=Selected_Int_Kind(12) ! 12 digits
-    INTEGER, PARAMETER :: r32=KIND(1.0)
-    INTEGER, PARAMETER :: r64=KIND(1.0D0)
-    INTEGER, PARAMETER :: default_prec=r64
-    REAL(r64), PARAMETER :: constant_zero=0.0d0
-    REAL(r64), PARAMETER :: constant_one=1.0d0
-    REAL(r64), PARAMETER :: constant_minusone=-1.0d0
-    REAL(r64), PARAMETER :: constant_twenty=20.0d0
-    REAL(r64), PARAMETER :: constant_pointfive=.5d0
-    REAL(r64), PARAMETER :: EXP_LowerLimit=-20.d0  ! In IVF=2.061153622438558E-009 - used 20
-                                                   ! because it's already used in other parts of the code
-    REAL(r64), PARAMETER :: EXP_UpperLimit= 40.d0  ! In IVF=2.353852668370200E+017
-
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
-
-          ! MODULE VARIABLE DECLARATIONS:
-          ! na
-
-          ! SUBROUTINE SPECIFICATIONS FOR MODULE:
-          ! na
-
-!     NOTICE
-!
-!     Copyright © 1996-2012 The Board of Trustees of the University of Illinois
-!     and The Regents of the University of California through Ernest Orlando Lawrence
-!     Berkeley National Laboratory.  All rights reserved.
-!
-!     Portions of the EnergyPlus software package have been developed and copyrighted
-!     by other individuals, companies and institutions.  These portions have been
-!     incorporated into the EnergyPlus software package under license.   For a complete
-!     list of contributors, see "Notice" located in EnergyPlus.f90.
-!
-!     NOTICE: The U.S. Government is granted for itself and others acting on its
-!     behalf a paid-up, nonexclusive, irrevocable, worldwide license in this data to
-!     reproduce, prepare derivative works, and perform publicly and display publicly.
-!     Beginning five (5) years after permission to assert copyright is granted,
-!     subject to two possible five year renewals, the U.S. Government is granted for
-!     itself and others acting on its behalf a paid-up, non-exclusive, irrevocable
-!     worldwide license in this data to reproduce, prepare derivative works,
-!     distribute copies to the public, perform publicly and display publicly, and to
-!     permit others to do so.
-!
-!     TRADEMARKS: EnergyPlus is a trademark of the US Department of Energy.
-!
-END MODULE DataPrecisionGlobals
-

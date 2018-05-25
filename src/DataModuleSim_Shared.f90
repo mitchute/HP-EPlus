@@ -15,7 +15,7 @@ REAL, PARAMETER :: Ucndct = 0.1442E-3   !(Btu-in/hr-ft2-F X Ucndct = kW/m-C)
 REAL, PARAMETER :: UnitP=6.895 !Pressure unit conversion (psi * UnitP = kPa)
 REAL, PARAMETER :: UnitH=2.326 !Enthalpy unit conversion (Btu/lbm * UnitH = kJ/kg)
 REAL, PARAMETER :: UnitM=0.4536 !Mass unit conversion (lbm * UnitM = kg)
-REAL, PARAMETER :: UnitL=0.3048 !Length unit conversion (ft * UnitL = m) 
+REAL, PARAMETER :: UnitL=0.3048 !Length unit conversion (ft * UnitL = m)
 
 !Coil types
 INTEGER,PARAMETER :: CONDENSERCOIL  = 1
@@ -99,14 +99,14 @@ REAL DTROC
 REAL CFMcnd                  !Standard condenser CFM, m3/s
 REAL CFMevp                  !Standard evaperator CFM, m3/s
 
-CHARACTER*80 Ref$	!Refrigerant name 
+CHARACTER*80 Ref	!Refrigerant name 
 CHARACTER*80 Rref   !Referance Refrigerant name
 
 INTEGER(2) PureRef	!Pure refrigerant flag: 1=Pure; 0=mixture
 
 !Compressor model passing parameters
 REAL TSICMP								!Compressor inlet saturation temperature, F
-REAL TSOCMP								!Compressor outlet saturation temperature, F 
+REAL TSOCMP								!Compressor outlet saturation temperature, F
 REAL SUPER								!Superheat (F) or quality
 REAL SUPERE
 REAL SUBCOOL							!Subcooling, F
@@ -143,7 +143,7 @@ REAL TOEVP,POEVP,HOEVP,XOEVP	!Evaporator outlet temp. (F); pressure (psi); entha
 
 INTEGER(2)	:: Unit !Unit flag: 1=SI; 2=IP
 
-INTEGER		:: MODE !1-Design mode: Given superheat, subcooling; Compute charge, orifice size   
+INTEGER		:: MODE !1-Design mode: Given superheat, subcooling; Compute charge, orifice size
 					!2-Simulation mode: Given charge, orifice size; Compute superheat, subcooling
 					!3-Design mode: Given expansion device, superheat; Compute charge, subcooling
 					!4-Simulation mode: Given superheat, charge; Compute subcooling, expansion deivce
@@ -154,7 +154,7 @@ LOGICAL FirstTimeHPdesignMode	!First time to run HPdesignMode?
 LOGICAL FirstTimeChargeLoop     !First time to run ChargeLoop?
 INTEGER(2) :: SystemType !1=A/C; 2=Heat Pump; 3=Condenser Unit; 4=Reheat; 5=Evaporator Only
 
-REAL RhoAiE  
+REAL RhoAiE
 REAL RhoAiC
 REAL RhoAoC
 REAL RhoAoE
@@ -162,7 +162,7 @@ REAL RhoAoE
 REAL MdotR
 
 REAL :: WeightSucLn      !Weight of suction line, kg or lbm
-REAL :: WeightDisLn      !Weight of discharge line, kg or lbm  
+REAL :: WeightDisLn      !Weight of discharge line, kg or lbm
 REAL :: WeightLiqLn      !Weight of liquid line, kg or lbm
 REAL :: WeightValveIDCLn !Weight of Valve to IDC line, kg or lbm
 REAL :: WeightValveODCLn !Weight of Valve to ODC line, kg or lbm

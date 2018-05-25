@@ -197,7 +197,7 @@ IMPLICIT NONE
 
 PUBLIC !Share the following with Condenser and Evaporator, ISI - 06/05/07
 
-!Data types 
+!Data types
 TYPE ModInfo
   REAL Len             !Length, m
   REAL pRi             !Inlet ref. pressure
@@ -206,7 +206,7 @@ TYPE ModInfo
   REAL hRo             !Outlet ref. enthalpy
   REAL mAi             !air mass flow rate
   REAL tAi             !Inlet air temperature
-  REAL tAo             !Outlet air temperature 
+  REAL tAo             !Outlet air temperature
   REAL wAi             !Inlet air humidity ratio
   REAL wAo             !Outlet air humidity ratio
   REAL rhAi            !Inlet air humidity
@@ -247,7 +247,7 @@ TYPE TubeInfo
   REAL    :: ID        !Tube inside diameter, m
   INTEGER :: NumOfMods !Number of tube modules/segments
   TYPE (ModInfo),ALLOCATABLE,DIMENSION(:) :: Seg  !Segment
-END TYPE TubeInfo   
+END TYPE TubeInfo
 
 TYPE CktInfo
   INTEGER InJoin                   !# tubes joined at inlet
@@ -255,7 +255,7 @@ TYPE CktInfo
   INTEGER OutJoin                  !# tubes joined at outlet
   INTEGER OutSplit                 !# tubes split at outlet
   INTEGER Ntube                    !# tubes
-  INTEGER,ALLOCATABLE,DIMENSION(:) :: TubeSequence ! Tube sequence        
+  INTEGER,ALLOCATABLE,DIMENSION(:) :: TubeSequence ! Tube sequence
   REAL Conduct         !Refrigerant flow conductance
   REAL pRo             !Outlet pressure
   REAL pRi             !Inlet pressure
@@ -267,7 +267,7 @@ TYPE CktInfo
   REAL tSH             !Superheat temp.
   REAL Qckt            !Circuit heat transfer
   REAL QcktSens        !Circuit sensible heat transfer
-  REAL mRef            !Ref. mass flow rate 
+  REAL mRef            !Ref. mass flow rate
   REAL mRefPrev        !Previous Ref. mass flow rate
   TYPE (TubeInfo),ALLOCATABLE,DIMENSION(:) :: Tube !Tube
 END TYPE CktInfo
@@ -294,7 +294,7 @@ TYPE InletPassInfo
   REAL pRo             !Outlet pressure
   REAL hRi             !Inlet enthalpy
   REAL hRo             !Outlet enthalpy
-  REAL Qpass           !Coil pass heat transfer, kW 
+  REAL Qpass           !Coil pass heat transfer, kW
   REAL QpassSens       !Coil pass sensible heat transfer, kW
 END TYPE InletPassInfo
 
@@ -320,8 +320,8 @@ TYPE SlabInfo
   REAL tSH             !Superheat temp.
   REAL Qslab           !Circuit heat transfer
   REAL Conduct         !Refrigerant flow conductance
-  TYPE (PassInfo),ALLOCATABLE,DIMENSION(:) :: Pass !Pass 
-  TYPE (InletPassInfo),ALLOCATABLE,DIMENSION(:) :: InletPass !Inlet pass 
+  TYPE (PassInfo),ALLOCATABLE,DIMENSION(:) :: Pass !Pass
+  TYPE (InletPassInfo),ALLOCATABLE,DIMENSION(:) :: InletPass !Inlet pass
 END TYPE SlabInfo
 
 TYPE SectionInfo !ISI - 09/10/07
@@ -346,7 +346,7 @@ END TYPE SectionInfo
 REAL,PARAMETER :: PI=3.14159265 !Pi
 
 !Tube types
-INTEGER,PARAMETER :: SMOOTH                    = 1     
+INTEGER,PARAMETER :: SMOOTH                    = 1
 INTEGER,PARAMETER :: MICROFIN                  = 2
 INTEGER,PARAMETER :: HERRINGBONE               = 3
 INTEGER,PARAMETER :: CROSSHATCH                = 4
@@ -367,15 +367,15 @@ INTEGER, PARAMETER :: WAVYFIN          = 2
 !Module subroutines:
 PUBLIC EPScalc
 PUBLIC UAcalc
-PUBLIC hcRefside 
-PUBLIC AirSideCalc 
+PUBLIC hcRefside
+PUBLIC AirSideCalc
 PUBLIC CalcCoilArea
 PUBLIC CalcUA
 PUBLIC MODdP
-PUBLIC Reynolds 
+PUBLIC Reynolds
 PUBLIC Prandtl
 PUBLIC manifold
-PUBLIC returnbend 
+PUBLIC returnbend
 PUBLIC Inventory
 PUBLIC GetRefName
 PUBLIC GetRefID
@@ -385,7 +385,7 @@ PUBLIC MinimumFreeFlowArea
 PUBLIC TWOPhasedPNino
 PUBLIC TwoPhaseDPMoriyama
 PUBLIC TWOPhasedPChoi
-PUBLIC hSPDittus 
+PUBLIC hSPDittus
 PRIVATE hSPPetukhov
 PRIVATE hSPGnielinski
 PUBLIC  hTPDobson
@@ -406,9 +406,9 @@ PRIVATE alphaCALC
 PRIVATE PHIcalc
 PRIVATE PmomTWOphase
 PRIVATE PmomIntegral
-PRIVATE ElevdP 
-PRIVATE Homo 
-PUBLIC  LockMartVoidFrac 
+PRIVATE ElevdP
+PRIVATE Homo
+PUBLIC  LockMartVoidFrac
 PUBLIC  HughmarkVoidFrac
 PUBLIC  GrahamVoidFrac
 PUBLIC  HarmsVoidFrac
@@ -480,11 +480,11 @@ REAL Cmax !Maximum heat capacity rate, [kW/K]
 		IF (Cratio .LT. SMALL) THEN
 			EPS=1.-EXP(-NTU)
 		ELSE IF (Cmin .EQ. cAir) THEN !Air side is mixed because of louver fins, ISI - 07/27/06
-			!EPS=(1-EXP(-Cratio*(1-EXP(-NTU))))/Cratio !Cmin unmixed, Cmax mixed 
+			!EPS=(1-EXP(-Cratio*(1-EXP(-NTU))))/Cratio !Cmin unmixed, Cmax mixed
 			EPS=1-EXP(-(1-EXP(-Cratio*NTU))/Cratio)   !Cmin mixed, Cmax unmixed
 		ELSE IF (Cmin .EQ. cRef) THEN !Ref. side is unmixed because each circuit has different outlet temp., ISI - 07/27/06
 			!EPS=1-EXP(-(1-EXP(-Cratio*NTU))/Cratio)   !Cmin mixed, Cmax unmixed
-			EPS=(1-EXP(-Cratio*(1-EXP(-NTU))))/Cratio !Cmin unmixed, Cmax mixed 
+			EPS=(1-EXP(-Cratio*(1-EXP(-NTU))))/Cratio !Cmin unmixed, Cmax mixed
 		END IF
 	ELSE
 		EPS=1.0
@@ -517,7 +517,7 @@ SUBROUTINE UAcalc(Rtube,RairMod,RrefMod,UA)
 !------------------------------------------------------------------------
 
 IMPLICIT NONE
-      
+
 !Subroutine passing variables:
 !Inputs:
 REAL Rtube   !Tube resistance, [(m^2-K)/kW]
@@ -554,13 +554,13 @@ SUBROUTINE hcRefside(CoilType,TubeType,ID,mRef,Qout, & !CoilType,TubeType,ID,ktu
 !
 !Reference:
 !Eckels, S.J.; Doerr, T.M.; Pate, M.B. In-tube heat transfer and pressure
-!drop of R-134a and ester lubricant mixtures in a smooth tube and a 
-!micro-fin tube: part II - condensation. ASHRAE Transactions, v 100, n 2,  
+!drop of R-134a and ester lubricant mixtures in a smooth tube and a
+!micro-fin tube: part II - condensation. ASHRAE Transactions, v 100, n 2,
 !pp. 283-294, 1994.
 !
-!Eckels, S.J.; Doerr, T.M.; Pate, M.B. In-tube heat transfer and pressure 
-!drop of R-134a and ester lubricant mixtures in a smooth tube and a 
-!micro-fin tube: part I - evaporation. ASHRAE Transactions, v 100, n 2, 
+!Eckels, S.J.; Doerr, T.M.; Pate, M.B. In-tube heat transfer and pressure
+!drop of R-134a and ester lubricant mixtures in a smooth tube and a
+!micro-fin tube: part I - evaporation. ASHRAE Transactions, v 100, n 2,
 !pp. 265-282, 1994.
 !
 !Outokumpu (2005). Tube side enhancement factors. Internal data.
@@ -578,13 +578,13 @@ IMPLICIT NONE
 
 !Subroutine passing variables:
 !Inputs:
-INTEGER          CoilType	!1-condenser; 
+INTEGER          CoilType	!1-condenser;
 							!2-evaporator;
 							!3-High side interconnecting pipes;
 							!4-Low side interconnecting pipes
 							!5-Microchannel condenser
 							!6-Microchannel evaporator
-INTEGER          TubeType	!1=Plain; 2=General Micro Fin; 3=Herringbone; 
+INTEGER          TubeType	!1=Plain; 2=General Micro Fin; 3=Herringbone;
 							!4=Crosshatch; 5=Herringbone w/crosshatch; 6=Turbo-A
 							!7=Helical; 8=42F HXH
 REAL ID			!Inside diameter, [m]
@@ -635,21 +635,21 @@ REAL Gref     !Refrigerant mass flux, [kg/s-m^2]
 	EF=1
 	IF (xRef .LT. 1. .AND. xRef .GT. 0.) THEN
 		IF (CoilType .EQ. CONDENSERCOIL) THEN
-				CALL hTPDobson(CoilType,ID,xRef,mRef,vg,vf,mug,muf,kL,kV,CpL,CpV,hcRef)		
+				CALL hTPDobson(CoilType,ID,xRef,mRef,vg,vf,mug,muf,kL,kV,CpL,CpV,hcRef)
 				!CALL hTPCavallini(CoilType,ID,xRef,mRef,vg,vf,mug,muf,kL,kV,CpL,CpV,sigma,hfg,DT,hcRef)
-				!CALL hTPShahCond(ID,xRef,mRef,mug,muf,kL,kV,CpL,CpV,Psat,Pcrit,hcRef) 
+				!CALL hTPShahCond(ID,xRef,mRef,mug,muf,kL,kV,CpL,CpV,Psat,Pcrit,hcRef)
 				!CALL hTPCZ(ID,xRef,mRef,vg,vf,mug,muf,kL,CpL,hcRef)
 		ELSEIF(CoilType .EQ. MCCONDENSER) THEN
 				CALL hTPShahCond(ID,xRef,mRef,mug,muf,kL,kV,CpL,CpV,Psat,Pcrit,hcRef)
                 !(ID,xRef,mRef,vgi,vfi,muRef,mug,muf,kL,kV,CpL,CpV,Psat,Pcrit,hTP)
-				!CALL hTPDobson(CoilType,ID,xRef,mRef,vg,vf,mug,muf,kL,kV,CpL,CpV,hcRef)		
+				!CALL hTPDobson(CoilType,ID,xRef,mRef,vg,vf,mug,muf,kL,kV,CpL,CpV,hcRef)
 		ELSE
 			IF (Qout .LT. 0) THEN
                 Qout=0
             END IF
 
 				hcRef=OilMixtureHTCevap(Gref,xRef,ID,muf,mug,1/vf,1/vg,kL*1e3,CpL*1e3,Wabsolute)*1e-3
-	    
+
 		END IF
 
 	ELSE
@@ -668,7 +668,7 @@ REAL Gref     !Refrigerant mass flux, [kg/s-m^2]
 	END IF
 
 	IF (xRef .GE. 1 .OR. xRef .LE. 0) THEN
-	    EF=1 
+	    EF=1
 	ELSE !Only apply to two phase region, ISI - 09/19/20
 		Gref=mRef/(ID**2*PI/4)
 		CALL CalcHTCenhancementFactor(CoilType,TubeType,Gref,EF)
@@ -705,20 +705,20 @@ SUBROUTINE AirSideCalc(CoilType,FinType,WetFlag,Nl,Nt,tAiCoil,mAiCoil,rhoIn,rhoO
 !March 2005
 !
 !Reference:
-!McQuiston, F. C., Parker, J. D. and Spitler, J.D. (2000). Heating, 
-!ventilating, and air conditioning - analysis and design, 4th Ed. 
+!McQuiston, F. C., Parker, J. D. and Spitler, J.D. (2000). Heating,
+!ventilating, and air conditioning - analysis and design, 4th Ed.
 !New York, NY: John Wiley & Sons, Inc.
 !
 !------------------------------------------------------------------------
 
-USE AirPropMod      
+USE AirPropMod
 
 IMPLICIT NONE
 
 !Subroutine passing variables
 !Inputs:
-INTEGER CoilType !1=Condenser; 2=Evaporator; 
-                 !3=High side interconnecting pipes; 
+INTEGER CoilType !1=Condenser; 2=Evaporator;
+                 !3=High side interconnecting pipes;
 				 !4=Low side interconnecting pipes
 				 !5=Microchannel condenser
 				 !6=Microchannel evaporator
@@ -766,7 +766,7 @@ REAL Jfactor  !J-factor, [-]
 REAL Ffactor  !Friction factor, [-]
 REAL Amin     !Minimum free flow area, [m^2]
 REAL AbrCoil  !Bared tube coil surface area, [m^2]
-REAL AmCoil   !Mean coil surface area, [m^2] 
+REAL AmCoil   !Mean coil surface area, [m^2]
 REAL Acs      !Cross-sectional area, [m^2]
 REAL AfrCoil  !Frontal area, [m^2]
 REAL Gmax     !Maximum mass flux, [kg/s-m^2]
@@ -796,7 +796,7 @@ REAL humrat !RS: Replace: humidity ratio for replacement (2/21/14)
  ELSE IF(CoilType .EQ. EVAPORATORCOIL) THEN
   Rc=OD/2+FinThk+FrostParam%Thickness
  END IF
- 
+
   !Outside diameter, including collar
   Dc=Rc*2
 
@@ -817,10 +817,10 @@ REAL humrat !RS: Replace: humidity ratio for replacement (2/21/14)
    ELSE IF(CoilType .EQ. EVAPORATORCOIL) THEN
     CoilParams(2)%CoilFaceArea=AfrCoil
    END IF
-  END IF    
+  END IF
   FinPitch=1/(FinSpg+FinThk)
 
-  !HX depth	
+  !HX depth
   HXdep=Nl*Pl
 
   !Minimum flow area
@@ -830,13 +830,13 @@ REAL humrat !RS: Replace: humidity ratio for replacement (2/21/14)
                     Ltube,ID,OD,Dchannel,NumOfChannels, &
 					FinThk,FinSpg,Lcoil,AfCoil, &
 					AoCoil,AiCoil,AmCoil)
- 
+
   AbrCoil=PI*Lcoil*Dc
-  
+
   !Tube Cross sectional area
   Acs=PI*(ID**2)/4
 
-  !Max. air mass flux 
+  !Max. air mass flux
   Gmax=mAiCoil/Amin
 
   !Reynolds # based on Dc
@@ -844,7 +844,7 @@ REAL humrat !RS: Replace: humidity ratio for replacement (2/21/14)
 
   !Reynolds # based on longitudinal pitch
   RePl=Gmax*Pl/muA
-      
+
   SELECT CASE (FinType)
   CASE (1,2,3,4,6,7,8,9,10) !RS: Debugging: Allowing all fin types here
   !CASE (PLAINFIN,WAVYFIN)  !RS: No allowance for louver fins
@@ -854,7 +854,7 @@ REAL humrat !RS: Replace: humidity ratio for replacement (2/21/14)
 	FaceVel=mAiCoil/(rhoIn*AfrCoil)
 	Gmax=mAiCoil/Amin
 	ReDc=Gmax*Dc/muA
-	
+
 	RePl=Gmax*Pl/muA
 
 	!J-factors
@@ -874,13 +874,13 @@ REAL humrat !RS: Replace: humidity ratio for replacement (2/21/14)
 !(CoilType,FinType,WetFlag,FinSpg,FinThk,HXdep,Nl,Nt,Dc,OD,Pt,Pl, &
 !                          Ltube,TubeDepth,AoCoil,AbrCoil,ReDc,RePl,Amin,AfrCoil,mAiCoil, &
 !						  Gmax,muAir,rhoIn,rhoOut,Fricfactor)
-					  
+
     IF (rhoOut .EQ. 0.0) THEN
 	  rhoOut=rhoIn
     END IF
     rhoAvg=(rhoIn+rhoOut)/2
-		  
-    !Air side pressure drop 
+
+    !Air side pressure drop
 	sigma=Amin/AfrCoil
 	Ki=-0.404*sigma+0.494 !McQuiston
 	Ke=-1.272*sigma+0.8726 !McQuiston
@@ -888,12 +888,12 @@ REAL humrat !RS: Replace: humidity ratio for replacement (2/21/14)
 	                        -(1-sigma**2-Ke)*rhoIn/rhoOut)*1E-3
 
   END SELECT
-  
+
   !RS: Attempt at error handling (8/1/12)
   !IF (FINTYPE .NE. PLAINFIN .AND. FINTYPE .NE. WAVYFIN) THEN
   !    CALL ShowSevereError('The fin type selected cannot be handled by the program')
   !END IF
-  
+
   RETURN
 
 END SUBROUTINE AirSideCalc
@@ -920,13 +920,13 @@ SUBROUTINE CalcCoilArea(CoilType,Nl,Nt,Pt,Pl,TubeDepth, &
 !none
 !
 !------------------------------------------------------------------------
-      
+
 IMPLICIT NONE
 
 !Subroutine passing variables
 !Inputs:
-INTEGER CoilType !1=Condenser; 2=Evaporator; 
-                 !3=High side interconnecting pipes; 
+INTEGER CoilType !1=Condenser; 2=Evaporator;
+                 !3=High side interconnecting pipes;
 				 !4=Low side interconnecting pipes
 				 !5=Microchannel condenser
 				 !6=Microchannel evaporator
@@ -969,8 +969,8 @@ REAL CoilHeight   !Coil height, m
 
   !Coil length
   Lcoil=Nl*Nt*Ltube
-  
-  FinPitch=1/(FinSpg+FinThk)  
+
+  FinPitch=1/(FinSpg+FinThk)
 
   IF (CoilType .EQ. MCCONDENSER .OR. &
       CoilType .EQ. MCEVAPORATOR) THEN !Microchannel coil
@@ -982,14 +982,14 @@ REAL CoilHeight   !Coil height, m
 	  AbsCoil=AbrCoil-FinThk*TubeDepth*FinPitch*Lcoil
 	  AoCoil=AbsCoil+AfCoil
 	  AiCoil=PI*Dchannel*NumOfChannels*Lcoil
-	  AmCoil=(AiCoil+AbrCoil)/2      !Module tube mean surface area    
+	  AmCoil=(AiCoil+AbrCoil)/2      !Module tube mean surface area
   ELSE
 	  !Outside radius, including collar
-    IF(CoilType==CONDENSERCOIL) THEN 
+    IF(CoilType==CONDENSERCOIL) THEN
      Rc=OD/2+FinThk
     ELSE IF(CoilType==EVAPORATORCOIL) THEN
      Rc=OD/2+FinThk+FrostParam%Thickness
-    END IF 
+    END IF
 
 	  !Outside diameter, including collar
 	  Dc=Rc*2
@@ -997,7 +997,7 @@ REAL CoilHeight   !Coil height, m
 	  !Coil frontal area
 	  AfrCoil=Pt*Nt*Ltube
 
-	  !HX depth	
+	  !HX depth
 	  !HXdep=Nl*Pl
 
       !Bare tube surface area
@@ -1012,7 +1012,7 @@ REAL CoilHeight   !Coil height, m
 	   AbrCoil=PI*Lcoil*Dc  !Sankar Changed
 	   AfCoil=2*(Nt*Pt*Nl*Pl-PI*Dc**2/4*Nl*Nt+(FinThk+FrostParam%Thickness)*(Nt*Pt+Nl*Pl))*FinPitch*Ltube
       END IF
-      
+
       IF(CoolHeatModeFlag == 1) THEN
        IF(CoilType==1) THEN
         CoilParams(2)%CoilFinArea=AfCoil
@@ -1033,7 +1033,7 @@ REAL CoilHeight   !Coil height, m
         CoilParams(2)%FinPitch=FinPitch
         CoilParams(2)%FinThickness=FinThk
        END IF
-      END IF    
+      END IF
 
 	  !Total outside surface area
 	  AoCoil=AbsCoil+AfCoil
@@ -1052,7 +1052,7 @@ REAL CoilHeight   !Coil height, m
 	  !Tube Cross sectional area
 	  !Acs=PI*(ID**2)/4
 
-	  AmCoil=(AiCoil+AbrCoil)/2 
+	  AmCoil=(AiCoil+AbrCoil)/2
 
 	  IF(CoilType==CONDENSERCOIL) THEN
 	   CondTubeArea = AbsCoil
@@ -1077,7 +1077,7 @@ SUBROUTINE CalcCustomAirHco(Unit,CurveType,PowerA,PowerB, &
 
 !------------------------------------------------------------------------
 !Purpose:
-!To calculate the air side heat transfer coefficient using custom 
+!To calculate the air side heat transfer coefficient using custom
 !curve fit coefficients
 !
 !Author
@@ -1091,7 +1091,7 @@ SUBROUTINE CalcCustomAirHco(Unit,CurveType,PowerA,PowerB, &
 !none
 !
 !------------------------------------------------------------------------
-      
+
 IMPLICIT NONE
 
 !Subroutine passing variables:
@@ -1134,7 +1134,7 @@ SUBROUTINE CalcCustomAirDP(Unit,CurveType,PowerA,PowerB, &
 
 !------------------------------------------------------------------------
 !Purpose:
-!To calculate the air side pressure drop using custom 
+!To calculate the air side pressure drop using custom
 !curve fit coefficients
 !
 !Author
@@ -1148,7 +1148,7 @@ SUBROUTINE CalcCustomAirDP(Unit,CurveType,PowerA,PowerB, &
 !none
 !
 !------------------------------------------------------------------------
-      
+
 IMPLICIT NONE
 
 !Subroutine passing variables:
@@ -1176,7 +1176,7 @@ REAL DP		 !Air side pressure drop, kPa
 
 	IF (Unit .EQ. 1) THEN
 		DP=DP/1000 !from Pa to kPa
-	ELSE 
+	ELSE
 		DP=DP*249/1000 !from in.wg to kPa
 	END IF
 
@@ -1208,13 +1208,13 @@ SUBROUTINE CalcUA(CoilType,Kfin,FinThk,FinHeight,Ktube,Pt,Pl,OD,TubeThk,TubeDept
 !
 !
 !------------------------------------------------------------------------
-      
+
 IMPLICIT NONE
 
 !Subroutine passing varibles:
 !Inputs:
-INTEGER CoilType !1=Condenser; 2=Evaporator; 
-                 !3=High side interconnecting pipes; 
+INTEGER CoilType !1=Condenser; 2=Evaporator;
+                 !3=High side interconnecting pipes;
 				 !4=Low side interconnecting pipes
 				 !5=Microchannel condenser
 				 !6=Microchannel evaporator
@@ -1258,29 +1258,29 @@ REAL FrostThk
   ELSE
    Rc=OD/2+FinThk
   END IF
-  
+
   !Fin efficiency
   CALL CalcFinEff(CoilType,Kfin,FinThk,FinHeight,Rc,TubeDepth,Pt,Pl,hco,FinEff)
 
   !Surface effectiveness
   SurfEff=1-(AfMod/AoMod)*(1-FinEff)
 
-  !Dry fin total air side resistance  
+  !Dry fin total air side resistance
   Rair=1/(AoMod*SurfEff*hco)
 
   !Refrigerant side resistance
   Rref=1/(hci*AiMod)
-  
+
   !Tube resistance   Sankar-Change the KTube
   IF(CoilType==EVAPORATORCOIL) THEN
    Kfrost=FrostParam%Conductivity
-   FrostThk=2*FrostParam%Thickness      
+   FrostThk=2*FrostParam%Thickness
    KfinFrost=(KTube*TubeThk+Kfrost*FrostThk)/(TubeThk+FrostThk)
    !FinFrostThk=FinThk+FrostThk !ISI - 12/24/2009
    FinFrostThk=TubeThk+FrostThk
-   Rtube=FinFrostThk/(KfinFrost*AmMod) 
+   Rtube=FinFrostThk/(KfinFrost*AmMod)
   ELSE
-   Rtube=TubeThk/(Ktube*AmMod) 
+   Rtube=TubeThk/(Ktube*AmMod)
   END IF
 
   !UA
@@ -1315,7 +1315,7 @@ IMPLICIT NONE
 
 !Subroutine passing variables:
 !Inputs:
-INTEGER          CoilType	!1-condenser; 
+INTEGER          CoilType	!1-condenser;
 							!2-evaporator;
 							!3-High side interconnecting pipes;
 							!4-Low side interconnecting pipes
@@ -1325,7 +1325,7 @@ REAL xRef		!Refrigerant quality, [-]
 REAL muRef		!Dynamic viscosity, [Pa-s]
 REAL mug		!Dynamic viscosity of vapor, [Pa-s]
 REAL muf		!Dynamic viscosity of liquid, [Pa-s]
-REAL kRef		!Thermal conductivity, [kW/m-K] 
+REAL kRef		!Thermal conductivity, [kW/m-K]
 REAL CpRef		!Specific heat, [kJ/kg-K]
 
 !Output:
@@ -1335,7 +1335,7 @@ REAL hSP        !Single phase heat transfer coefficient, [kW/m^2-K]
 REAL ReLiq      !Liquid Reynold number
 REAL ReVap      !Vapor Reynold number
 REAL Re         !Reynold number
-REAL Pr         !Prandtl number 
+REAL Pr         !Prandtl number
 REAL Nu         !Nusselt number
 
 !Flow:
@@ -1395,7 +1395,7 @@ REAL xRef		!Refrigerant quality, [-]
 REAL muRef		!Dynamic viscosity, [Pa-s]
 REAL mug		!Dynamic viscosity of vapor, [Pa-s]
 REAL muf		!Dynamic viscosity of liquid, [Pa-s]
-REAL kRef		!Thermal conductivity, [kW/m-K] 
+REAL kRef		!Thermal conductivity, [kW/m-K]
 REAL CpRef		!Specific heat, [kJ/kg-K]
 
 !Output:
@@ -1405,7 +1405,7 @@ REAL hSP        !Single phase heat transfer coefficient, [kW/m^2-K]
 REAL ReLiq      !Liquid Reynold number
 REAL ReVap      !Vapor Reynold number
 REAL Re         !Reynold number
-REAL Pr         !Prandtl number 
+REAL Pr         !Prandtl number
 REAL Nu         !Nusselt number
 REAL ff			!Intermediate variable
 
@@ -1444,7 +1444,7 @@ SUBROUTINE hSPGnielinski(ID,mRef,xRef,muRef,mug,muf,kRef,CpRef,hSP)
 !March 2005
 !
 !Reference:
-!Gnielinski, V. New equation for heat and mass transfer in turbulent 
+!Gnielinski, V. New equation for heat and mass transfer in turbulent
 !pipe and channel flow. Int. Chem. Eng. 16. pp. 359-368. 1976.
 !
 !------------------------------------------------------------------------
@@ -1459,7 +1459,7 @@ REAL xRef		!Refrigerant quality, [-]
 REAL muRef		!Dynamic viscosity, [Pa-s]
 REAL mug		!Dynamic viscosity of vapor, [Pa-s]
 REAL muf		!Dynamic viscosity of liquid, [Pa-s]
-REAL kRef		!Thermal conductivity, [kW/m-K] 
+REAL kRef		!Thermal conductivity, [kW/m-K]
 REAL CpRef		!Specific heat, [kJ/kg-K]
 
 !Output:
@@ -1469,7 +1469,7 @@ REAL hSP        !Single phase heat transfer coefficient, [kW/m^2-K]
 REAL ReLiq      !Liquid Reynold number
 REAL ReVap      !Vapor Reynold number
 REAL Re         !Reynold number
-REAL Pr         !Prandtl number 
+REAL Pr         !Prandtl number
 REAL Nu         !Nusselt number
 REAL ff			!Intermediate variable
 
@@ -1512,7 +1512,7 @@ SUBROUTINE hTPDobson(CoilType,ID,xRef,mRef,vgi,vfi,mug,muf,kL,kV,CpL,CpV,hTP)
 !March 2005
 !
 !Reference:
-!Dobson, M.K. and Chato, J.C. Condensation in smooth horizontal tubes. 
+!Dobson, M.K. and Chato, J.C. Condensation in smooth horizontal tubes.
 !J. of heat transfer, transactions of ASME. 120:193-312, 1998.
 !
 !------------------------------------------------------------------------
@@ -1521,7 +1521,7 @@ IMPLICIT NONE
 
 !Subroutine passing variables:
 !Inputs:
-INTEGER          CoilType	!1-condenser; 
+INTEGER          CoilType	!1-condenser;
 							!2-evaporator;
 							!3-High side interconnecting pipes;
 							!4-Low side interconnecting pipes
@@ -1545,7 +1545,7 @@ REAL,PARAMETER :: xMin=0.1
 REAL,PARAMETER :: xMax=0.9
 
 !Subroutine local variables
-REAL Acs    !Cross sectional area, [m^2]  
+REAL Acs    !Cross sectional area, [m^2]
 REAL Gref   !Refrigerant mass flux, [kg/s-m^2]
 REAL rhog   !Vapor density, [kg/m^3]
 REAL rhof   !Liquid density, [kg/m^3]
@@ -1573,7 +1573,7 @@ REAL VelGas !Wallis dimensionless gas velocity, [-]
     PrL=CpL*muf/kL
     ReL=Gref*ID*(1.0-xRef)/muf
 	hLmin=0.023*ReL**0.8*PrL**0.3*kL/ID
-	hTP=hLmin*2.61/Xtt**0.805   
+	hTP=hLmin*2.61/Xtt**0.805
   ELSEIF (xRef .LT. xMin) THEN
     Xtt=(rhog/rhof)**0.5*(muf/mug)**0.125*((1-xMin)/xMin)**0.875
     PrL=CpL*muf/kL
@@ -1591,7 +1591,7 @@ REAL VelGas !Wallis dimensionless gas velocity, [-]
   	CALL hSPDittus(CoilType,ID,mRef,1.00,mug,mug,muf,kV,CpV,hVap)
   	hTP=(xRef-1)/(xMax-1)*(hTPmax-hVap)+hVap
   END IF
-	      
+
   RETURN
 
 END SUBROUTINE hTPDobson
@@ -1648,12 +1648,12 @@ REAL ReEq  !Equivalent Reynold number
 
   Acs=(PI*ID*ID)/4.0
   Gref=mRef/Acs
-      
+
   rhog=1.0/vgi
   rhof=1.0/vfi
 
   PrL=CpL*muf/kL
-  ReV=Gref*ID*xRef/mug  
+  ReV=Gref*ID*xRef/mug
   ReL=Gref*ID*(1.0-xRef)/muf
 
   ReEq=ReL+ReV*(mug/muf)*(rhof/rhog)**0.5
@@ -1681,7 +1681,7 @@ SUBROUTINE hTPShahCond(ID,xRef,mRef,mug,muf,kL,kV,CpL,CpV,Psat,Pcrit,hTP) !(ID,x
 !
 !Reference:
 !Shah, M.M. (1979). A general correlation for heat transfer during film
-!condensation inside pipes. International Journal of heat and mass transfer. 
+!condensation inside pipes. International Journal of heat and mass transfer.
 !88, pp 185-196.
 !
 !------------------------------------------------------------------------
@@ -1710,8 +1710,8 @@ INTEGER,PARAMETER :: CoilType=1 !Condenser
 REAL,PARAMETER    :: xMax=0.95 !Maximum quality
 
 !Subroutine local variables:
-REAL hliq  !Liquid heat transfer coefficient, [kW/m^2-K] 
-REAL h1    !Intermediate heat transfer coefficient, [kW/m^2-K] 
+REAL hliq  !Liquid heat transfer coefficient, [kW/m^2-K]
+REAL h1    !Intermediate heat transfer coefficient, [kW/m^2-K]
 REAL ZZ    !Intermediate variable
 REAL Pred  !Reduced pressure, [kPa]
 REAL hTPmax
@@ -1720,7 +1720,7 @@ REAL hVap
 !Flow:
 
   CALL hSPDittus(CoilType,ID,mRef,0.00,muf,mug,muf,kL,CpL,hliq)
-  
+
   IF (xRef .LT. xMax) THEN
     h1=hliq*(1-xRef)**0.8
     Pred=Psat/Pcrit
@@ -1757,7 +1757,7 @@ SUBROUTINE hTPCavallini(CoilType,ID,xRef,mRef,vgi,vfi,mug,muf,kL,kV,CpL,CpV,sigm
 !
 !Reference:
 !Cavallini A, Del Col D, Doretti L, Longo G.A., Rossetto, L. "Intube
-!condensation of halogenated refrigerants." ASHRAE transactions, 
+!condensation of halogenated refrigerants." ASHRAE transactions,
 !2002,108(1), pp.146-161
 !
 !------------------------------------------------------------------------
@@ -1767,8 +1767,8 @@ IMPLICIT NONE
 
 !Subroutine passing variables:
 !Inputs:
-INTEGER CoilType !1=Condenser; 2=Evaporator; 
-                 !3=High side interconnecting pipes; 
+INTEGER CoilType !1=Condenser; 2=Evaporator;
+                 !3=High side interconnecting pipes;
 				 !4=Low side interconnecting pipes
 				 !5=Microchannel condenser
 				 !6=Microchannel evaporator
@@ -1784,7 +1784,7 @@ REAL kL    !Liquid conductivity, [kW/m-K]
 REAL kV    !Vapor conductivity, [kW/m-K]
 REAL CpL   !Liquid specific heat, [kJ/kg-K]
 REAL CpV   !Vapor specific heat, [kJ/kg-K]
-REAL sigma !Surface tension, [N/m]  
+REAL sigma !Surface tension, [N/m]
 REAL hfg   !Latent heat of condensation, [kJ/kg]
 REAL DT    !Temperature difference between tube wall and saturate vapor, [C]
 
@@ -1795,14 +1795,14 @@ REAL hTP   !Two-phase heat transfer coefficient, [kW/m^2-K]
 REAL,PARAMETER :: xMax=0.9
 
 !Subroutine local variables
-REAL Acs    !Cross sectional area, [m^2]  
+REAL Acs    !Cross sectional area, [m^2]
 REAL Gref   !Refrigerant mass flux, [kg/s-m^2]
 REAL JG     !Dimensionless vapor velocity
 REAL Xtt    !Lockhart-Martinelli parameter
 REAL rhog   !Vapor density, [kg/m^3]
 REAL rhof   !Liquid density, [kg/m^3]
 REAL hTPmax !Two-phase heat transfer coefficient at xMax, [kW/m^2-K]
-REAL hVap   !Vapor heat transfer coefficient, [kW/m^2-K] 
+REAL hVap   !Vapor heat transfer coefficient, [kW/m^2-K]
 
 !Flow:
 
@@ -1821,21 +1821,21 @@ REAL hVap   !Vapor heat transfer coefficient, [kW/m^2-K]
 								 kL,CpL,sigma,hTP)
         !hTPCavalliniAnnular(CoilType,ID,xRef,Gref,rhog,rhof,mug,muf, &
         !                       kL,kV,CpL,CpV,sigma,hTP)
-  
+
 	  ELSEIF (JG .LT. 2.5 .AND. Xtt .LT. 1.6) THEN !Annular-stratified flow
 
 		CALL hTPCavalliniAnn_Strat(ID,xRef,Gref,rhog,rhof,mug,muf, &
 								   kL,CpL,sigma,hfg,DT,JG,hTP)
         !(CoilType,ID,xRef,Gref,rhog,rhof,mug,muf, &
 !                                 kL,kV,CpL,CpV,sigma,hfg,DT,JG,hTP)
-  
+
 	  ELSEIF (JG .LT. 2.5 .AND. Xtt .GT. 1.6) THEN !Stratified and slug flow
 
 		CALL hTPCavalliniStrat_Slug(ID,xRef,Gref,rhog,rhof,mug,muf, &
 									kL,CpL,sigma,hfg,DT,JG,hTP)
         !(CoilType,ID,xRef,Gref,rhog,rhof,mug,muf, &
         !                          kL,kV,CpL,CpV,sigma,hfg,DT,JG,hTP)
-  
+
 	  END IF
 
   ELSE
@@ -1848,27 +1848,27 @@ REAL hVap   !Vapor heat transfer coefficient, [kW/m^2-K]
 								 kL,CpL,sigma,hTPmax)
                 !hTPCavalliniAnnular(CoilType,ID,xRef,Gref,rhog,rhof,mug,muf, &
         !                       kL,kV,CpL,CpV,sigma,hTP)
-  
+
 	  ELSEIF (JG .LT. 2.5 .AND. Xtt .LT. 1.6) THEN !Annular-stratified flow
 
 		CALL hTPCavalliniAnn_Strat(ID,xMax,Gref,rhog,rhof,mug,muf, &
 								   kL,CpL,sigma,hfg,DT,JG,hTPmax)
         !(CoilType,ID,xRef,Gref,rhog,rhof,mug,muf, &
 !                                 kL,kV,CpL,CpV,sigma,hfg,DT,JG,hTP)
-  
+
 	  ELSEIF (JG .LT. 2.5 .AND. Xtt .GT. 1.6) THEN !Stratified and slug flow
 
 		CALL hTPCavalliniStrat_Slug(ID,xMax,Gref,rhog,rhof,mug,muf, &
 									kL,CpL,sigma,hfg,DT,JG,hTPmax)
                 !(CoilType,ID,xRef,Gref,rhog,rhof,mug,muf, &
         !                          kL,kV,CpL,CpV,sigma,hfg,DT,JG,hTP)
-  
+
 	  END IF
 
 	CALL hSPDittus(CoilType,ID,mRef,1.00,mug,mug,muf,kV,CpV,hVap)
 	hTP=(xRef-1)/(xMax-1)*(hTPmax-hVap)+hVap
   END IF
-      
+
   RETURN
 
 END SUBROUTINE hTPCavallini
@@ -1894,7 +1894,7 @@ SUBROUTINE hTPCavalliniAnnular(ID,xRef,Gref,rhog,rhof,mug,muf, &
 !
 !Reference:
 !Cavallini A, Del Col D, Doretti L, Longo G.A., Rossetto, L. "Intube
-!condensation of halogenated refrigerants." ASHRAE transactions, 
+!condensation of halogenated refrigerants." ASHRAE transactions,
 !2002,108(1), pp.146-161
 !
 !------------------------------------------------------------------------
@@ -1912,7 +1912,7 @@ REAL mug   !Vapor dynamic viscosity, [Pa-s]
 REAL muf   !Liquid dynamic viscosity, [Pa-s]
 REAL kL    !Liquid conductivity, [kW/m-K]
 REAL CpL   !Liquid specific heat, [kJ/kg-K]
-REAL sigma !Surface tension, [N/m]  
+REAL sigma !Surface tension, [N/m]
 
 !Output:
 REAL hTP   !Two-phase heat transfer coefficient, [kW/m^2-K]
@@ -1925,10 +1925,10 @@ REAL FF     !Intermediate variable, F in Cavallini et al.
 REAL HH     !Intermediate variable, H in Cavallini et al.
 REAL DD		!Intermediate variable, theta+ in Cavallini et al.
 REAL TT	    !Intermediate variable, T+ in Cavallini et al.
-REAL fliq   !Liquid friction factor 
+REAL fliq   !Liquid friction factor
 REAL fvap   !Vapor friction factor
 REAL We     !Weber number
-REAL phi2Liq !Square of two-phase multiplier 
+REAL phi2Liq !Square of two-phase multiplier
 REAL DPDZliq !Liquid pressure gradient
 REAL tau    !Intermediate variable
 REAL mu     !Dynamic viscosity, [Pa-s]
@@ -1952,7 +1952,7 @@ REAL mu     !Dynamic viscosity, [Pa-s]
   ELSEIF (DD .GE. 30) THEN
     TT=5*(PrL+LOG(1+5*PrL)+0.495*LOG(DD/30))
   END IF
-    
+
   IF (Gref*ID/mu .GT. 2000) THEN
     fliq=0.046*(Gref*ID/muf)**(-0.2)
 	fvap=0.046*(Gref*ID/mug)**(-0.2)
@@ -1973,7 +1973,7 @@ REAL mu     !Dynamic viscosity, [Pa-s]
   tau=DPDZliq*ID/4
 
   hTP=rhof*CpL*(tau/rhof)**0.5/TT
-	      
+
   RETURN
 
 END SUBROUTINE hTPCavalliniAnnular
@@ -1999,7 +1999,7 @@ SUBROUTINE hTPCavalliniAnn_Strat(ID,xRef,Gref,rhog,rhof,mug,muf, &
 !
 !Reference:
 !Cavallini A, Del Col D, Doretti L, Longo G.A., Rossetto, L. "Intube
-!condensation of halogenated refrigerants." ASHRAE transactions, 
+!condensation of halogenated refrigerants." ASHRAE transactions,
 !2002,108(1), pp.146-161
 !
 !------------------------------------------------------------------------
@@ -2017,11 +2017,11 @@ REAL mug   !Vapor dynamic viscosity, [Pa-s]
 REAL muf   !Liquid dynamic viscosity, [Pa-s]
 REAL kL    !Liquid conductivity, [kW/m-K]
 REAL CpL   !Liquid specific heat, [kJ/kg-K]
-REAL sigma !Surface tension, [N/m]  
+REAL sigma !Surface tension, [N/m]
 REAL hfg   !Latent heat of condensation, [kJ/kg]
 REAL DT    !Temperature difference between tube wall and saturate vapor, [C]
 REAL JG    !Dimensionless vapor velocity
- 
+
 !Output:
 REAL hTP   !Two-phase heat transfer coefficient, [kW/m^2-K]
 
@@ -2036,7 +2036,7 @@ REAL theta   !Liquid phase angle
 !Flow:
 
   Gref25=2.5*(9.8*ID*rhog*(rhof-rhog))**0.5/xRef
-  
+
   CALL hTPCavalliniAnnular(ID,xRef,Gref25,rhog,rhof,mug,muf,&
                            kL,CpL,sigma,hTPan25)
           !hTPCavalliniAnnular(CoilType,ID,xRef,Gref,rhog,rhof,mug,muf, &
@@ -2050,10 +2050,10 @@ REAL theta   !Liquid phase angle
 
   hTPst=0.725*(1+0.82*((1-xRef)/xRef)**0.268)**(-1)* &
         (kL**3*rhof*(rhof-rhog)*9.8*hfg/(muf*ID*DT))**0.25+ &
-  	    hliq*(1-theta/PI) 
+  	    hliq*(1-theta/PI)
 
   hTP=(hTPan25-hTPst)*(JG/2.5)+hTPst
-	      
+
   RETURN
 
 END SUBROUTINE hTPCavalliniAnn_Strat
@@ -2079,7 +2079,7 @@ SUBROUTINE hTPCavalliniStrat_Slug(ID,xRef,Gref,rhog,rhof,mug,muf, &
 !
 !Reference:
 !Cavallini A, Del Col D, Doretti L, Longo G.A., Rossetto, L. "Intube
-!condensation of halogenated refrigerants." ASHRAE transactions, 
+!condensation of halogenated refrigerants." ASHRAE transactions,
 !2002,108(1), pp.146-161
 !
 !------------------------------------------------------------------------
@@ -2088,8 +2088,8 @@ IMPLICIT NONE
 
 !Subroutine passing variables:
 !Inputs:
-!INTEGER CoilType !1=Condenser; 2=Evaporator; 
-                 !3=High side interconnecting pipes; 
+!INTEGER CoilType !1=Condenser; 2=Evaporator;
+                 !3=High side interconnecting pipes;
 				 !4=Low side interconnecting pipes
 				 !5=Microchannel condenser
 				 !6=Microchannel evaporator
@@ -2103,7 +2103,7 @@ REAL mug   !Vapor dynamic viscosity, [Pa-s]
 REAL muf   !Liquid dynamic viscosity, [Pa-s]
 REAL kL    !Liquid conductivity, [kW/m-K]
 REAL CpL   !Liquid specific heat, [kJ/kg-K]
-REAL sigma !Surface tension, [N/m]  
+REAL sigma !Surface tension, [N/m]
 REAL hfg   !Latent heat of condensation, [kJ/kg]
 REAL DT    !Temperature difference between tube wall and saturate vapor, [C]
 REAL JG    !Dimensionless vapor velocity
@@ -2119,16 +2119,16 @@ REAL hLiq   !Liquid heat transfer coefficient, [kW/m^2-K]
 !Flow:
 
   x16=(muf/mug)**0.111*(rhog/rhof)**0.556/(1.686+(muf/mug)**0.111*(rhog/rhof)**0.556)
-  
+
   CALL hTPCavalliniAnn_Strat(ID,x16,Gref,rhog,rhof,mug,muf, &
                              kL,CpL,sigma,hfg,DT,JG,hTP16)
   !(CoilType,ID,xRef,Gref,rhog,rhof,mug,muf, &
 !                                 kL,kV,CpL,CpV,sigma,hfg,DT,JG,hTP)
-  
+
   hLiq=0.023*(kL/ID)*(Gref*ID/muf)**0.8*(CpL*muf/kL)**0.4
-  
+
   hTP=hLiq+xRef*(hTP16-hLiq)/x16
-	      
+
   RETURN
 
 END SUBROUTINE hTPCavalliniStrat_Slug
@@ -2136,7 +2136,7 @@ END SUBROUTINE hTPCavalliniStrat_Slug
 !************************************************************************
 
 SUBROUTINE hTPShahEvap(ID,xRef,mRef,Qout,hfg,vgi,vfi,mug,muf,kL,CpL,Psat,Pcrit,hTP) !(ID,xRef,mRef,Qout,hfg,vgi,vfi,muRef,mug,muf,kL,CpL,Psat,Pcrit,hTP)
-		   
+
 !------------------------------------------------------------------------
 !Purpose:
 !To calculate the refrigerant heat transfer coefficient in two phase
@@ -2150,9 +2150,9 @@ SUBROUTINE hTPShahEvap(ID,xRef,mRef,Qout,hfg,vgi,vfi,mug,muf,kL,CpL,Psat,Pcrit,h
 !March 2005
 !
 !Reference:
-!Shah, M.M (1977). General correlation for heat transfer during 
-!subcooled boiling in pipes and annuli. ASHRAE transactions. 83(1), 
-!pp. 202-217. 
+!Shah, M.M (1977). General correlation for heat transfer during
+!subcooled boiling in pipes and annuli. ASHRAE transactions. 83(1),
+!pp. 202-217.
 !
 !------------------------------------------------------------------------
 
@@ -2181,11 +2181,11 @@ REAL hTP   !Two-phase heat transfer coefficient, [kW/m^2-K]
 INTEGER,PARAMETER :: CoilType=2 !Evaporator
 
 !Subroutine local variables:
-REAL hliq    !Liquid heat transfer coefficient, [kW/m^2-K] 
-REAL h1      !Intermediate heat transfer coefficient, [kW/m^2-K] 
+REAL hliq    !Liquid heat transfer coefficient, [kW/m^2-K]
+REAL h1      !Intermediate heat transfer coefficient, [kW/m^2-K]
 REAL ZZ      !Intermediate variable
 REAL Pred    !Reduced pressure, [kPa]
-REAL rhog    !Vapor density, [kg/m^3] 
+REAL rhog    !Vapor density, [kg/m^3]
 REAL rhof    !Liquid density, [kg/m^3]
 REAL Acs     !Cross sectional area, [m^2]
 REAL Gref    !Mass flux, [kg/s-m^2]
@@ -2202,7 +2202,7 @@ REAL phi     !Intermediate variable
 !Flow:
 
   CALL hSPDittus(CoilType,ID,mRef,0.00,muf,mug,muf,kL,CpL,hliq)
-  
+
   IF (Qout .EQ. 0) THEN
     h1=hliq*(1-xRef)**0.8
     Pred=Psat/Pcrit
@@ -2215,7 +2215,7 @@ REAL phi     !Intermediate variable
 
     Acs=(ID/2)**2*PI
     Gref=mRef/Acs
-    
+
     Bo=(Qout/Acs)/(Gref*Hfg)
     Co=((1-xRef)/xRef)**0.8*(rhog/rhof)**0.5
     FrL=Gref**2/(rhof**2*9.8*ID)
@@ -2250,7 +2250,7 @@ REAL phi     !Intermediate variable
     ELSE
       phi=phicb
     END IF
-    
+
 	IF (phi .LT. phinb) THEN
       phi=phinb
     END IF
@@ -2281,7 +2281,7 @@ SUBROUTINE hTPevapWattelet(ID,mRef,muf,mug,vf,vg,kL,kV,CpL,CpV,xRef,Psat,Pcrit,M
 !March 2005
 !
 !Reference:
-!Wattelet, J.P.; Chato, J.C.; Souza, A.L. and Christoffersen, B.R. (1994). 
+!Wattelet, J.P.; Chato, J.C.; Souza, A.L. and Christoffersen, B.R. (1994).
 !Evaporative charateristics of R-12, R-134a, and a mixture at low
 !mass fluxes. ASHRAE transactions, 100(1), pp. 603-615.
 !
@@ -2304,7 +2304,7 @@ REAL CpV        !Vapor specific heat, [kJ/kg-K]
 REAL xRef       !Quality of refrigerant, [-]
 REAL Psat       !Saturation pressure, [kPa]
 REAL Pcrit      !Critical pressure, [kPa]
-REAL MolWeight	!Molecular weight of refrigerant, [kg/mol]      
+REAL MolWeight	!Molecular weight of refrigerant, [kg/mol]
 REAL AoMod      !Outside heat transfer area, [m^2]
 REAL Qout       !Tube outside heat transfer, [W]
 
@@ -2315,28 +2315,28 @@ REAL hTP   !Two-phase heat transfer coefficient, [kW/m^2-K]
 INTEGER,PARAMETER :: CoilType=2 !Evaporator
 REAL,PARAMETER :: DryAngle=0 !Dry angle for annular flow
 REAL,PARAMETER :: nn=2.5 !3. !Model coefficient
-REAL,PARAMETER :: xMax=0.8      !Maximum quality, [-] 
-REAL,PARAMETER :: xVap=1.0      !Vapor quality, [-] 
+REAL,PARAMETER :: xMax=0.8      !Maximum quality, [-]
+REAL,PARAMETER :: xVap=1.0      !Vapor quality, [-]
 
 !Subroutine local variables:
 
 REAL Acs      !Cross sectional area, [m^2]
 REAL Gref     !Mass flux, [kg/s-m^2]
-REAL FrL      !Liquid Froude number 
+REAL FrL      !Liquid Froude number
 REAL Pred     !Reduced pressure
 REAL RR		  !Intermediate variable
 REAL Xtt	  !Lockhart-Martinelli parameter
 REAL FF		  !Intermediate variable
 REAL hcb	  !Heat transfer coefficient for convective boiling, [kW/m^2-K]
-REAL hnb      !Heat transfer coefficient for nucleate boiling, [kW/m^2-K] 
-REAL hL		  !Liquid heat transfer coefficient, [kW/m^2-K] 
+REAL hnb      !Heat transfer coefficient for nucleate boiling, [kW/m^2-K]
+REAL hL		  !Liquid heat transfer coefficient, [kW/m^2-K]
 REAL rhof	  !Liquid density, [kg/m^3]
 REAL rhog	  !Vapor density, [kg/m^3]
 REAL ReV	  !Vapor Reynold number
 REAL PrV	  !Vapor Prandtl number
-REAL hMax	  !Heat transfer coefficient at xMax, [kW/m^2-K] 
-REAL hvap	  !Vapor heat transfer coefficient, [kW/m^2-K] 
-REAL hwet	  !Wet surface heat transfer coefficient, [kW/m^2-K] 	
+REAL hMax	  !Heat transfer coefficient at xMax, [kW/m^2-K]
+REAL hvap	  !Vapor heat transfer coefficient, [kW/m^2-K]
+REAL hwet	  !Wet surface heat transfer coefficient, [kW/m^2-K]
 
 !Flow:
 
@@ -2400,7 +2400,7 @@ REAL hwet	  !Wet surface heat transfer coefficient, [kW/m^2-K]
 		htp=(xRef-xMax)/(xVap-xMax)*(hVap-hMax)+hMax
 
 	END IF
-	
+
 	RETURN
 
 END SUBROUTINE hTPevapWattelet
@@ -2465,13 +2465,13 @@ SUBROUTINE MODdP(CoilType,TubeType,hg,hf,hRi,hRo,xRi,xRo, &
 !
 !Reference:
 !Eckels, S.J.; Doerr, T.M.; Pate, M.B. In-tube heat transfer and pressure
-!drop of R-134a and ester lubricant mixtures in a smooth tube and a 
-!micro-fin tube: part II - condensation. ASHRAE Transactions, v 100, n 2,  
+!drop of R-134a and ester lubricant mixtures in a smooth tube and a
+!micro-fin tube: part II - condensation. ASHRAE Transactions, v 100, n 2,
 !pp. 283-294, 1994.
 !
-!Eckels, S.J.; Doerr, T.M.; Pate, M.B. In-tube heat transfer and pressure 
-!drop of R-134a and ester lubricant mixtures in a smooth tube and a 
-!micro-fin tube: part I - evaporation. ASHRAE Transactions, v 100, n 2, 
+!Eckels, S.J.; Doerr, T.M.; Pate, M.B. In-tube heat transfer and pressure
+!drop of R-134a and ester lubricant mixtures in a smooth tube and a
+!micro-fin tube: part I - evaporation. ASHRAE Transactions, v 100, n 2,
 !pp. 265-282, 1994.
 !
 !Outokumpu(2005). Tube side enhancement factors. Internal data.
@@ -2482,11 +2482,11 @@ IMPLICIT NONE
 
 !Subroutine passing variables:
 !Inputs:
-INTEGER          CoilType	!1-condenser; 
+INTEGER          CoilType	!1-condenser;
 							!2-evaporator;
 							!3-High side interconnecting pipes;
 							!4-Low side interconnecting pipes
-INTEGER          TubeType	!1=Plain; 2=General Micro Fin; 3=Herringbone; 
+INTEGER          TubeType	!1=Plain; 2=General Micro Fin; 3=Herringbone;
 							!4=Crosshatch; 5=Herringbone w/crosshatch; 6=Turbo-A
 REAL hg         !Vapor refrigerant enthalpy, [kJ/kg]
 REAL hf         !Liquid refrigerant enthalpy, [kJ/kg]
@@ -2502,7 +2502,7 @@ REAL vgo        !Vapor refrigerant specific volume, [m^3/kg]
 REAL vfo        !Liquid refrigerant specific volume, [m^3/kg]
 REAL mRef       !Refrigerant mass flow rate, [kg/s]
 REAL muRef      !Refrigerant dynamic viscosity, [Pa-s]
-REAL mug        !Vapor refrigerant dynamic viscosity, [Pa-s] 
+REAL mug        !Vapor refrigerant dynamic viscosity, [Pa-s]
 REAL muf        !Liquid refrigerant dynamic viscosity, [Pa-s]
 REAL Lmod       !Module length, [m]
 REAL LmodTPratio !Ratio of two-phase length to the total length
@@ -2512,7 +2512,7 @@ REAL Lcoil      !Coil length, [m]
 
 !Outputs:
 REAL dPfric    !Frictional pressure drop, [kPa]
-REAL dPmom     !Momentum pressure drop, [kPa] 
+REAL dPmom     !Momentum pressure drop, [kPa]
 REAL dPgrav    !Gravitational pressure drop, [kPa]
 
 !Subroutine local variables:
@@ -2552,7 +2552,7 @@ REAL PF        !Pressure enhancement factor
   IF ((xRi .LT. 1 .AND. xRi .GT. 0) .AND. (xRo .LT. 1 .AND. xRo .GT. 0)) THEN
 	IF (CoilType .EQ. MCCONDENSER .OR. &
 	    CoilType .EQ. MCEVAPORATOR) THEN
-		
+
 		CALL TWOPhasedPSouza(xRi,xRo,vRi,vgi,vfi,vgo,vfo,Lmod, & !tRi,tRo,xRi,xRo,vRi,vgi,vfi,vgo,vfo,Lmod,dPfric, &
 							 dPfric,dPmom,dPgrav,mRef,ID,mug,muf,HtCoil,Lcoil) !dPmom,dPgrav,mRef,ID,muRef,mug,muf,HtCoil,Lcoil)
 		!CALL TWOPhasedPLM(tRi,tRo,pRi,xRi,xRo,vRi,vgi,vfi,vgo,vfo,Lmod,dPfric, &
@@ -2563,7 +2563,7 @@ REAL PF        !Pressure enhancement factor
        !CALL TWOPhasedPChoi(hf,hg,xRi,xRo,vRi,vgi,vfi,vgo,vfo,Lmod, &
 							!dPfric,dPmom,dPgrav,mRef,ID,mug,muf, &
 							!HtCoil,Lcoil)
-                            
+
 		CALL TWOPhasedPSouza(xRi,xRo,vRi,vgi,vfi,vgo,vfo,Lmod, & !tRi,tRo,xRi,xRo,vRi,vgi,vfi,vgo,vfo,Lmod,dPfric, &
 							 dPfric,dPmom,dPgrav,mRef,ID,mug,muf,HtCoil,Lcoil) !Modified by ISI 07/09/06 !dPmom,dPgrav,mRef,ID,muRef,mug,muf,HtCoil,Lcoil)
 
@@ -2580,7 +2580,7 @@ REAL PF        !Pressure enhancement factor
 		ELSE
 		  FracTP=ABS((hg-hRi)/(hRi-hRo))
 		END IF
-	END IF	
+	END IF
 
 	IF (FracTP .EQ. 0) THEN
 		dPfricTP=0
@@ -2604,10 +2604,10 @@ REAL PF        !Pressure enhancement factor
 			!CALL TWOPhasedPChoi(hf,hg,xRi,xRo,vRi,vgi,vfi,vgo,vfo,Lmod, &
 			!				dPfric,dPmom,dPgrav,mRef,ID,mug,muf, &
 			!				HtCoil,Lcoil)
-            
+
 			CALL TWOPhasedPSouza(xRi,0.9999,vRi,vgi,vfi,vgo,vfo,Lmod*FracTP, & !tRi,tRo,xRi,xRo,vRi,vgi,vfi,vgo,vfo,Lmod,dPfric, &
 								 dPfricTP,dPmomTP,dPgravTP,mRef,ID,mug,muf,HtCoil,Lcoil) !Modified by ISI 07/09/06 !dPmom,dPgrav,mRef,ID,muRef,mug,muf,HtCoil,Lcoil)
-		
+
   		    !CALL TWOPhasedPLM(xRi,xRo,vRi,vgi,vfi,vgo,vfo,Lmod,dPfric, &
         !                      dPmom,dPgrav,mRef,ID,muRef,mug,muf,HtCoil,Lcoil)
 
@@ -2619,7 +2619,7 @@ REAL PF        !Pressure enhancement factor
 		CALL ONEPhasedP(CoilType,1.00,vRi,vRo,vgi,vfi,Lmod*(1-FracTP), & !CoilType,tRi,pRi,xRi,vRi,vRo,vgi,vfi,Lmod,dPfric, &
 						dPfricSP,dPmomSP,dPgravSP,mRef,ID,muRef,mug,muf,HtCoil,Lcoil)
     END IF
-	
+
 	dPfric=dPfricSP+dPfricTP
 	dPmom=dPmomSP+dPmomTP
 	dPgrav=dPgravSP+dPgravTP
@@ -2634,7 +2634,7 @@ REAL PF        !Pressure enhancement factor
 		ELSE
 			FracTP=ABS((hg-hRo)/(hRi-hRo))
 		END IF
-	END IF	
+	END IF
 
 
 	IF (FracTP .EQ. 0) THEN
@@ -2672,7 +2672,7 @@ REAL PF        !Pressure enhancement factor
 		CALL ONEPhasedP(CoilType,1.00,vRi,vRo,vgi,vfi,Lmod*(1-FracTP), & !CoilType,tRi,pRi,xRi,vRi,vRo,vgi,vfi,Lmod,dPfric, &
 						dPfricSP,dPmomSP,dPgravSP,mRef,ID,muRef,mug,muf,HtCoil,Lcoil)
 	END IF
-	
+
 	dPfric=dPfricSP+dPfricTP
 	dPmom=dPmomSP+dPmomTP
 	dPgrav=dPgravSP+dPgravTP
@@ -2717,14 +2717,14 @@ REAL PF        !Pressure enhancement factor
 		    !                  dPmomTP,dPgravTP,mRef,ID,muRef,mug,muf,HtCoil,Lcoil)
 
 		END IF
-	
+
 	END IF
 
 	IF (FracTP .NE. 1) THEN
 		CALL ONEPhasedP(CoilType,0.0,vRi,vRo,vgi,vfi,Lmod*(1-FracTP), & !CoilType,tRi,pRi,xRi,vRi,vRo,vgi,vfi,Lmod,dPfric, &
 						dPfricSP,dPmomSP,dPgravSP,mRef,ID,muRef,mug,muf,HtCoil,Lcoil)
 	END IF
-	
+
 	dPfric=dPfricSP+dPfricTP
 	dPmom=dPmomSP+dPmomTP
 	dPgrav=dPgravSP+dPgravTP
@@ -2736,11 +2736,11 @@ REAL PF        !Pressure enhancement factor
 
   Gref=mRef/(PI*ID**2/4)
   CALL CalcDPpenaltyFactor(CoilType,TubeType,Gref,PF)
-  
+
   dPfric=dPfric*PF
   dPmom=dPmom*PF
   dPgrav=dPgrav*PF
-  
+
   RETURN
 
 END SUBROUTINE MODdP
@@ -2749,7 +2749,7 @@ END SUBROUTINE MODdP
 
 SUBROUTINE ONEPhasedP(CoilType,xRi,vRi,vRo,vgi,vfi,Lmod,dPfric, & !CoilType,tRi,pRi,xRi,vRi,vRo,vgi,vfi,Lmod,dPfric, &
                       dPmom,dPgrav,mRef,ID,muRef,mug,muf,HtCoil,Lcoil)
-     
+
 !------------------------------------------------------------------------
 !Purpose:
 !To calculate single phase pressure drop
@@ -2767,12 +2767,12 @@ SUBROUTINE ONEPhasedP(CoilType,xRi,vRi,vRo,vgi,vfi,Lmod,dPfric, & !CoilType,tRi,
 !University of Illinois, Urbana,IL.
 !
 !------------------------------------------------------------------------
-      
+
 IMPLICIT NONE
 
 !Subroutine passing variables:
 !Inputs:
-INTEGER          CoilType	!1-condenser; 
+INTEGER          CoilType	!1-condenser;
 							!2-evaporator;
 							!3-High side interconnecting pipes;
 							!4-Low side interconnecting pipes
@@ -2782,7 +2782,7 @@ REAL xRi      !Inlet refrigerant quality, [-]
 REAL vRi      !Inlet refrigerant specific volume, [m^3/kg]
 REAL vRo      !Outlet refrigerant specific volume, [m^3/kg]
 REAL vgi      !Vapor refrigerant specific volume, [m^3/kg]
-REAL vfi      !Liquid refrigerant specific volume, [m^3/kg] 
+REAL vfi      !Liquid refrigerant specific volume, [m^3/kg]
 REAL Lmod     !Module length, [m]
 REAL mRef     !Refrigerant mass flow rate, [kg/s]
 REAL ID       !Tube inside diameter, [m]
@@ -2861,7 +2861,7 @@ IMPLICIT NONE
 
 !Subroutine passing variables:
 !Inputs:
-INTEGER          CoilType	!1-condenser; 
+INTEGER          CoilType	!1-condenser;
 							!2-evaporator;
 							!3-High side interconnecting pipes;
 							!4-Low side interconnecting pipes
@@ -2959,7 +2959,7 @@ IMPLICIT NONE
 !Inputs:
 REAL xRef  !Refrigerant quality
 REAL Re    !Reynold number
-INTEGER          CoilType	!1-condenser; 
+INTEGER          CoilType	!1-condenser;
 							!2-evaporator;
 							!3-High side interconnecting pipes;
 							!4-Low side interconnecting pipes
@@ -3020,7 +3020,7 @@ IMPLICIT NONE
 
 !Subroutine passing variables:
 !Inputs:
-INTEGER          CoilType	!1-condenser; 
+INTEGER          CoilType	!1-condenser;
 							!2-evaporator;
 							!3-High side interconnecting pipes;
 							!4-Low side interconnecting pipes
@@ -3074,7 +3074,7 @@ REAL Xtt        !Martinelli parameter
 
   !Chisholm
   !CALL Reynolds(ID,mRef,xRi,muRef,mug,muf,ReVap,ReLiq)
-  
+
   !IF (ReLiq .LT. 2000 .AND. ReVap .LT. 2000) THEN
   !	  CC=5
   !ELSEIF (ReLiq .LT. 2000 .AND. ReVap .GT. 2000) THEN
@@ -3096,16 +3096,16 @@ REAL Xtt        !Martinelli parameter
 
   !Two-phase elevation Pchange
   CALL ElevdP(xRi,vRi,vgi,vfi,dPdZgrav,HtCoil,Lcoil)
-      
+
   !Total two-phase Pchange
   dPfric=dPdZfrict*Lmod*1E-3
   dPmom=dPdZmom*Lmod*1E-3
   dPgrav=dPdZgrav*Lmod*1E-3
-  
+
   IF (xRo .LE. 0.00000001) THEN
       xRo=0.0
   END IF
-                  
+
   RETURN
 
 END SUBROUTINE TWOPhasedPLM
@@ -3127,9 +3127,9 @@ SUBROUTINE TWOPhasedPSouza(xRi,xRo,vRi,vgi,vfi,vgo,vfo,Lmod,dPfric, & !tRi,tRo,x
 !March 2005
 !
 !Reference:
-!Souza, A.L., Chato J.C., Jabardo, J.M.S., Wattelet, J.P., Paneck, L., 
-!Christoffersen, B.C. and Rhines, N. Pressure drop during two-phase flow 
-!of refrigerants in horizontal smooth tubes. National heat transfer 
+!Souza, A.L., Chato J.C., Jabardo, J.M.S., Wattelet, J.P., Paneck, L.,
+!Christoffersen, B.C. and Rhines, N. Pressure drop during two-phase flow
+!of refrigerants in horizontal smooth tubes. National heat transfer
 !conf.. 1993.
 !
 !------------------------------------------------------------------------
@@ -3239,15 +3239,15 @@ REAL xRef       !Refrigerant quality, [-]
   CALL alphaCALC(xRi,vgi,vfi,alphai)
   CALL alphaCALC(xRo,vgo,vfo,alphao)
   CALL PmomTWOphase(vgi,vfi,vgo,vfo,xRi,xRo,alphai,alphao,Lmod,dPdZmom,mRef,ID)
-	        
+
   !Two-phase elevation Pchange
   CALL ElevdP(xRef,vRi,vgi,vfi,dPdZgrav,HtCoil,Lcoil)
-      
+
   !Total two-phase Pchange
   dPfric=dPdZfric*Lmod*1E-3
   dPmom=dPdZmom*Lmod*1E-3
   dPgrav=dPdZgrav*Lmod*1E-3
-                  
+
   RETURN
 
 END SUBROUTINE TWOPhasedPSouza
@@ -3263,7 +3263,7 @@ SUBROUTINE TWOPhasedPChang(xRi,xRo,vRi,vgi,vfi,vgo,vfo,Lmod,dPfric, & !tRi,tRo,x
 !
 !Author
 !Ipseng Iu
-!Johnson Controls, Inc. 
+!Johnson Controls, Inc.
 !Wichita, KS
 !
 !Date
@@ -3271,7 +3271,7 @@ SUBROUTINE TWOPhasedPChang(xRi,xRo,vRi,vgi,vfi,vgo,vfo,Lmod,dPfric, & !tRi,tRo,x
 !
 !Reference:
 !Chang, Y.; Chiang, S.; Chung, T.; Wang, C. (2000). "Two-phase frictional
-!characteristics of R-410A and air-water in a 5 mm smooth tube." 
+!characteristics of R-410A and air-water in a 5 mm smooth tube."
 !ASHRAE transactions, 106(1), pp. 792-797.
 !
 !------------------------------------------------------------------------
@@ -3303,7 +3303,7 @@ REAL dPgrav  !Gravitational pressure drop, [kPa]
 
 !Subroutine local variables:
 REAL,PARAMETER :: IDReference = 0.01 !reference diameter, m
-REAL,PARAMETER :: muReference = 121.33e-6 !reference viscosity, Pa-s at 25 °C, R410A
+REAL,PARAMETER :: muReference = 121.33e-6 !reference viscosity, Pa-s at 25 ï¿½C, R410A
 REAL dPdZfric   !Frictional pressure gradient, [kPa/m]
 REAL dPdZmom    !Momentum pressure gradient, [kPa/m]
 REAL dPdZgrav   !Gravitational pressure gradient, [kPa/m]
@@ -3325,7 +3325,7 @@ REAL phiLiq     !Liquid phase multiplier
 REAL xRef       !Refrigerant quality, [-]
 REAL A1,A2,A3   !Intermediate variables
 REAL omega      !Small diameter correction factor
-REAL ReLiqReference   !Liquid Reynolds number at 25 °C, 410A 
+REAL ReLiqReference   !Liquid Reynolds number at 25 ï¿½C, 410A
 
 !Flow:
 
@@ -3335,7 +3335,7 @@ REAL ReLiqReference   !Liquid Reynolds number at 25 °C, 410A
   Gref=mRef/Acs
   rhog=1/vgi
   rhof=1/vfi
-  
+
   rhoRef = 1/(xRef/rhog+(1-xRef)/rhof)
 
   ReLiq=Gref*ID/muf*(1-xRef)
@@ -3346,7 +3346,7 @@ REAL ReLiqReference   !Liquid Reynolds number at 25 °C, 410A
   IF (xRef .GE. 0.05) THEN
   	  ReVap=Gref*ID/mug*xRef
   	  fvap=0.079/ReVap**0.25
-  	    
+
   	  A1=(1-xRef)**2+xRef**2*(rhof*fvap/(rhog*fliq))
   	  A2=xRef**0.78*(1-xRef)**0.224
   	  A3=(rhof/rhog)**0.91*(mug/muf)**0.19*(1-mug/muf)**0.7
@@ -3356,7 +3356,7 @@ REAL ReLiqReference   !Liquid Reynolds number at 25 °C, 410A
   	  omega=EXP(-(IDreference/ID)**1.7)*LOG(350/(We*(ReLiq/ReLiqReference)**1.3))
 
   	  phiLiq=(A1+3.24*A2*A3/(Fr**0.045*We**0.035+omega))**0.5
-  	  
+
   	  DPDZfric=DPDZliq*phiLiq**2
   END IF
 
@@ -3364,15 +3364,15 @@ REAL ReLiqReference   !Liquid Reynolds number at 25 °C, 410A
   CALL alphaCALC(xRi,vgi,vfi,alphai)
   CALL alphaCALC(xRo,vgo,vfo,alphao)
   CALL PmomTWOphase(vgi,vfi,vgo,vfo,xRi,xRo,alphai,alphao,Lmod,dPdZmom,mRef,ID)
-	        
+
   !Two-phase elevation Pchange
   CALL ElevdP(xRef,vRi,vgi,vfi,dPdZgrav,HtCoil,Lcoil)
-      
+
   !Total two-phase Pchange
   dPfric=dPdZfric*Lmod*1E-3
   dPmom=dPdZmom*Lmod*1E-3
   dPgrav=dPdZgrav*Lmod*1E-3
-                  
+
   RETURN
 
 END SUBROUTINE TWOPhasedPChang
@@ -3408,7 +3408,7 @@ IMPLICIT NONE
 
 !Subroutine passing variables:
 !Inputs:
-!INTEGER          TubeType	!1=Plain; 2=General Micro Fin; 3=Herringbone; 
+!INTEGER          TubeType	!1=Plain; 2=General Micro Fin; 3=Herringbone;
 							!4=Crosshatch; 5=Herringbone w/crosshatch
 REAL hg      !Vapor refrigerant enthalpy, [kJ/kg]
 REAL hf      !Liquid refrigerant enthalpy, [kJ/kg]
@@ -3459,7 +3459,7 @@ REAL Dh !Hydraulic diameter, [m]
   vi=xRi*vgi+(1-xRi)*vfi
   Kf=ABS(xRo-xRi)*hfg*1000/(Lmod*9.8)
   CALL Reynolds(Dh,mRef,0.00,muf,mug,muf,ReVap,ReLiq)
-  
+
   !Choi
   fN=0.00506*ReLiq**(-0.0951)*Kf**0.1554
   dPfric=(fN*Lmod*(vo+vi)/Dh+ABS(vo-vi))*Gref**2
@@ -3471,15 +3471,15 @@ REAL Dh !Hydraulic diameter, [m]
   !fN=0.0185*(Kf/ReLiq)**0.25
   !dPfric=(fN+(xRo-xRi)*ID/(xRef*Lmod))*(Gref**2*xRef*vg*Lmod)/ID
   !dPdZmom=0
-     
+
   !Two-phase elevation Pchange
   CALL ElevdP(xRef,vRi,vgi,vfi,dPdZgrav,HtCoil,Lcoil)
-      
+
   !Total two-phase Pchange
   dPfric=dPfric*1E-3
   dPmom=dPdZmom*Lmod*1E-3
   dPgrav=dPdZgrav*Lmod*1E-3
-                  
+
   RETURN
 
 END SUBROUTINE TWOPhasedPChoi
@@ -3531,7 +3531,7 @@ SUBROUTINE PHIcalc(Xtt,PHIg)
 
 !------------------------------------------------------------------------
 !Purpose:
-!To calculate the 'PHI' factor used in the Martinelli friction pressure 
+!To calculate the 'PHI' factor used in the Martinelli friction pressure
 !drop calculation.
 !
 !Author
@@ -3607,7 +3607,7 @@ REAL ID       !Inside tube diameter, [m]
 REAL dPdZmom  !Momentum pressure gradient, [kPa/m]
 
 !Subroutine local variables
-REAL dPdZmomI !Inlet pressure gradient, [kPa/m] 
+REAL dPdZmomI !Inlet pressure gradient, [kPa/m]
 REAL dPdZmomO !Outlet pressure gradient, [kPa/m]
 REAL Gref     !Refrigerant mass flux, [kg/s-m^2]
 
@@ -3617,12 +3617,12 @@ REAL Gref     !Refrigerant mass flux, [kg/s-m^2]
 
   CALL PmomIntegral(xRi,vgi,vfi,alphai,dPdZmomI) !(tR,xR,vg,vf,alpha,dPdZmomInt)
   CALL PmomIntegral(xRo,vgo,vfo,alphao,dPdZmomO)
-  
+
   dPdZmom=ABS(dPdZmomI-dPdZmomO)*(Gref**2)*(1./Lmod)
 
   !alphai=1.0/(1.0+((1.0-xRi)/xRi)*((vfi/vgi)**(2.0/3.0)))
   !alphao=1.0/(1.0+((1.0-xRo)/xRo)*((vfo/vgo)**(2.0/3.0)))
-  
+
   !Pin=(xRi**2*vgi/alphai+(1-xRi)**2*vfi/(1-alphai))
   !Pout=(xRo**2*vgo/alphao+(1-xRo)**2*vfo/(1-alphao))
   !Pin=Gref**2*(xRi**2*vgi/alphai+(1-xRi)**2*vfi/(1-alphai))
@@ -3678,7 +3678,7 @@ REAL dPdZmomInt !Pressure gradient
 
   RETURN
 
-END SUBROUTINE 
+END SUBROUTINE
 
 !************************************************************************
 
@@ -3725,7 +3725,7 @@ REAL dZdL    !Pressure gradient, [kPa/m]
   IF (xR .LE. 0.0 .OR. xR .GE. 1.0) THEN
       vRef1=vRef
   END IF
-  
+
   IF (xR .GT. 0.0 .AND. xR .LT. 1.0) THEN
       vRef1=vf+xR*(vg-vf)
   END IF
@@ -3733,7 +3733,7 @@ REAL dZdL    !Pressure gradient, [kPa/m]
   dZdL=HtCoil/Lcoil
 
   dPdZgrav=(1./vRef1)*9.8*dZdL
-  
+
   IF (dZdL .eq. 0) THEN !RS: Debugging: Trying to keep dPdZgrav from being NaN
       dPdZgrav=0
   END IF
@@ -3817,7 +3817,7 @@ SUBROUTINE Prandtl(CpRef,muRef,kRef,Pr)
 
 !------------------------------------------------------------------------
 !Purpose:
-!To calculate the Prandtl number for the refrigerant as a function of 
+!To calculate the Prandtl number for the refrigerant as a function of
 !temperature and quality
 !
 !Author
@@ -3869,8 +3869,8 @@ SUBROUTINE manifold(CoilType,ID,mRef,xRef,vgi,vfi,mug,muf,dPman) !(CoilType,ID,m
 !March 2005
 !
 !Reference:
-!Paliwoda, A. Generalized method of pressure drop calculation across 
-!pipe components containing two-phase flow of refrigerants. Int. j. of 
+!Paliwoda, A. Generalized method of pressure drop calculation across
+!pipe components containing two-phase flow of refrigerants. Int. j. of
 !refrigeration. 15(2), pp. 119-125. 1992.
 !
 !------------------------------------------------------------------------
@@ -3879,7 +3879,7 @@ IMPLICIT NONE
 
 !Subroutine passing variables:
 !Inputs:
-INTEGER CoilType	!1-condenser; 
+INTEGER CoilType	!1-condenser;
 					!2-evaporator;
 					!3-High side interconnecting pipes;
 					!4-Low side interconnecting pipes
@@ -3890,7 +3890,7 @@ REAL mRef   !Refrigerant mass flow rate, [kg/s]
 REAL xRef   !Refrigerant quality
 REAL vgi    !Vapor specific volume, [m^3/kg]
 REAL vfi    !Liquid specific volume, [m^3/kg]
-REAL mug    !Vapor dynamic viscosity, [Pa-s] 
+REAL mug    !Vapor dynamic viscosity, [Pa-s]
 REAL muf    !Liquid dynamic viscosity, [Pa-s]
 
 !Outputs:
@@ -3914,10 +3914,10 @@ REAL Kfactor  !K factor
 
   Acs=(PI*ID*ID)/4.0
   Gref=mRef/Acs
-      
+
   rhog=1./vgi   !Vapor Density
   rhof=1./vfi   !Liquid Density
-  
+
   IF (CoilType .EQ. HIGHSIDETUBE) THEN
 	Kfactor=Kcond
   ELSEIF (CoilType .EQ. LOWSIDETUBE) THEN
@@ -3935,13 +3935,13 @@ REAL Kfactor  !K factor
   DPman=DPman/1000. !RS Comment: Unit Conversion
 
   RETURN
-      
+
 END SUBROUTINE
-      
+
 !************************************************************************
 
 SUBROUTINE returnbend(CoilType,TubeType,ID,Pt,mRef,xRef,vRef,vgi,vfi,mug,muf,dPret) !CoilType,TubeType,ID,OD,Pt,mRef,xRef,vRef,vgi,vfi,muRef,mug,muf,dPret)
-                          
+
 !------------------------------------------------------------------------
 !Purpose:
 !To calculate pressure drop in the return bends.
@@ -3954,8 +3954,8 @@ SUBROUTINE returnbend(CoilType,TubeType,ID,Pt,mRef,xRef,vRef,vgi,vfi,mug,muf,dPr
 !March 2005
 !
 !Reference:
-!Paliwoda, A. Generalized method of pressure drop calculation across 
-!pipe components containing two-phase flow of refrigerants. Int. j. of 
+!Paliwoda, A. Generalized method of pressure drop calculation across
+!pipe components containing two-phase flow of refrigerants. Int. j. of
 !refrigeration. 15(2), pp. 119-125. 1992.
 !
 !------------------------------------------------------------------------
@@ -3964,13 +3964,13 @@ IMPLICIT NONE
 
 !Subroutine passing variables:
 !Inputs:
-INTEGER CoilType	!1-condenser; 
+INTEGER CoilType	!1-condenser;
 					!2-evaporator;
 					!3-High side interconnecting pipes;
 					!4-Low side interconnecting pipes
 					!5-Microchannel condenser
 					!6-Microchannel evaporator
-INTEGER TubeType	!1=Plain; 2=General Micro Fin; 3=Herringbone; 
+INTEGER TubeType	!1=Plain; 2=General Micro Fin; 3=Herringbone;
 					!4=Crosshatch; 5=Herringbone w/crosshatch; 6=Turbo-A
 					!7=Helical; 8=42F HXH
 REAL ID     !Inside tube diameter, [m]
@@ -3980,7 +3980,7 @@ REAL xRef   !Refrigerant quality
 REAL vRef   !Refrigerant specific volume, [m^3/kg]
 REAL vgi    !Vapor specific volume, [m^3/kg]
 REAL vfi    !Liquid specific volume, [m^3/kg]
-REAL mug    !Vapor dynamic viscosity, [Pa-s] 
+REAL mug    !Vapor dynamic viscosity, [Pa-s]
 REAL muf    !Liquid dynamic viscosity, [Pa-s]
 
 !Output:
@@ -4007,7 +4007,7 @@ REAL Kfactor !K factor
   rhog=1./vgi   !Vapor Density
   rhof=1./vfi   !Liquid Density
   rho=1./vRef   !Refrigerant Density
-  
+
   !ISI - 09/12/06
   Kfactor=1/(3.426*LOG(Pt/2/ID)+3.8289) !Curve fit from table data
 
@@ -4026,7 +4026,7 @@ REAL Kfactor !K factor
   DPret=DPret*PF
 
   RETURN
-      
+
 END SUBROUTINE
 
 !************************************************************************
@@ -4040,7 +4040,7 @@ SUBROUTINE Inventory(CoilType,ID,mRef,hg,hf,xRi,xRo,vRi,vRo,vgi,vfi,vgo,vfo, &  
 
 !------------------------------------------------------------------------
 !Purpose:
-!To calculate the charge in each module and the overall segment 
+!To calculate the charge in each module and the overall segment
 !refrigerant charge.
 !
 !Author
@@ -4059,7 +4059,7 @@ IMPLICIT NONE
 
 !Subroutine passing variables:
 !Inputs:
-INTEGER          CoilType	!1-condenser; 
+INTEGER          CoilType	!1-condenser;
 							!2-evaporator;
 							!3-High side interconnecting pipes;
 							!4-Low side interconnecting pipes
@@ -4092,7 +4092,7 @@ REAL FracTP     !Two-phase fraction
 REAL Gref       !Refrigerant mass flux, [kg/s-m^2]
 REAL rhoRef     !Refrigerant density, [kg/m^3]
 REAL MassLiqTP  !Liquid mass in two-phase portion, [kg]
-REAL MassVapTP  !Vapor mass in two-phase portion, [kg] 
+REAL MassVapTP  !Vapor mass in two-phase portion, [kg]
 REAL MassModTP  !Mass in two-phase portion, [kg]
 REAL MassModSP  !Mass in single-phase portion, [kg]
 
@@ -4272,13 +4272,13 @@ REAL VoidFrac   !Void fraction
 
   VoidFrac=(((xo/c2)-((c1/c2**2.)*LOG(c1+c2*xo)))- &
            ((xi/c2)-((c1/c2**2.)*LOG(c1+c2*xi))))/(xo-xi)
-  
+
   VoidFrac=ABS(VoidFrac)
 
   MassLiq=Vol*rhof*(1-VoidFrac) !Liquid Mass
   MassVap=Vol*rhog*VoidFrac     !Vapor Mass
   MassTot=MassLiq+MassVap       !Total Mass
-  
+
   RETURN
 
 END SUBROUTINE
@@ -4328,7 +4328,7 @@ REAL Xtt   !Lockhart-Martinelli parameter
   ELSE
 	alpha=0.823-0.157*LOG(Xtt)
   END IF
-  
+
   RETURN
 
 END SUBROUTINE
@@ -4368,11 +4368,11 @@ IMPLICIT NONE
 
 !Subroutine passing variables:
 !Inputs:
-INTEGER          CoilType	!1-condenser; 
+INTEGER          CoilType	!1-condenser;
 							!2-evaporator;
 							!3-High side interconnecting pipes;
 							!4-Low side interconnecting pipes
-!INTEGER          TubeType	!1=Plain; 2=General Micro Fin; 3=Herringbone; 
+!INTEGER          TubeType	!1=Plain; 2=General Micro Fin; 3=Herringbone;
 							!4=Crosshatch; 5=Herringbone w/crosshatch; 6=Turbo-A
 REAL ID			!Inside diameter, [m]
 REAL mRef		!Refrigerant mass flow rate, [kg/s]
@@ -4428,12 +4428,12 @@ REAL alpha      !Void fraction
 
   ELSE !for condenser and evaporator
     xRef=(xi+xo)/2
-    
+
     !CALL HughmarkVoidFrac(xRef,ID,Gref,rhog,rhof,Mug,Muf,alpha)
     !CALL LockMartVoidFrac(x,rhog,rhof,Mug,Muf,alpha)
 	CALL GrahamVoidFrac(xRef,ID,Gref,rhog,alpha) !Modified by ISI 07/09/06 !(xRef,ID,Gref,rhog,rhof,Mug,Muf,alpha)
 	!CALL HarmsVoidFrac(xRef,ID,Gref,rhog,rhof,Mug,Muf,alpha)
-    
+
   END IF
 
   alpha=ABS(alpha)
@@ -4462,7 +4462,7 @@ SUBROUTINE HughmarkVoidFrac(xRef,ID,Gref,rhog,rhof,Mug,Muf,alpha)
 !March 2005
 !
 !Reference:
-!Hughmark, G.A. (1962). Holdup in gas-liquid flow. Chemical engineering 
+!Hughmark, G.A. (1962). Holdup in gas-liquid flow. Chemical engineering
 !progress. 58 (4), pp. 62-65.
 !
 !------------------------------------------------------------------------
@@ -4501,18 +4501,18 @@ INTEGER Iter                 !Iteration loop counter
 !Flow:
 
   Acs = PI*(ID/2)**2
-  
+
   alphaPrev=xRef
   DO Iter=1,MaxIter
 
-    beta=1/(1+(1-xRef)/xRef*rhog/rhof)  
+    beta=1/(1+(1-xRef)/xRef*rhog/rhof)
     yL=1-beta
     Fr=1/ID*(Gref*xRef/(beta*rhog))
     ReAlpha=ID*Gref/(muf+alphaPrev*(mug-muf))
 	ZZ=(ID*Gref/(muf+alphaPrev*(mug-muf)))**0.167* &
 	   (1/(9.8*ID)*(Gref*xRef/(rhog*beta*(1-beta)))**2)**0.125
 	IF (ZZ .LT. 8) THEN
-		KH=0.0017*ZZ**3-0.0393*ZZ**2+0.3258*ZZ-0.1792    
+		KH=0.0017*ZZ**3-0.0393*ZZ**2+0.3258*ZZ-0.1792
 	ELSE
         KH=0.6363*ZZ**0.0887
 	END IF
@@ -4520,7 +4520,7 @@ INTEGER Iter                 !Iteration loop counter
 	IF (alpha .GT. 1) THEN
         alpha=1
     END IF
-  
+
 	Error=(alphaPrev-alpha)/alphaPrev
 	IF (ABS(Error) .GT. alphaTol) THEN
 	  alphaPrev=alpha
@@ -4553,7 +4553,7 @@ SUBROUTINE GrahamVoidFrac(xRef,ID,Gref,rhog,alpha) !(xRef,ID,Gref,rhog,rhof,Mug,
 !Graham, D.M.; Kopke, H.R.; Wilson, M.J.; Yashar, D.A.; Chato, J.C.; and
 !Newell, T.A. (1998). An investigation of void fraction in the stratified/
 !annular/intermittent flow regions in smooth, horizontal tubes. ACRC TR-144,
-!Air conditioning and refrigeration center, University of Illinois, 
+!Air conditioning and refrigeration center, University of Illinois,
 !Urbana-Champaign, IL.
 !
 !------------------------------------------------------------------------
@@ -4576,7 +4576,7 @@ REAL Ft    !Intermediate variable
 !Flow:
 
   Ft=(xRef**3*Gref**2/(rhog**2*9.8*ID*(1-xRef)))**0.5
-  
+
   IF (Ft .GT. 0.01031) THEN
     alpha=1-EXP(-1-0.3*LOG(Ft)-0.0328*(LOG(Ft))**2)
   ELSE
@@ -4604,7 +4604,7 @@ SUBROUTINE HarmsVoidFrac(xRef,ID,Gref,rhog,rhof,Mug,Muf,alpha)
 !
 !Reference:
 !Harms, T.M.; Li, D.; Groll, E.A. and Braun, J.E. (2003). "A void fraction
-!model for annular flow in horizontal tubes." International J. of 
+!model for annular flow in horizontal tubes." International J. of
 !Heat and Mass Transfer. 46. pp. 4051-4057.
 !
 !------------------------------------------------------------------------
@@ -4633,7 +4633,7 @@ REAL Ref   !Intermediate variable
   Xtt=((1-xRef)/xRef)**0.9*(rhog/rhof)**0.5*(mug/muf)**0.1
 
   Ref = (1 - xRef) * Gref * ID / muf
-  
+
   alpha = (1 - 10.06 * Ref**(-0.875) * (1.74 + 0.104 * Ref**0.5)**2 * &
           (1.376 + 7.242 / (Xtt**1.655))**(-0.5))**2
 
@@ -4696,6 +4696,32 @@ END SUBROUTINE RouhanniVoidFrac
 
 !************************************************************************
 
+REAL FUNCTION TanD(x)
+
+  IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
+
+  REAL, intent(in) :: x
+
+  TanD = Tan(x * pi / 180)
+
+  RETURN
+END FUNCTION TanD
+
+!************************************************************************
+
+REAL FUNCTION CosD(x)
+
+  IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
+
+  REAL, intent(in) :: x
+
+  CosD = Cos(x * pi / 180)
+
+  RETURN
+END FUNCTION CosD
+
+!************************************************************************
+
 SUBROUTINE CalcJfactor(FinType,WetFlag,FinSpg,FinThk,HXdep,Nl, &
                        Dc,Pt,Pl,Amin,AoCoil,ReDc,jfactor)
 !(CoilType,FinType,WetFlag,FinSpg,FinThk,Ltube,HXdep,Nl,Nt,RowNum, &
@@ -4719,7 +4745,7 @@ SUBROUTINE CalcJfactor(FinType,WetFlag,FinSpg,FinThk,HXdep,Nl, &
 !exchangers. International journal of heat and mass transfer. 42, pp.
 !1945-1956.
 !
-!Wang, C.C., Lin, Y.T. and Lee, C.J. (2000). An airside correlation for 
+!Wang, C.C., Lin, Y.T. and Lee, C.J. (2000). An airside correlation for
 !plain fin-and-tube heat exchanger in wet conditions. International
 !journal of heat and mass transfer. 43, pp. 1869-1872.
 !
@@ -4729,10 +4755,10 @@ SUBROUTINE CalcJfactor(FinType,WetFlag,FinSpg,FinThk,HXdep,Nl, &
 !
 !Wang, C.C., Hwang, Y.M. and Lin, Y.T. (2002). Empirical correlations
 !for heat transfer and flow friction characteristics of herringbone
-!wavy fin-and-tube heat exchangers. International journal of 
+!wavy fin-and-tube heat exchangers. International journal of
 !refrigeration. 25, pp. 673-680.
 !
-!Wang, C.C., Lee, W.S., Sheu, W.J. (2001). A comparative study of 
+!Wang, C.C., Lee, W.S., Sheu, W.J. (2001). A comparative study of
 !compact enhanced fin-and-tube heat exchangers. International journal
 !of heat and mass transfer, 44, pp. 3565-3573.
 !
@@ -4742,8 +4768,8 @@ IMPLICIT NONE
 
 !Subroutine passing variables:
 !Inputs:
-!INTEGER CoilType !1=Condenser; 2=Evaporator; 
-                 !3=High side interconnecting pipes; 
+!INTEGER CoilType !1=Condenser; 2=Evaporator;
+                 !3=High side interconnecting pipes;
 				 !4=Low side interconnecting pipes
 				 !5=Microchannel condenser
 				 !6=Microchannel evaporator
@@ -4770,10 +4796,10 @@ REAL, PARAMETER :: theta=8 !Wavy fin angle, [deg]
 !Subroutine local variables:
 REAL Dh        !Hydraulic diameter, [m]
 REAL FinPitch  !Fin pitch, [fins/m]
-REAL P1        !Intermediate variable 
-REAL P2        !Intermediate variable 
+REAL P1        !Intermediate variable
+REAL P2        !Intermediate variable
 REAL P3        !Intermediate variable
-REAL P4        !Intermediate variable 
+REAL P4        !Intermediate variable
 REAL P5        !Intermediate variable
 REAL P6        !Intermediate variable
 REAL beta      !Intermediate variable
@@ -4869,7 +4895,7 @@ REAL j3        !Intermediate variable
    !   Dh=4*Amin*HXdep/AoCoil    !The other cases take these into account, so maybe this one does too
 	  !FinPitch=1/(FinSpg+FinThk)
    !
-   !   !RS: Assuming that this is indeed a correlation for a louvered fin        
+   !   !RS: Assuming that this is indeed a correlation for a louvered fin
 	  !!Wang et. al (1999), IJ Heat and Mass Transfer
 	  !j1=-0.229+0.115*((1/FinPitch)/Dc)**0.6*(Pl/Dh)**0.54*Nl**(-0.284)*LOG(0.5*TAND(theta))
 	  !j2=-0.251+0.232*Nl**1.37/(LOG(ReDc)-2.303)
@@ -4877,10 +4903,10 @@ REAL j3        !Intermediate variable
 	  !j4=0.502*(LOG(ReDc)-2.54)
 	  !jfactor=0.324*ReDc**j1*((1/FinPitch)/Pl)**j2*TAND(theta)**j3*(Pl/Pt)**j4*Nl**0.428
    !   !RS: End of test code by RS
-      
+
 	END SELECT
 
-  ELSE 
+  ELSE
 
       !RS Comment: Need a case for louvers!
     SELECT CASE (FinType)
@@ -4921,7 +4947,7 @@ SUBROUTINE CalcFricfactor(FinType,WetFlag,FinSpg,FinThk,HXdep,Nl,Dc,Pt,Pl, &
 !exchangers. International journal of heat and mass transfer. 42, pp.
 !1945-1956.
 !
-!Wang, C.C., Lin, Y.T. and Lee, C.J. (2000). An airside correlation for 
+!Wang, C.C., Lin, Y.T. and Lee, C.J. (2000). An airside correlation for
 !plain fin-and-tube heat exchanger in wet conditions. International
 !journal of heat and mass transfer. 43, pp. 1869-1872.
 !
@@ -4931,10 +4957,10 @@ SUBROUTINE CalcFricfactor(FinType,WetFlag,FinSpg,FinThk,HXdep,Nl,Dc,Pt,Pl, &
 !
 !Wang, C.C., Hwang, Y.M. and Lin, Y.T. (2002). Empirical correlations
 !for heat transfer and flow friction characteristics of herringbone
-!wavy fin-and-tube heat exchangers. International journal of 
+!wavy fin-and-tube heat exchangers. International journal of
 !refrigeration. 25, pp. 673-680.
 !
-!Wang, C.C., Lee, W.S., Sheu, W.J. (2001). A comparative study of 
+!Wang, C.C., Lee, W.S., Sheu, W.J. (2001). A comparative study of
 !compact enhanced fin-and-tube heat exchangers. International journal
 !of heat and mass transfer, 44, pp. 3565-3573.
 !
@@ -4945,12 +4971,12 @@ IMPLICIT NONE
 !Subroutine passing variables:
 !Inputs:
 !INTEGER CoilType !1=Condenser; 2=Evaporator;   !RS: Debugging: Extraneous variables
-                 !3=High side interconnecting pipes; 
+                 !3=High side interconnecting pipes;
 				 !4=Low side interconnecting pipes
 				 !5=Microchannel condenser
 				 !6=Microchannel evaporator
 
-INTEGER FinType !1-Plain; 2-Wavy; 
+INTEGER FinType !1-Plain; 2-Wavy;
 INTEGER WetFlag  !1=Wet; 0=Dry
 REAL FinSpg    !Fin spacing, [m]
 REAL FinThk    !Fin thickness, [m]
@@ -4973,7 +4999,7 @@ REAL, PARAMETER :: theta=8 !Wavy fin angle, [deg]
 REAL Dh        !Hydraulic diameter, [m]
 REAL FinPitch  !Fin pitch, [fins/m]
 REAL F1        !Intermediate variable
-REAL F2        !Intermediate variable 
+REAL F2        !Intermediate variable
 REAL F3        !Intermediate variable
 REAL F4        !Intermediate variable
 REAL beta      !Intermediate variable
@@ -5030,15 +5056,15 @@ REAL beta      !Intermediate variable
 	  	F4=-0.306+3.63*TAND(theta)
 	  	Fricfactor=0.228*ReDc**F1*TAND(theta)**F2*(FinSpg/Pl)**F3*(Pl/Dc)**F4*(Dc/Dh)**0.383*(Pl/Pt)**(-0.247)
       END IF
-      
+
       !RS: Code below written by RS for testing
       !CASE (3)   !RS: Dry Louver Case
       !RS: Need Dry Louvered Fin case correlations and equations
       !Fricfactor=0.1  !Just seeing if the case works; Yep, it does
       !RS: End of test code by RS
-      
+
     END SELECT
-  ELSE 
+  ELSE
     SELECT CASE (FinType)
     CASE (1) !Wet plain fin
 
@@ -5047,8 +5073,8 @@ REAL beta      !Intermediate variable
         !RS: Also, this is under the ELSE, so it's totally skipped if the above IF is true.
   	END SELECT
   END IF
-  
-  !RS: Attempt at error handling (8/1/12)  
+
+  !RS: Attempt at error handling (8/1/12)
   !IF (FINTYPE .NE. PLAINFIN .AND. FINTYPE .NE. WAVYFIN) THEN
   !    CALL ShowFatalError('The fin type selected cannot be handled by the program.')
   !END IF
@@ -5071,7 +5097,7 @@ SUBROUTINE CalcFinEff(CoilType,Kfin,FinThk,FinHeight,Rc,TubeDepth,Pt,Pl,hco,FinE
 !March 2005
 !
 !Reference:
-!Schmidt, ThE. Heat transfer calculations for extended surfaces. 
+!Schmidt, ThE. Heat transfer calculations for extended surfaces.
 !Refrig. Eng., pp. 351-357. 1949.
 !
 !------------------------------------------------------------------------
@@ -5080,8 +5106,8 @@ IMPLICIT NONE
 
 !Subroutine passing variables:
 !Inputs:
-INTEGER CoilType !1=Condenser; 2=Evaporator; 
-                 !3=High side interconnecting pipes; 
+INTEGER CoilType !1=Condenser; 2=Evaporator;
+                 !3=High side interconnecting pipes;
 				 !4=Low side interconnecting pipes
 				 !5=Microchannel condenser
 				 !6=Microchannel evaporator
@@ -5134,7 +5160,7 @@ REAL FrostThk
   !Changed by Sankar
         IF(CoilType .EQ. EVAPORATORCOIL) THEN
          Kfrost=FrostParam%Conductivity
-         FrostThk=2*FrostParam%Thickness      
+         FrostThk=2*FrostParam%Thickness
          KfinFrost=(Kfin*FinThk+Kfrost*FrostThk)/(FinThk+FrostThk)
          FinFrostThk=FinThk+FrostThk
 		 mm=SQRT(2*hco/(KfinFrost*FinFrostThk))
@@ -5142,10 +5168,10 @@ REAL FrostThk
 		ELSE
 		 mm=SQRT(2*hco/(Kfin*FinThk))
 		 FinEff=TANH(mm*Rc*phi)/(mm*Rc*phi)
-		END IF 
+		END IF
 
 		!Hong and Webb
-		!FinEff=TANH(m*Rc*phi)*COS(0.1*m*Rc*phi)/(m*Rc*phi) 
+		!FinEff=TANH(m*Rc*phi)*COS(0.1*m*Rc*phi)/(m*Rc*phi)
 	END IF
 
 	RETURN
@@ -5223,8 +5249,8 @@ IMPLICIT NONE
 !Subroutine passing variables:
 !Inputs:
 INTEGER      RefID    !Refrigerant ID:
-					  !1=R22; 2=R410A; 3=R407C; 4=R134A; 5=PROPANE; 
- 
+					  !1=R22; 2=R410A; 3=R407C; 4=R134A; 5=PROPANE;
+
 !Outputs:
 CHARACTER*80 RefName  !Refrigerant name
 
@@ -5276,7 +5302,7 @@ IMPLICIT NONE
 !Subroutine passing variables:
 !Inputs:
 CHARACTER*80 RefName  !Refrigerant name
- 
+
 !Outputs:
 INTEGER      RefID    !Refrigerant ID:
 					  !1=R22; 2=R410A; 3=R407C; 4=R134A; 5=PROPANE; 6=R417A; 7=R507A
@@ -5288,15 +5314,15 @@ INTEGER      RefID    !Refrigerant ID:
   ELSEIF (TRIM(RefName) .EQ. "R410A") THEN
     RefID=2
   ELSEIF (TRIM(RefName) .EQ. "R407C") THEN
-    RefID=3  
+    RefID=3
   ELSEIF (TRIM(RefName) .EQ. "R134A") THEN
-    RefID=4  
+    RefID=4
   ELSEIF (TRIM(RefName) .EQ. "PROPANE") THEN
-    RefID=5  
+    RefID=5
   ELSEIF (TRIM(RefName) .EQ. "R417A") THEN
     RefID=6
   ELSEIF (TRIM(RefName) .EQ. "R507A") THEN
-    RefID=7    
+    RefID=7
   ELSE
     RefID=1
   END IF
@@ -5328,7 +5354,7 @@ SUBROUTINE CalcMaterialWeight(CoilType,Ltube,IDtube,ODtube,TubeHeight,TubeDepth,
 IMPLICIT NONE
 
 !Subroutine passing variables
-INTEGER,INTENT(IN)  :: CoilType	!1-condenser 
+INTEGER,INTENT(IN)  :: CoilType	!1-condenser
 							    !2-evaporator
 							    !3-High side interconnecting pipes;
 							    !4-Low side interconnecting pipes
@@ -5399,7 +5425,7 @@ REAL Lcoil			  !Coil length, m
 		!Aluminum weight
 		SingleSheetArea=Pl*Nt*Pt*Nl
 		TubeArea=PI*ODtube**2/4*Nl*Nt
-		
+
 		Dcollar=ODtube+FinThk*2
 		CollarVol=PI*Dcollar*FinSpg*FinThk*Nl*Nt
 
@@ -5437,7 +5463,7 @@ SUBROUTINE MinimumFreeFlowArea(CoilType,Nl, Nt, Pl, Pt, OD, TubeHeight,FinThk, F
 IMPLICIT NONE
 
 !Subroutine passing variables
-INTEGER,INTENT(IN) :: CoilType	!1-condenser; 
+INTEGER,INTENT(IN) :: CoilType	!1-condenser;
 					 		    !2-evaporator;
 							    !3-High side interconnecting pipes;
 							    !4-Low side interconnecting pipes
@@ -5480,11 +5506,11 @@ REAL Smin !Minimum of s1 and s2, m
 
 	ELSE !Staggered plate finned tube coil
 
-      IF(CoilType==CONDENSERCOIL) THEN 
+      IF(CoilType==CONDENSERCOIL) THEN
        Rc=OD/2+FinThk
       ELSE IF(CoilType==EVAPORATORCOIL) THEN
        Rc=OD/2+FinThk+FrostParam%Thickness
-      END IF 
+      END IF
 		Dcollar=2*Rc
 
 		OuterGap = Pt - Dcollar
@@ -5508,7 +5534,7 @@ REAL Smin !Minimum of s1 and s2, m
 			Amin = (Pt-(Dcollar+FrostParam%Thickness))*Ltube*Nt-FinPitch*Ltube*(FinThk+2*FrostParam%Thickness)*(Pt-(Dcollar+FrostParam%Thickness))*Nt
 		 END IF
         END IF
-        
+
 		!Weber 1991
 		CoilDepth=Nl*Pl
 		CoilWidth=Ltube
@@ -5519,7 +5545,7 @@ REAL Smin !Minimum of s1 and s2, m
 		ELSE IF(CoilType==EVAPORATORCOIL) THEN
 		 s1=0.5*(1-(FinThk+2*FrostParam%Thickness)*FinPitch)*(Pt-Dcollar)
 		 s2=((Pt/2)**2+Pl**2)**0.5-Dcollar-(Pt-Dcollar)*(FinThk+2*FrostParam%Thickness)*FinPitch
-		END IF 
+		END IF
 		Smin=MIN(2*s1,2*s2)
 		!Amin=(CoilHeight/Pt-1)*Smin*CoilWidth-((1-FinThk*FinPitch)*(Pt-Dcollar))*CoilWidth
 
@@ -5566,7 +5592,7 @@ IMPLICIT NONE
 
 !Subroutine passing variables:
 !Inputs:
-INTEGER          CoilType	!1-condenser; 
+INTEGER          CoilType	!1-condenser;
 							!2-evaporator;
 							!3-High side interconnecting pipes;
 							!4-Low side interconnecting pipes
@@ -5607,7 +5633,7 @@ REAL ReLiq      !Liquid Reynold number
 REAL xRef       !Refrigerant quality, [-]
 REAL aa			!Intermediate parameter for intermittent flow boundary
 REAL bb			!Intermediate parameter for intermittent flow boundary
-REAL xInter		!Intermittent flow threshold quality 
+REAL xInter		!Intermittent flow threshold quality
 REAL rhog		!Vapor density, [kg/m^3]
 REAL rhof		!Liquid density, [kg/m^3]
 REAL rho		!Density, [kg/m^3]
@@ -5629,7 +5655,7 @@ REAL Xlow		!High Quality Value for smoothing
 
   Acs=PI*Dh**2/4
   Gref=mRef/Acs
-  
+
   !Threshold quality from Garimella et al. (2005)
   aa=69.57+22.6*EXP(0.259*Dh*1000)
   bb=-59.99+176.8*EXP(0.383*Dh*1000)
@@ -5641,7 +5667,7 @@ REAL Xlow		!High Quality Value for smoothing
   IF (Xri .LT. Xro) then ! Expand range to avoid discontinuity
 	Xlow=Xri
 	Xhi=Xro
-  else 
+  else
 	Xhi=Xri
 	Xlow=Xro
   endif
@@ -5663,7 +5689,7 @@ REAL Xlow		!High Quality Value for smoothing
   IF (xRef .LT. xInter) THEN !Intermittent flow
 	rho=1/(xRef/rhog+(1-xRef)/rhof)
 	KE=Gref**2/(2*rho)
-	DPDZfrici = 0.045/Dh*KE    
+	DPDZfrici = 0.045/Dh*KE
   ELSE !other flow patterns
 	CALL Reynolds(Dh,mRef,xRef,muRef,mug,muf,ReVap,ReLiq)
     CALL FannFact(1.00,ReVap,CoilType,fVap)
@@ -5679,7 +5705,7 @@ REAL Xlow		!High Quality Value for smoothing
   IF (xRef .LT. xInter) THEN !Intermittent flow
 	rho=1/(xRef/rhog+(1-xRef)/rhof)
 	KE=Gref**2/(2*rho)
-	DPDZfrico = 0.045/Dh*KE    
+	DPDZfrico = 0.045/Dh*KE
   ELSE !other flow patterns
 	CALL Reynolds(Dh,mRef,xRef,muRef,mug,muf,ReVap,ReLiq)
     CALL FannFact(1.00,ReVap,CoilType,fVap)
@@ -5697,7 +5723,7 @@ REAL Xlow		!High Quality Value for smoothing
   IF (xRi .LT. xInter) THEN !Intermittent flow
 	rho=1/(xRi/rhog+(1-xRi)/rhof)
 	KE=Gref**2/(2*rho)
-	DPDZfrico = 0.045/Dh*KE    
+	DPDZfrico = 0.045/Dh*KE
   ELSE !other flow patterns
 	CALL Reynolds(Dh,mRef,xRi,muRef,mug,muf,ReVap,ReLiq)
     CALL FannFact(1.00,ReVap,CoilType,fVap)
@@ -5712,7 +5738,7 @@ REAL Xlow		!High Quality Value for smoothing
   IF (xRo .LT. xInter) THEN !Intermittent flow
 	rho=1/(xRo/rhog+(1-xRo)/rhof)
 	KE=Gref**2/(2*rho)
-	DPDZfrico = 0.045/Dh*KE    
+	DPDZfrico = 0.045/Dh*KE
   ELSE !other flow patterns
 	CALL Reynolds(Dh,mRef,xRo,muRef,mug,muf,ReVap,ReLiq)
     CALL FannFact(1.00,ReVap,CoilType,fVap)
@@ -5733,7 +5759,7 @@ REAL Xlow		!High Quality Value for smoothing
 
   !Two-phase elevation Pchange
   CALL ElevdP(xRef,vRi,vgi,vfi,dPdZgrav,HtCoil,Lcoil)
-      
+
   !Total two-phase Pchange
   dPfric=dPdZfric*Lmod*1E-3
   dPmom=dPdZmom*Lmod*1E-3
@@ -5778,7 +5804,7 @@ IMPLICIT NONE
 
 !Subroutine passing variables:
 !Inputs:
-INTEGER          CoilType	!1-condenser; 
+INTEGER          CoilType	!1-condenser;
 							!2-evaporator;
 							!3-High side interconnecting pipes;
 							!4-Low side interconnecting pipes
@@ -5837,9 +5863,9 @@ REAL KK         !Intermediate parameter
   !Two-phase friction pressure change
   CALL FanningdP(CoilType,xRef,vRi,vg,vf,dPdZfLiq,dPdZfVap,mRef,ID,muRef,mug,muf)
   XX=(dPdZfLiq/dPdZfVap)**0.5
-  
+
   CALL Reynolds(ID,mRef,xRef,muRef,mug,muf,ReVap,ReLiq)
-  
+
   !Chisholm 1967
   !IF (ReLiq .LT. 1000 .AND. ReVap .LT. 1000) THEN !Laminar-Laminar
   !  CC=5.0
@@ -5867,7 +5893,7 @@ REAL KK         !Intermediate parameter
   !CC=aa*lambda**qq*psi**rr*ReLiq**ss
 
   !Mishima and Hibiki 1996
-  !CC=21*(1-EXP(-0.319*ID)) 
+  !CC=21*(1-EXP(-0.319*ID))
   !phiLiq=(1+CC/XX+1/XX**2)**0.5
 
   !Moriyama and Inoue 1992
@@ -5887,12 +5913,12 @@ REAL KK         !Intermediate parameter
 
   !Two-phase elevation Pchange
   CALL ElevdP(xRi,vRi,vgi,vfi,dPdZgrav,HtCoil,Lcoil)
-      
+
   !Total two-phase Pchange
   dPfric=dPdZfrict*Lmod*1E-3
   dPmom=dPdZmom*Lmod*1E-3
   dPgrav=dPdZgrav*Lmod*1E-3
-                  
+
   RETURN
 
 END SUBROUTINE TwoPhaseDPMoriyama
@@ -5920,15 +5946,15 @@ IMPLICIT NONE
 
 !Subroutine passing variables:
 !Inputs:
-INTEGER          CoilType	!1-condenser; 
+INTEGER          CoilType	!1-condenser;
 							!2-evaporator;
 							!3-High side interconnecting pipes;
 							!4-Low side interconnecting pipes
 							!5-Microchannel condenser
 							!6-Microchannel evaporator
-INTEGER          TubeType	!1=Plain; 2=General Micro Fin; 3=Herringbone; 
-							!4=Crosshatch; 5=Herringbone w/crosshatch; 
-							
+INTEGER          TubeType	!1=Plain; 2=General Micro Fin; 3=Herringbone;
+							!4=Crosshatch; 5=Herringbone w/crosshatch;
+
 REAL Gref    !Refrigerant mass flux, [kg/s-m2]
 
 !Outputs:
@@ -6027,15 +6053,15 @@ IMPLICIT NONE
 
 !Subroutine passing variables:
 !Inputs:
-INTEGER          CoilType	!1-condenser; 
+INTEGER          CoilType	!1-condenser;
 							!2-evaporator;
 							!3-High side interconnecting pipes;
 							!4-Low side interconnecting pipes
 							!5-Microchannel condenser
 							!6-Microchannel evaporator
-INTEGER          TubeType	!1=Plain; 2=General Micro Fin; 3=Herringbone; 
+INTEGER          TubeType	!1=Plain; 2=General Micro Fin; 3=Herringbone;
 							!4=Crosshatch; 5=Herringbone w/crosshatch
-							
+
 REAL Gref    !Refrigerant mass flux, [kg/s-m2]
 
 !Outputs:
@@ -6046,7 +6072,7 @@ REAL EF      !Enhancement factor
 	EF=1
 	IF (CoilType .EQ. CONDENSERCOIL) THEN !Condenser
 
-		SELECT CASE (TubeType) 
+		SELECT CASE (TubeType)
 		CASE (SMOOTH) !Plain
 			EF=1
 		CASE (MICROFIN) !General micro fin, Eckels et al. (1998) ASHRAE RP-630
@@ -6132,7 +6158,7 @@ SUBROUTINE UpdateRefMassFlowRate(Iter,Ckt,NumOfCkts,pRiCoil,mRefTot,Nnode,Node)
 !March 2005
 !
 !Reference:
-!Vlach, J. and Singhal, K. (1993). Computer methods for circuit 
+!Vlach, J. and Singhal, K. (1993). Computer methods for circuit
 !analysis and design. 2nd ed. Van Nostrand Reinhold. New York.
 !
 !------------------------------------------------------------------------
@@ -6152,7 +6178,7 @@ REAL,PARAMETER :: Relax=0.6     !Relaxation
 INTEGER I,J,K !Loop counter
 REAL DPckt  !Refrigerant pressure drop in circuit, kPa
 REAL Gckt   !Mass flux in circuit, kg/m^2
-REAL pRiCkt !Circuit inlet pressure, kPa      
+REAL pRiCkt !Circuit inlet pressure, kPa
 REAL pRoCkt !Circuit outlet pressure, kPa
 INTEGER :: NumOfMods !Number of tube modules/Segments
 REAL :: IDtube !Tube inside diameter, m
@@ -6177,7 +6203,7 @@ REAL,ALLOCATABLE,DIMENSION(:) :: Pmat      !matrix stores pressure
 		!Circuit pressure drop
 		IF (Ckt(I)%InSplit .GT. 1 .AND. Ckt(I)%OutJoin .GT. 1) THEN !Split inlet and Joint outlet
 			pRiCkt=Ckt(I)%Tube(2)%Seg(1)%pRi
-	  		pRoCkt=Ckt(I)%Tube(Ckt(I)%Ntube-1)%Seg(NumOfMods)%pRo 
+	  		pRoCkt=Ckt(I)%Tube(Ckt(I)%Ntube-1)%Seg(NumOfMods)%pRo
 
 		ELSE IF (Ckt(I)%InSplit .GT. 1) THEN !Split inlet
 			pRiCkt=Ckt(I)%Tube(2)%Seg(1)%pRi
@@ -6185,7 +6211,7 @@ REAL,ALLOCATABLE,DIMENSION(:) :: Pmat      !matrix stores pressure
 
 		ELSE IF (Ckt(I)%OutJoin .GT. 1) THEN !Joint outlet
 			pRiCkt=Ckt(I)%Tube(1)%Seg(1)%pRi
-      		pRoCkt=Ckt(I)%Tube(Ckt(I)%Ntube-1)%Seg(NumOfMods)%pRo 
+      		pRoCkt=Ckt(I)%Tube(Ckt(I)%Ntube-1)%Seg(NumOfMods)%pRo
 
 		ELSE
 			pRiCkt=Ckt(I)%Tube(1)%Seg(1)%pRi
@@ -6195,11 +6221,11 @@ REAL,ALLOCATABLE,DIMENSION(:) :: Pmat      !matrix stores pressure
 		DPckt=pRiCkt-pRoCkt
 
 		Gckt=Ckt(I)%mRef/((PI*IDtube**2)/4) !Circuit mass flux
-		  
+
 		Ckt(I)%Conduct=(Ckt(I)%mRef)/DPCkt !Circuit conductance
 	END DO
 
-		  
+
 	!***Recalc. refrigerant mass flow rates***
 	Ckt%mRefPrev=Ckt%mRef !Store previous mdot
 
@@ -6217,13 +6243,13 @@ REAL,ALLOCATABLE,DIMENSION(:) :: Pmat      !matrix stores pressure
 						END IF
 					END DO !End NumOfCkts
 				ELSE !Node at circuit outlet
-					DO K=1, NumOfCkts 
+					DO K=1, NumOfCkts
 						IF (Ckt(K)%OutSplit .LE. 1 .AND. Ckt(K)%OutJoin .LE. 1) THEN
                             Gmat(I,J)=Gmat(I,J)+Ckt(k)%Conduct
                         END IF
 					END DO !End NumOfCkts
 				END IF
-	  
+
 			ELSE !Off diagonal
 				IF (Node(I)%Num .GT. 0) THEN !Node inside circuit
 					IF (Node(J)%Num .GT. 0) THEN !Last node is circuit outlet
@@ -6248,7 +6274,7 @@ REAL,ALLOCATABLE,DIMENSION(:) :: Pmat      !matrix stores pressure
 						END DO !End NumOfCkts
 					END IF
 				ELSE !Node at circuit outlet
-					DO K=1, NumOfCkts 
+					DO K=1, NumOfCkts
 						IF (Ckt(K)%OutSplit .LE. 1 .AND. Ckt(K)%OutJoin .LE. 1 .AND. &
 						    Ckt(K)%TubeSequence(1) .EQ. Node(J)%Num) THEN
                             Gmat(I,J)=Gmat(I,J)-Ckt(k)%Conduct
@@ -6257,7 +6283,7 @@ REAL,ALLOCATABLE,DIMENSION(:) :: Pmat      !matrix stores pressure
 				END IF
 			END IF
 		END DO !End Nnode J
-    
+
 		!***Fill Mmat***
 		Mmat(I)=0
 		DO J=1, NumOfCkts
@@ -6291,28 +6317,28 @@ REAL,ALLOCATABLE,DIMENSION(:) :: Pmat      !matrix stores pressure
 	DO I=1, NumOfCkts
 		DO J=1, Nnode
 			IF ((Ckt(I)%InSplit .LE. 1 .AND. Ckt(I)%InJoin .LE. 1) .AND. &
-				(Ckt(I)%OutSplit .LE. 1 .AND. Ckt(I)%OutJoin .LE. 1)) THEN !Connected to coil inlet and outlet 
-				
-				Ckt(I)%mRef=(pRiCoil-Node(Nnode)%Pressure)*Ckt(I)%Conduct                  
-			ELSEIF (Ckt(I)%InSplit .LE. 1 .AND. Ckt(I)%InJoin .LE. 1) THEN !Connected to coil inlet 
-				
+				(Ckt(I)%OutSplit .LE. 1 .AND. Ckt(I)%OutJoin .LE. 1)) THEN !Connected to coil inlet and outlet
+
+				Ckt(I)%mRef=(pRiCoil-Node(Nnode)%Pressure)*Ckt(I)%Conduct
+			ELSEIF (Ckt(I)%InSplit .LE. 1 .AND. Ckt(I)%InJoin .LE. 1) THEN !Connected to coil inlet
+
 				IF (Ckt(I)%TubeSequence(Ckt(I)%Ntube) .EQ. Node(J)%Num) &
 				    Ckt(I)%mRef=(pRiCoil-Node(J)%Pressure)*Ckt(I)%Conduct
 				ELSEIF (Ckt(I)%OutSplit .LE. 1 .AND. Ckt(I)%OutJoin .LE. 1) THEN !Connected to coil outlet
-					
+
 					IF (Ckt(I)%TubeSequence(1) .EQ. Node(J)%Num) THEN
                         Ckt(I)%mRef=(Node(J)%Pressure-Node(Nnode)%Pressure)*Ckt(I)%Conduct
                     END IF
 					ELSE !Connected between circuits
-						
+
 						DO K=1, Nnode
 							IF (Ckt(I)%TubeSequence(1) .EQ. Node(J)%Num .AND. &
 								Ckt(I)%TubeSequence(Ckt(I)%Ntube) .EQ. Node(K)%Num) THEN !Pressure J > Pressure K
-								
+
 								Ckt(I)%mRef=(Node(J)%Pressure-Node(K)%Pressure)*Ckt(I)%Conduct
 							ELSE IF (Ckt(I)%TubeSequence(1) .EQ. Node(K)%Num .AND. &
 								Ckt(I)%TubeSequence(Ckt(I)%Ntube) .EQ. Node(J)%Num) THEN !Pressure K > Pressure J
-								
+
 								Ckt(I)%mRef=(Node(K)%Pressure-Node(J)%Pressure)*Ckt(I)%Conduct
   							END IF
 						END DO !End K nodes
@@ -6376,21 +6402,21 @@ REAL,ALLOCATABLE,DIMENSION(:) :: mdot !kg/s
   ENDIF
 
   TotCond=0
-  DO I=1, Nl    
+  DO I=1, Nl
     Slab(I)%Conduct=Slab(I)%mdot/(Slab(I)%pRi-Slab(I)%pRo)
     TotCond=TotCond+Slab(I)%Conduct
   END DO
   DPcoil=mRefTot/TotCond
-  
+
   DO I=1, Nl
     mdot(I)=Slab(I)%Conduct*DPcoil
   END DO
 
   !Apply relaxation
   Slab%mdot=(mdot*(Relax)+Slab%mdot*(1-Relax))
-  
+
   DEALLOCATE(mdot)
-  
+
 RETURN
 
 END SUBROUTINE UpdateMCrefMassFlowRate

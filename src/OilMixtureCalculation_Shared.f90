@@ -110,7 +110,7 @@ PRIVATE
 
 !Sample oil properties from ASHRAE handbook - refrigeration or
 !Jensen, M.K.and Jackman, D.L. (1984). Prediction of nucleate
-!pool boiling heat transfer coefficient of refrigerant-oil 
+!pool boiling heat transfer coefficient of refrigerant-oil
 !mixtures, transactions of the ASME, Journal of heat transfer,
 !106, pp. 184-190.
 
@@ -149,8 +149,8 @@ IMPLICIT NONE
 !To calculate local oil mass fraction
 !
 !REFERENCE:
-!Schwentker, R.A. (2005). Advances to computer model used in the 
-!simulation and optimization of heat exchangers. MS thesis. 
+!Schwentker, R.A. (2005). Advances to computer model used in the
+!simulation and optimization of heat exchangers. MS thesis.
 !The Univeristy of Maryland, College Park.
 !
 !Ipseng Iu
@@ -159,7 +159,7 @@ IMPLICIT NONE
 
 !INPUTS:
 REAL, INTENT(IN) :: AsoluteOilMassFraction !Asolute oil mass fraction
-REAL, INTENT(INOUT) :: MixtureQuality         !Ref.-Oil mixture quality 
+REAL, INTENT(INOUT) :: MixtureQuality         !Ref.-Oil mixture quality
 
 !LOCAL VARIABLES:
 REAL xMax !Maximum oil-mixture quality
@@ -203,8 +203,8 @@ IMPLICIT NONE
 !To calculate saturation temperature for refrigerant-oil mixture, C
 !
 !REFERENCE:
-!Schwentker, R.A. (2005). Advances to computer model used in the 
-!simulation and optimization of heat exchangers. MS thesis. 
+!Schwentker, R.A. (2005). Advances to computer model used in the
+!simulation and optimization of heat exchangers. MS thesis.
 !The Univeristy of Maryland, College Park.
 !
 !Ipseng Iu
@@ -220,7 +220,7 @@ REAL,PARAMETER :: a1=182.52   !Empirical coefficient
 REAL,PARAMETER :: a2=-724.21  !Empirical coefficient
 REAL,PARAMETER :: a3=3868.0   !Empirical coefficient
 REAL,PARAMETER :: a4=-5268.9  !Empirical coefficient
-REAL,PARAMETER :: b1=-0.72212 !Empirical coefficient 
+REAL,PARAMETER :: b1=-0.72212 !Empirical coefficient
 REAL,PARAMETER :: b2=2.3914   !Empirical coefficient
 REAL,PARAMETER :: b3=-13.779  !Empirical coefficient
 REAL,PARAMETER :: b4=17.066   !Empirical coefficient
@@ -280,8 +280,8 @@ IMPLICIT NONE
 !To calculate refrigerant-oil mixture outlet enthalpy (J/kg) and quality
 !
 !REFERENCE:
-!Schwentker, R.A. (2005). Advances to computer model used in the 
-!simulation and optimization of heat exchangers. MS thesis. 
+!Schwentker, R.A. (2005). Advances to computer model used in the
+!simulation and optimization of heat exchangers. MS thesis.
 !The Univeristy of Maryland, College Park.
 !
 !Ipseng Iu
@@ -292,8 +292,8 @@ IMPLICIT NONE
 INTEGER, INTENT(IN) :: CompManufacturer !Compressor manufacturer
                                         !1=Copland; 2=Bristol
 									    !3=Danfoss; 4=Panasonic
-INTEGER,INTENT(IN) :: CoilType !1=Condenser; 2=Evaporator; 
-                               !3=High side interconnecting pipes; 
+INTEGER,INTENT(IN) :: CoilType !1=Condenser; 2=Evaporator;
+                               !3=High side interconnecting pipes;
 				               !4=Low side interconnecting pipes
 				               !5=Microchannel condenser
 				               !6=Microchannel evaporator
@@ -313,7 +313,7 @@ REAL, INTENT(OUT) :: Xout !Outlet quality
 
 !LOCAL PARAMETERS:
 REAL, PARAMETER :: SMALL = 1E-3 !Iteration tolerance
-REAL, PARAMETER :: MaxIter=20 !Maximum number of iterations
+INTEGER, PARAMETER :: MaxIter=20 !Maximum number of iterations
 
 !LOCAL VARIABLES:
 REAL Xmin !Minimum quality
@@ -342,7 +342,7 @@ IF (Wlocal .LE. 0 .OR. Xin .GE. 1 .OR. Xin .LE. 0) THEN
 		Xout=Xin-DXmix
 	CASE DEFAULT !Low pressure side
 		Xout=Xin+DXmix
-	END SELECT			
+	END SELECT
 	RETURN
 END IF
 
@@ -384,7 +384,7 @@ DO I=1, MaxIter
 				Xmin=Xout
 			CASE DEFAULT !Low pressure side
 				Xmax=Xout
-			END SELECT			
+			END SELECT
 
 		ELSE
 
@@ -393,7 +393,7 @@ DO I=1, MaxIter
 				Xmax=Xout
 			CASE DEFAULT !Low pressure side
 				Xmin=Xout
-			END SELECT			
+			END SELECT
 
 		END IF
 		Xout=(Xmin+Xmax)/2
@@ -411,7 +411,7 @@ IF (I .GT. MaxIter) THEN
 		Xout=Xin-DXmix
 	CASE DEFAULT !Low pressure side
 		Xout=Xin+DXmix
-	END SELECT			
+	END SELECT
 	RETURN
 END IF
 
@@ -420,7 +420,7 @@ CASE(1,3,5)  !High pressure side
 	hout=hin-DH
 CASE DEFAULT !Low pressure side
 	hout=hin+DH
-END SELECT			
+END SELECT
 
 RETURN
 
@@ -437,8 +437,8 @@ IMPLICIT NONE
 !To calculate refrigerant-oil mixture specific heat, J/kg-K
 !
 !REFERENCE:
-!Schwentker, R.A. (2005). Advances to computer model used in the 
-!simulation and optimization of heat exchangers. MS thesis. 
+!Schwentker, R.A. (2005). Advances to computer model used in the
+!simulation and optimization of heat exchangers. MS thesis.
 !The Univeristy of Maryland, College Park.
 !
 !Ipseng Iu
@@ -488,8 +488,8 @@ IMPLICIT NONE
 !To calculate refrigerant-oil mixture density, kg/m3
 !
 !REFERENCE:
-!Schwentker, R.A. (2005). Advances to computer model used in the 
-!simulation and optimization of heat exchangers. MS thesis. 
+!Schwentker, R.A. (2005). Advances to computer model used in the
+!simulation and optimization of heat exchangers. MS thesis.
 !The Univeristy of Maryland, College Park.
 !
 !Ipseng Iu
@@ -528,8 +528,8 @@ IMPLICIT NONE
 !To calculate refrigerant-oil mixture viscosity, kg/s-m
 !
 !REFERENCE:
-!Schwentker, R.A. (2005). Advances to computer model used in the 
-!simulation and optimization of heat exchangers. MS thesis. 
+!Schwentker, R.A. (2005). Advances to computer model used in the
+!simulation and optimization of heat exchangers. MS thesis.
 !The Univeristy of Maryland, College Park.
 !
 !Ipseng Iu
@@ -614,8 +614,8 @@ IMPLICIT NONE
 !To calculate refrigerant-oil mixture surface tension, N/m
 !
 !REFERENCE:
-!Schwentker, R.A. (2005). Advances to computer model used in the 
-!simulation and optimization of heat exchangers. MS thesis. 
+!Schwentker, R.A. (2005). Advances to computer model used in the
+!simulation and optimization of heat exchangers. MS thesis.
 !The Univeristy of Maryland, College Park.
 !
 !Ipseng Iu
@@ -672,8 +672,8 @@ IMPLICIT NONE
 !To calculate refrigerant-oil mixture thermal conductivity, W/m-K
 !
 !REFERENCE:
-!Schwentker, R.A. (2005). Advances to computer model used in the 
-!simulation and optimization of heat exchangers. MS thesis. 
+!Schwentker, R.A. (2005). Advances to computer model used in the
+!simulation and optimization of heat exchangers. MS thesis.
 !The Univeristy of Maryland, College Park.
 !
 !Ipseng Iu
@@ -731,8 +731,8 @@ IMPLICIT NONE
 !To calculate refrigerant-oil mixture thermal conductivity, W/m-K
 !
 !REFERENCE:
-!Schwentker, R.A. (2005). Advances to computer model used in the 
-!simulation and optimization of heat exchangers. MS thesis. 
+!Schwentker, R.A. (2005). Advances to computer model used in the
+!simulation and optimization of heat exchangers. MS thesis.
 !The Univeristy of Maryland, College Park.
 !
 !Ipseng Iu
@@ -780,12 +780,12 @@ IMPLICIT NONE
 
 !------------------------------------------------------------------------------
 !OBJECTIVE:
-!To calculate refrigerant-oil mixture evaporation heat transfer 
+!To calculate refrigerant-oil mixture evaporation heat transfer
 !coefficient, W/m2-K
 !
 !REFERENCE:
-!Schwentker, R.A. (2005). Advances to computer model used in the 
-!simulation and optimization of heat exchangers. MS thesis. 
+!Schwentker, R.A. (2005). Advances to computer model used in the
+!simulation and optimization of heat exchangers. MS thesis.
 !The Univeristy of Maryland, College Park.
 !
 !Ipseng Iu
@@ -836,8 +836,8 @@ IMPLICIT NONE
 !To calculate refrigerant-oil mixture thermal conductivity, W/m-K
 !
 !REFERENCE:
-!Schwentker, R.A. (2005). Advances to computer model used in the 
-!simulation and optimization of heat exchangers. MS thesis. 
+!Schwentker, R.A. (2005). Advances to computer model used in the
+!simulation and optimization of heat exchangers. MS thesis.
 !The Univeristy of Maryland, College Park.
 !
 !Ipseng Iu
