@@ -459,7 +459,7 @@ CONTAINS
   END SUBROUTINE UpdateSQLiteSimulationRecord
   !     NOTICE
   !
-  !     Copyright � 1996-2012 The Board of Trustees of the University of Illinois
+  !     Copyright © 1996-2012 The Board of Trustees of the University of Illinois
   !     and The Regents of the University of California through Ernest Orlando Lawrence
   !     Berkeley National Laboratory.  All rights reserved.
   !
@@ -480,6 +480,6 @@ CONTAINS
   !
   !     TRADEMARKS: EnergyPlus is a trademark of the US Department of Energy.
   !
-  !     Copyright � 2008 Building Synergies, LLC.  All rights reserved.
+  !     Copyright © 2008 Building Synergies, LLC.  All rights reserved.
 
 END MODULE SQLiteProcedures
