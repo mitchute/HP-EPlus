@@ -32,16 +32,16 @@ Module Psychrometrics
 
   ! USE STATEMENTS:
   USE DataPrecisionGlobals
-  #ifdef EP_psych_errors
+#ifdef EP_psych_errors
   USE DataGlobals_HPSimIntegrated
   USE DataEnvironment
   USE DataInterfaces
-  #endif
+#endif
 
   ! Use Statements for other routines
-  #ifdef EP_psych_errors
+#ifdef EP_psych_errors
   USE General, ONLY: TrimSigDigits
-  #endif
+#endif
 
   IMPLICIT NONE         ! Enforce explicit typing of all variables
 
@@ -87,11 +87,11 @@ Module Psychrometrics
   'PsyWFnTdbTwbPb        ',  &  ! 16 - HR
   'PsyTsatFnPb           '/)    ! 17 - max iter
 
-  #ifndef EP_psych_errors
+#ifndef EP_psych_errors
   REAL(r64), PARAMETER :: KelvinConv=273.15d0
-  #endif
+#endif
 
-  #ifdef EP_cache_PsyTwbFnTdbWPb
+#ifdef EP_cache_PsyTwbFnTdbWPb
   integer, parameter :: cache_size=1024*1024
   integer, parameter :: precision_bits=20
 
@@ -102,7 +102,7 @@ Module Psychrometrics
     REAL(r64) :: Pb   = 0.0d0
     REAL(r64) :: Twb  = 0.0d0
   END TYPE
-  #endif
+#endif
 
   ! MODULE VARIABLE DECLARATIONS:
   ! na
@@ -114,9 +114,9 @@ Module Psychrometrics
   LOGICAL :: ReportErrors=.true.
   INTEGER(i64), DIMENSION(NumToReport) :: NumTimesCalled=NumToReport*0
   INTEGER, DIMENSION(NumToReport) :: NumIterations =NumToReport*0
-  #ifdef EP_cache_PsyTwbFnTdbWPb
+#ifdef EP_cache_PsyTwbFnTdbWPb
   TYPE(cached_TWB_T), DIMENSION(0:cache_size) :: cached_Twb
-  #endif
+#endif
 
 
   ! Subroutine Specifications for the Module
@@ -190,7 +190,7 @@ CONTAINS
     ! na
 
     ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-    #ifdef EP_psych_stats
+#ifdef EP_psych_stats
     INTEGER :: EchoInputFile  ! found unit number for "eplusout.audit"
     INTEGER, EXTERNAL :: FindUnitNumber
     INTEGER :: Loop
@@ -215,7 +215,7 @@ CONTAINS
         ENDIF
       ENDDO
     ENDIF
-    #endif
+#endif
 
     RETURN
 
@@ -541,13 +541,13 @@ CONTAINS
 
     TDP=PsyTdpFnWPb(W,PB,calledfrom)
 
-    #ifdef EP_psych_stats
+#ifdef EP_psych_stats
     NumTimesCalled(iPsyTdpFnTdbTwbPb)=NumTimesCalled(iPsyTdpFnTdbTwbPb)+1
-    #endif
+#endif
 
     !                                      VALIDITY TEST.
     IF (TDP > TWB) THEN
-      #ifdef EP_psych_errors
+#ifdef EP_psych_errors
       IF (TDP > TWB+0.1d0) THEN
         IF (.not. WarmupFlag) THEN    ! Display error message
           IF (iPsyErrIndex(iPsyTdpFnTdbTwbPb) == 0) THEN
@@ -573,7 +573,7 @@ CONTAINS
       ELSE
         TDP=TWB
       ENDIF
-      #endif
+#endif
       TDP=TWB
     ENDIF
 
@@ -984,14 +984,14 @@ CONTAINS
       RHValue =Rhovapor*461.52d0*(Tdb+KelvinConv)/pws
     End If
 
-    #ifdef EP_psych_stats
+#ifdef EP_psych_stats
     NumTimesCalled(iPsyRhFnTdbRhov)=NumTimesCalled(iPsyRhFnTdbRhov)+1
-    #endif
+#endif
 
     !                   VALIDITY TEST
     IF (RHValue < 0.0d0 .or. RHValue > 1.0d0) THEN
       IF (RHValue > 1.0d0) THEN
-        #ifdef EP_psych_errors
+#ifdef EP_psych_errors
         IF (RHValue > 1.01d0) THEN
           IF (.not. WarmupFlag) THEN
             IF (iPsyErrIndex(iPsyRhFnTdbRhov) == 0) THEN
@@ -1012,10 +1012,10 @@ CONTAINS
             ReportMinUnits='%',ReportMaxUnits='%')
           ENDIF
         ENDIF
-        #endif
+#endif
         RHValue=1.0d0
       ELSE    ! RHValue < 0.0
-        #ifdef EP_psych_errors
+#ifdef EP_psych_errors
         IF (RHValue < -0.05d0) THEN
           IF (.not. WarmupFlag) THEN
             IF (iPsyErrIndex(iPsyRhFnTdbRhov) == 0) THEN
@@ -1036,7 +1036,7 @@ CONTAINS
             ReportMinUnits='%',ReportMaxUnits='%')
           ENDIF
         ENDIF
-        #endif
+#endif
         RHValue=.01d0
       ENDIF
     ENDIF    ! RHValue in proper range
@@ -1093,14 +1093,14 @@ CONTAINS
       ((Tdb+KelvinConv)-35.45d0))
     End If
 
-    #ifdef EP_psych_stats
+#ifdef EP_psych_stats
     NumTimesCalled(iPsyRhFnTdbRhovLBnd0C)=NumTimesCalled(iPsyRhFnTdbRhovLBnd0C)+1
-    #endif
+#endif
 
     !                   VALIDITY TEST
     IF (RHValue < 0.0d0 .or. RHValue > 1.0d0) THEN
       IF (RHValue > 1.0d0) THEN
-        #ifdef EP_psych_errors
+#ifdef EP_psych_errors
         IF (RHValue > 1.01d0) THEN
           IF (.not. WarmupFlag) THEN
             IF (iPsyErrIndex(iPsyRhFnTdbRhovLBnd0C) == 0) THEN
@@ -1121,10 +1121,10 @@ CONTAINS
             ReportMinUnits='%',ReportMaxUnits='%')
           ENDIF
         ENDIF
-        #endif
+#endif
         RHValue=1.0d0
       ELSE    ! RHValue < 0.0
-        #ifdef EP_psych_errors
+#ifdef EP_psych_errors
         IF (RHValue < -0.05d0) THEN
           IF (.not. WarmupFlag) THEN
             IF (iPsyErrIndex(iPsyRhFnTdbRhovLBnd0C) == 0) THEN
@@ -1145,7 +1145,7 @@ CONTAINS
             ReportMinUnits='%',ReportMaxUnits='%')
           ENDIF
         ENDIF
-        #endif
+#endif
         RHValue=.01d0
       ENDIF
     ENDIF    ! RHValue in proper range
@@ -1208,14 +1208,14 @@ CONTAINS
     !                   Calculate The Relative Humidity
     RHValue=U/(1.0d0-(1.0d0-U)*(PWS/PB))
     !
-    #ifdef EP_psych_stats
+#ifdef EP_psych_stats
     NumTimesCalled(iPsyRhFnTdbWPb)=NumTimesCalled(iPsyRhFnTdbWPb)+1
-    #endif
+#endif
 
     !                   VALIDITY TEST
     IF (RHValue < 0.0 .or. RHValue > 1.0) THEN
       IF (RHValue > 1.0d0) THEN
-        #ifdef EP_psych_errors
+#ifdef EP_psych_errors
         IF (RHValue > 1.01d0) THEN
           IF (.not. WarmupFlag) THEN
             IF (iPsyErrIndex(iPsyRhFnTdbWPb) == 0) THEN
@@ -1236,10 +1236,10 @@ CONTAINS
             ReportMinUnits='%',ReportMaxUnits='%')
           ENDIF
         ENDIF
-        #endif
+#endif
         RHValue=1.0d0
       ELSE    ! RHValue < 0.0
-        #ifdef EP_psych_errors
+#ifdef EP_psych_errors
         IF (RHValue < -0.05d0) THEN
           IF (.not. WarmupFlag) THEN
             IF (iPsyErrIndex(iPsyRhFnTdbWPb) == 0) THEN
@@ -1260,7 +1260,7 @@ CONTAINS
             ReportMinUnits='%',ReportMaxUnits='%')
           ENDIF
         ENDIF
-        #endif
+#endif
         RHValue=.01d0
       ENDIF
     ENDIF    ! RHValue in proper range
@@ -1345,14 +1345,14 @@ CONTAINS
     !                   Calculate The Relative Humidity
     RHValue=U/(1.0d0-(1.0d0-U)*(PWS/PB))
     !
-    #ifdef EP_psych_stats
+#ifdef EP_psych_stats
     NumTimesCalled(iPsyRhFnTdbWPb)=NumTimesCalled(iPsyRhFnTdbWPb)+1
-    #endif
+#endif
 
     !                   VALIDITY TEST
     IF (RHValue < 0.0 .or. RHValue > 1.0) THEN
       IF (RHValue > 1.0d0) THEN
-        #ifdef EP_psych_errors
+#ifdef EP_psych_errors
         IF (RHValue > 1.01d0) THEN
           IF (.not. WarmupFlag) THEN
             IF (iPsyErrIndex(iPsyRhFnTdbWPb) == 0) THEN
@@ -1373,10 +1373,10 @@ CONTAINS
             ReportMinUnits='%',ReportMaxUnits='%')
           ENDIF
         ENDIF
-        #endif
+#endif
         RHValue=1.0d0
       ELSE    ! RHValue < 0.0
-        #ifdef EP_psych_errors
+#ifdef EP_psych_errors
         IF (RHValue < -0.05d0) THEN
           IF (.not. WarmupFlag) THEN
             IF (iPsyErrIndex(iPsyRhFnTdbWPb) == 0) THEN
@@ -1397,7 +1397,7 @@ CONTAINS
             ReportMinUnits='%',ReportMaxUnits='%')
           ENDIF
         ENDIF
-        #endif
+#endif
         RHValue=.01d0
       ENDIF
     ENDIF    ! RHValue in proper range
@@ -1410,7 +1410,7 @@ CONTAINS
     RETURN
   END SUBROUTINE PsyRhFnTdbWPb2
 
-  #ifdef EP_cache_PsyTwbFnTdbWPb
+#ifdef EP_cache_PsyTwbFnTdbWPb
   FUNCTION PsyTwbFnTdbWPb(Tdb,W,Pb,calledfrom)  RESULT (Twb_result)
 
     ! FUNCTION INFORMATION:
@@ -1488,9 +1488,9 @@ CONTAINS
   END FUNCTION PsyTwbFnTdbWPb
 
   FUNCTION PsyTwbFnTdbWPb_raw(TDB,dW,Patm,calledfrom) RESULT(TWB)
-    #else
-    FUNCTION PsyTwbFnTdbWPb(TDB,dW,Patm,calledfrom) RESULT(TWB)
-      #endif
+#else
+  FUNCTION PsyTwbFnTdbWPb(TDB,dW,Patm,calledfrom) RESULT(TWB)
+#endif
 
       ! FUNCTION INFORMATION:
       !       AUTHOR         George Shih
@@ -1548,13 +1548,13 @@ CONTAINS
       Integer:: icvg      ! Iteration convergence flag
       LOGICAL FlagError   ! set when errors should be flagged
 
-      #ifdef EP_psych_stats
+#ifdef EP_psych_stats
       NumTimesCalled(iPsyTwbFnTdbWPb)=NumTimesCalled(iPsyTwbFnTdbWPb)+1
-      #endif
+#endif
 
       ! CHECK TDB IN RANGE.
       FlagError=.false.
-      #ifdef EP_psych_errors
+#ifdef EP_psych_errors
       IF (TDB <= -100.0d0 .or. TDB >= 200.0d0) THEN
         IF (.not. WarmupFlag) THEN
           IF (iPsyErrIndex(iPsyTwbFnTdbWPb) == 0) THEN
@@ -1571,11 +1571,11 @@ CONTAINS
           iPsyErrIndex(iPsyTwbFnTdbWPb),ReportMinOf=TDB,ReportMaxOf=TDB,ReportMinUnits='C',ReportMaxUnits='C')
         ENDIF
       ENDIF
-      #endif
+#endif
 
       W=dW
       IF (W < 0.0d0) THEN
-        #ifdef EP_psych_errors
+#ifdef EP_psych_errors
         IF (W <= -.0001d0) THEN
           IF (.not. WarmupFlag) THEN
             IF (iPsyErrIndex(iPsyTwbFnTdbWPb2) == 0) THEN
@@ -1595,7 +1595,7 @@ CONTAINS
             iPsyErrIndex(iPsyTwbFnTdbWPb2),ReportMinOf=W,ReportMaxOf=W,ReportMinUnits='[]',ReportMaxUnits='[]')
           ENDIF
         ENDIF
-        #endif
+#endif
         W=1.d-5
       ENDIF
 
@@ -1660,13 +1660,13 @@ CONTAINS
 
       End Do  ! End of Iteration Loop
 
-      #ifdef EP_psych_stats
+#ifdef EP_psych_stats
       NumIterations(iPsyTwbFnTdbWPb)=NumIterations(iPsyTwbFnTdbWPb)+iter
-      #endif
+#endif
 
       ! Wet bulb temperature has not converged after maximum specified
       ! iterations. Print error message, set return error flag, and RETURN
-      #ifdef EP_psych_errors
+#ifdef EP_psych_errors
       IF (iter > itmax) THEN
         IF (.not. WarmupFlag) THEN
           IF (iPsyErrIndex(iPsyTwbFnTdbWPb3) == 0) THEN
@@ -1685,16 +1685,16 @@ CONTAINS
           iPsyErrIndex(iPsyTwbFnTdbWPb3))
         ENDIF
       ENDIF
-      #endif
+#endif
 
       !Result is Temperature Wet Bulb
       TWB=WBT
 
-      #ifdef EP_psych_errors
+#ifdef EP_psych_errors
       IF (FlagError) THEN
         CALL ShowContinueError(' Resultant Temperature= '//TRIM(TrimSigDigits(WBT,2)))
       ENDIF
-      #endif
+#endif
 
       ! If (TempWetBulb)>(Dry Bulb Temp) , Setting (TempWetBulb)=(DryBulbTemp).
       IF (TWB .GT. TDB)  Then
@@ -1703,17 +1703,17 @@ CONTAINS
       IF(OutputFileDebug .EQ. 9 .OR. OutputFileDebug .EQ. 10 .OR. OutputFileDebug .EQ. 12) THEN
         WRITE(*,*) 'Error with OutputFileDebug'    !RS: Debugging: Searching for a mis-set file number
       END IF
-      #ifdef generatetestdata
+#ifdef generatetestdata
       write(outputfiledebug,*) Tdb,dW,Patm,Twb
-      #endif
+#endif
 
       RETURN
 
-      #ifdef EP_cache_PsyTwbFnTdbWPb
+#ifdef EP_cache_PsyTwbFnTdbWPb
     END FUNCTION PsyTwbFnTdbWPb_raw
-    #else
+#else
   END FUNCTION PsyTwbFnTdbWPb
-  #endif
+#endif
 
   SUBROUTINE PsyTwbFnTdbWPb2(Tdb,W,Pb,Twb_result, calledfrom) !RS: Debugging: Same as above function, but a subroutine instead
     !RS: Debugging: Used in ORNLSolver only
@@ -1838,13 +1838,13 @@ CONTAINS
     w=MAX(dW,1.0d-5)
     V=1.59473d2*(1.d0+1.6078d0*W)*(1.8d0*TDB+492.d0)/PB
 
-    #ifdef EP_psych_stats
+#ifdef EP_psych_stats
     NumTimesCalled(iPsyVFnTdbWPb)=NumTimesCalled(iPsyVFnTdbWPb)+1
-    #endif
+#endif
 
     !                                      VALIDITY TEST.
     IF (V < 0.0d0) THEN
-      #ifdef EP_psych_errors
+#ifdef EP_psych_errors
       IF (V <= -.01d0) THEN
         IF (.not. WarmupFlag) THEN
           IF (iPsyErrIndex(iPsyVFnTdbWPb) == 0) THEN
@@ -1865,7 +1865,7 @@ CONTAINS
         ENDIF
       ENDIF
       V=0.83d0
-      #endif
+#endif
     ENDIF
 
     ! V is the result
@@ -1914,9 +1914,9 @@ CONTAINS
     ! FUNCTION LOCAL VARIABLE DECLARATIONS:
     REAL(r64) PDEW ! saturation pressure at dew-point temperature {Pascals}
 
-    #ifdef EP_psych_stats
+#ifdef EP_psych_stats
     NumTimesCalled(iPsyWFnTdpPb)=NumTimesCalled(iPsyWFnTdpPb)+1
-    #endif
+#endif
 
     IF (PRESENT(calledfrom)) THEN
       PDEW=PsyPsatFnTemp(TDP,calledfrom)
@@ -1926,7 +1926,7 @@ CONTAINS
     W=PDEW*0.62198d0/(PB-PDEW)
     !                                      VALIDITY TEST.
     IF (W < 0.0d0) THEN
-      #ifdef EP_psych_errors
+#ifdef EP_psych_errors
       IF (W <= -.0001d0) THEN
         IF (.not. WarmupFlag) THEN
           IF (iPsyErrIndex(iPsyWFnTdpPb) == 0) THEN
@@ -1945,7 +1945,7 @@ CONTAINS
           iPsyErrIndex(iPsyWFnTdpPb),ReportMinOf=W,ReportMaxOf=W,ReportMinUnits='[]',ReportMaxUnits='[]')
         ENDIF
       ENDIF
-      #endif
+#endif
       W=1.d-5
     ENDIF
 
@@ -1998,13 +1998,13 @@ CONTAINS
     !CP-------- here is 1.2, 1200., 1.004, or 1004.  --------
     W=(H-1.00484d3*TDB)/(2.50094d6+1.85895d3*TDB)
     !
-    #ifdef EP_psych_stats
+#ifdef EP_psych_stats
     NumTimesCalled(iPsyWFnTdbH)=NumTimesCalled(iPsyWFnTdbH)+1
-    #endif
+#endif
 
     !                                      VALIDITY TEST.
     IF (W < 0.0d0) THEN
-      #ifdef EP_psych_errors
+#ifdef EP_psych_errors
       IF (W < -.0001d0) THEN
         IF (.not. WarmupFlag) THEN
           IF (iPsyErrIndex(iPsyWFnTdbH) == 0) THEN
@@ -2023,7 +2023,7 @@ CONTAINS
           iPsyErrIndex(iPsyWFnTdbH),ReportMinOf=W,ReportMaxOf=W,ReportMinUnits='[]',ReportMaxUnits='[]')
         ENDIF
       ENDIF
-      #endif
+#endif
       W=1.d-5
     ENDIF
 
@@ -2077,14 +2077,14 @@ CONTAINS
     REAL(r64) TWB   ! test wet-bulb temperature
 
 
-    #ifdef EP_psych_stats
+#ifdef EP_psych_stats
     NumTimesCalled(iPsyWFnTdbTwbPb)=NumTimesCalled(iPsyWFnTdbTwbPb)+1
-    #endif
+#endif
 
     !                                      VALIDITY CHECK.
     TWB=TWBin
     IF (TWB > TDB) THEN
-      #ifdef EP_psych_errors
+#ifdef EP_psych_errors
       IF (TWB > (TDB+0.01d0)) THEN
         IF (ReportErrors .and. .not. WarmupFlag) THEN
           IF (iPsyErrIndex(iPsyWFnTdbTwbPb) == 0) THEN
@@ -2103,7 +2103,7 @@ CONTAINS
           iPsyErrIndex(iPsyWFnTdbTwbPb),ReportMinOf=TWB,ReportMaxOf=TWB,ReportMinUnits='C',ReportMaxUnits='C')
         ENDIF
       ENDIF
-      #endif
+#endif
       TWB=TDB
     ENDIF
     !                                      CALCULATION.
@@ -2118,7 +2118,7 @@ CONTAINS
     (2501.0d0+1.805d0*TDB-4.186d0*TWB)
     !                                      VALIDITY CHECK.
     IF (W < 0.0d0) THEN
-      #ifdef EP_psych_errors
+#ifdef EP_psych_errors
       IF (ReportErrors .and. .not. WarmupFlag) THEN
         IF (iPsyErrIndex(iPsyWFnTdbTwbPb2) == 0) THEN
           String=' Dry-Bulb= '//TRIM(TrimSigDigits(TDB,2))//' Wet-Bulb= '//TRIM(TrimSigDigits(TWB,2))//  &
@@ -2136,7 +2136,7 @@ CONTAINS
         CALL ShowRecurringWarningErrorAtEnd('Calculated Humidity Ratio Invalid (PsyWFnTdbTwbPb)',   &
         iPsyErrIndex(iPsyWFnTdbTwbPb2),ReportMinOf=W,ReportMaxOf=W,ReportMinUnits='[]',ReportMaxUnits='[]')
       ENDIF
-      #endif
+#endif
       W=PsyWFnTdbRhPb(TDB,.0001d0,PB,calledfrom)
     ENDIF
 
@@ -2188,9 +2188,9 @@ CONTAINS
     REAL(r64) PDRY  ! Pressure at dry-bulb temperature {Pascals}
     REAL(r64) PDEW  ! Pressure at dew-point temperature {Pascals}
 
-    #ifdef EP_psych_stats
+#ifdef EP_psych_stats
     NumTimesCalled(iPsyWFnTdbRhPb)=NumTimesCalled(iPsyWFnTdbRhPb)+1
-    #endif
+#endif
 
     IF (PRESENT(calledfrom)) THEN
       PDRY=PsyPsatFnTemp(TDB,calledfrom)
@@ -2214,7 +2214,7 @@ CONTAINS
     !                                      ASHRAE HANDBOOK OF FUNDAMENTALS
     !                                      PAGE 99  EQUATION 22
     IF (W < 1.0d-5) THEN
-      #ifdef EP_psych_errors
+#ifdef EP_psych_errors
       IF (W <= -.0001d0) THEN
         IF (.not. WarmupFlag) THEN
           IF (iPsyErrIndex(iPsyWFnTdbRhPb) == 0) THEN
@@ -2234,7 +2234,7 @@ CONTAINS
           iPsyErrIndex(iPsyWFnTdbRhPb),ReportMinOf=W,ReportMaxOf=W,ReportMinUnits='[]',ReportMaxUnits='[]')
         ENDIF
       ENDIF
-      #endif
+#endif
       W=1.d-5
     ENDIF
 
@@ -2299,12 +2299,12 @@ CONTAINS
     REAL(r64)   :: Tkel  ! Dry-bulb in REAL(r64) for function passing
 
 
-    #ifdef EP_psych_stats
+#ifdef EP_psych_stats
     NumTimesCalled(iPsyPsatFnTemp)=NumTimesCalled(iPsyPsatFnTemp)+1
-    #endif
+#endif
 
     ! CHECK T IN RANGE.
-    #ifdef EP_psych_errors
+#ifdef EP_psych_errors
     IF (T <= -100.0d0 .or. T >= 200.0d0) THEN
       IF (.not. WarmupFlag) THEN
         IF (iPsyErrIndex(iPsyPsatFnTemp) == 0) THEN
@@ -2320,7 +2320,7 @@ CONTAINS
         iPsyErrIndex(iPsyPsatFnTemp),ReportMinOf=T,ReportMaxOf=T,ReportMinUnits='C',ReportMaxUnits='C')
       ENDIF
     ENDIF
-    #endif
+#endif
 
     ! Convert temperature from Centigrade to Kelvin.
     TKel = T + KelvinConv
@@ -2343,7 +2343,7 @@ CONTAINS
 
     ELSE
       ! bad temperature.  Use 0.0 C
-      #ifdef EP_psych_errors
+#ifdef EP_psych_errors
       !CALL ShowSevereError('PsyPsatFnTemp -- Bad input temperature='//TRIM(TrimSigDigits(T,2))) !RS: Debugging: Commenting out for ONE test
       if (present(calledfrom)) then
         CALL ShowContinueErrorTimeStamp(' Routine='//trim(calledfrom)//',')
@@ -2351,9 +2351,9 @@ CONTAINS
         CALL ShowContinueErrorTimeStamp(' Routine=Unknown,')
       endif
       CALL ShowFatalError(' Program terminates due to preceding conditions.')
-      #else
+#else
       STOP 'PsyPsatFnTemp'
-      #endif
+#endif
     ENDIF
 
 
@@ -2425,12 +2425,12 @@ CONTAINS
       Hloc = MIN(-.00001d0,H)
     END IF
 
-    #ifdef EP_psych_stats
+#ifdef EP_psych_stats
     NumTimesCalled(iPsyTsatFnHPb)=NumTimesCalled(iPsyTsatFnHPb)+1
-    #endif
+#endif
 
     FlagError=.false.
-    #ifdef EP_psych_errors
+#ifdef EP_psych_errors
     IF (HH <= -4.24D4 .or. HH >= 4.5866D7) THEN
       IF (.not. WarmupFlag) THEN
         IF (iPsyErrIndex(iPsyTsatFnHPb) == 0) THEN
@@ -2448,7 +2448,7 @@ CONTAINS
         iPsyErrIndex(iPsyTsatFnHPb),ReportMinOf=HH,ReportMaxOf=HH,ReportMinUnits='J/kg',ReportMaxUnits='J/kg')
       ENDIF
     ENDIF
-    #endif
+#endif
     !
     IF (HH > 7.5222d4) GO TO 20
     IF (HH > 2.7297d4) GO TO 60
@@ -2505,12 +2505,12 @@ CONTAINS
     !                                      OTHERWISE TEMP. IS COMPUTED BY
     !                                      FOLLOWING ITERATION METHOD
     120 CONTINUE
-    #ifdef EP_psych_errors
+#ifdef EP_psych_errors
     IF (FlagError) THEN
       !CALL ShowContinueError(' Initial Resultant Temperature= '//TRIM(TrimSigDigits(T,2)))   !RS: Secret Search String
       WRITE(DebugFile,*) ' Initial Resultant Temperature= '//TRIM(TrimSigDigits(T,2))
     ENDIF
-    #endif
+#endif
     IF (ABS(PB-1.0133d5)/1.0133d5 <= 0.01d0) GO TO 170
     IterCount=0
     T1=T
@@ -2536,7 +2536,7 @@ CONTAINS
     T=T2
     GO TO 170
     160 CONTINUE
-    #ifdef EP_psych_errors
+#ifdef EP_psych_errors
     IF (FlagError) THEN
       CALL ShowSevereError('Temperature did not converge (PsyTsatFnHPb)')
       if (present(calledfrom)) then
@@ -2547,7 +2547,7 @@ CONTAINS
       String=' Enthalpy='//TRIM(TrimSigDigits(HH,5))//' Pressure= '//TRIM(TrimSigDigits(PB,2))
       CALL ShowContinueError(TRIM(String)//' Last T='//TRIM(TrimSigDigits(T,2)))
     ENDIF
-    #endif
+#endif
     170 CONTINUE
 
     !   result is T
@@ -2632,13 +2632,13 @@ CONTAINS
     Integer :: icvg       ! Iteration convergence flag
 
 
-    #ifdef EP_psych_stats
+#ifdef EP_psych_stats
     NumTimesCalled(iPsyTsatFnPb)=NumTimesCalled(iPsyTsatFnPb)+1
-    #endif
+#endif
 
     ! Check press in range.
     FlagError=.false.
-    #ifdef EP_psych_errors
+#ifdef EP_psych_errors
     IF (Press <= 0.0017d0 .or. Press >= 1555000.d0) THEN
       IF (.not. WarmupFlag) THEN
         IF (iPsyErrIndex(iPsyTsatFnPb) == 0) THEN
@@ -2655,7 +2655,7 @@ CONTAINS
         iPsyErrIndex(iPsyTsatFnPb),ReportMinOf=Press,ReportMaxOf=Press,ReportMinUnits='Pa',ReportMaxUnits='Pa')
       ENDIF
     ENDIF
-    #endif
+#endif
     IF (Press == Press_save) THEN
       Temp=tSat_Save
       RETURN
@@ -2712,11 +2712,11 @@ CONTAINS
 
     End IF  !End If for the Pressure Range Checking
 
-    #ifdef EP_psych_stats
+#ifdef EP_psych_stats
     NumIterations(iPsyTsatFnPb)=NumIterations(iPsyTsatFnPb)+iter
-    #endif
+#endif
 
-    #ifdef EP_psych_errors
+#ifdef EP_psych_errors
     IF (iter > itmax) THEN
       IF (.not. WarmupFlag) THEN
         IF (iPsyErrIndex(iPsyTsatFnPb2) == 0) THEN
@@ -2734,18 +2734,18 @@ CONTAINS
         iPsyErrIndex(iPsyTsatFnPb2),ReportMinOf=tSat,ReportMaxOf=tSat,ReportMinUnits='C',ReportMaxUnits='C')
       ENDIF
     ENDIF
-    #endif
+#endif
 
     ! Result is SatTemperature
     Temp = tSat
     tSat_Save=tSat
 
 
-    #ifdef EP_psych_errors
+#ifdef EP_psych_errors
     IF (FlagError) THEN
       CALL ShowContinueError(' Resultant Temperature= '//TRIM(TrimSigDigits(Temp,2)))
     ENDIF
-    #endif
+#endif
 
     RETURN
 

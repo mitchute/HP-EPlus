@@ -32,19 +32,19 @@ MODULE DataStringGlobals      ! EnergyPlus Data-Only Module
   ! MODULE PARAMETER DEFINITIONS:
   CHARACTER(len=*), PARAMETER :: UpperCase='ABCDEFGHIJKLMNOPQRSTUVWXYZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝ'
   CHARACTER(len=*), PARAMETER :: LowerCase='abcdefghijklmnopqrstuvwxyzàáâãäåæçèéêëìíîïðñòóôõöøùúûüý'
-  CHARACTER(len=*), PARAMETER :: AccentedUpperCase='ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝ'
-  CHARACTER(len=*), PARAMETER :: AccentedLowerCase='àáâãäåæçèéêëìíîïðñòóôõöøùúûüý'
-  CHARACTER(len=*), PARAMETER :: AllCase=&
-  'àáâãäåæçèéêëìíîïðñòóôõöøùúûüýÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
-  #ifdef WINDOWS
-  CHARACTER(len=1),  PARAMETER :: PathChar='\'
-  #elif defined LINUX
+!  CHARACTER(len=*), PARAMETER :: AccentedUpperCase='ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝ'
+!  CHARACTER(len=*), PARAMETER :: AccentedLowerCase='àáâãäåæçèéêëìíîïðñòóôõöøùúûüý'
+!  CHARACTER(len=*), PARAMETER :: AllCase='àáâãäåæçèéêëìíîïðñòóôõöøùúûüýÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝ&
+!                                         &ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+!#ifdef WINDOWS
+!  CHARACTER(len=1),  PARAMETER :: PathChar='\'
+!#elif defined LINUX
+!  CHARACTER(len=1),  PARAMETER :: PathChar='/'
+!#elif defined MAC
   CHARACTER(len=1),  PARAMETER :: PathChar='/'
-  #elif defined MAC
-  CHARACTER(len=1),  PARAMETER :: PathChar='/'
-  #else
-  CHARACTER(len=1),  PARAMETER :: PathChar='\'  ! default to Windows
-  #endif
+!#else
+!  CHARACTER(len=1),  PARAMETER :: PathChar='\'  ! default to Windows
+!#endif
   INTEGER,           PARAMETER :: PathLimit=255
   CHARACTER(len=1),  PARAMETER :: CharComma=CHAR(44) !comma
   CHARACTER(len=1),  PARAMETER :: CharSemicolon=CHAR(59) !comma

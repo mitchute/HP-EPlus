@@ -3567,9 +3567,9 @@ REAL(r64) FUNCTION PerformanceCurveObject(CurveIndex,Var1,Var2,Var3,Var4) RESULT
   REAL(r64) :: CurveValueNumer ! cpw22Aug2010 Numerator in in exponential skew normal curve
   REAL(r64) :: CurveValueDenom ! cpw22Aug2010 Numerator in in exponential skew normal curve
   REAL(r64) :: CurveValueExp ! cpw22Aug2010 Exponential term in sigmoid curve
-  #ifdef nointrinsicERF
+#ifdef nointrinsicERF
   REAL(r64), EXTERNAL :: ERF
-  #endif
+#endif
 
   V1 = MAX(MIN(Var1,PerfCurve(CurveIndex)%Var1Max),PerfCurve(CurveIndex)%Var1Min)
 
