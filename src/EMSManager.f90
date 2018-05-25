@@ -2,166 +2,166 @@
 
 MODULE EMSManager
 
-        ! MODULE INFORMATION:
-        !       AUTHOR         Peter Graham Ellis
-        !       DATE WRITTEN   June 2006
-        !       MODIFIED       Brent Griffith
-        !                      May - August 2009
-        !       RE-ENGINEERED  na
+  ! MODULE INFORMATION:
+  !       AUTHOR         Peter Graham Ellis
+  !       DATE WRITTEN   June 2006
+  !       MODIFIED       Brent Griffith
+  !                      May - August 2009
+  !       RE-ENGINEERED  na
 
-        ! PURPOSE OF THIS MODULE:
-        ! This module manages the programmable energy management system(EMS).
+  ! PURPOSE OF THIS MODULE:
+  ! This module manages the programmable energy management system(EMS).
 
-        ! METHODOLOGY EMPLOYED:
-        !
+  ! METHODOLOGY EMPLOYED:
+  !
 
-        ! USE STATEMENTS:
-USE DataPrecisionGlobals
-USE DataGlobals_HPSimIntegrated, ONLY: MaxNameLength !, ShowFatalError, ShowWarningError, ShowContinueError
-USE DataInterfaces, ONLY: GetInternalVariableValue
-USE DataRuntimeLanguage
+  ! USE STATEMENTS:
+  USE DataPrecisionGlobals
+  USE DataGlobals_HPSimIntegrated, ONLY: MaxNameLength !, ShowFatalError, ShowWarningError, ShowContinueError
+  USE DataInterfaces, ONLY: GetInternalVariableValue
+  USE DataRuntimeLanguage
 
-IMPLICIT NONE ! Enforce explicit typing of all variables
+  IMPLICIT NONE ! Enforce explicit typing of all variables
 
-          ! MODULE PARAMETER DEFINITIONS
-INTEGER, PARAMETER, PUBLIC :: iTemperatureSetpoint      = 101 ! integer for node setpoint control type
-INTEGER, PARAMETER, PUBLIC :: iTemperatureMinSetpoint   = 102 ! integer for node setpoint control type
-INTEGER, PARAMETER, PUBLIC :: iTemperatureMaxSetpoint   = 103 ! integer for node setpoint control type
-INTEGER, PARAMETER, PUBLIC :: iHumidityRatioSetpoint    = 104 ! integer for node setpoint control type
-INTEGER, PARAMETER, PUBLIC :: iHumidityRatioMinSetpoint = 105 ! integer for node setpoint control type
-INTEGER, PARAMETER, PUBLIC :: iHumidityRatioMaxSetpoint = 106 ! integer for node setpoint control type
-INTEGER, PARAMETER, PUBLIC :: iMassFlowRateSetpoint     = 107 ! integer for node setpoint control type
-INTEGER, PARAMETER, PUBLIC :: iMassFlowRateMinSetpoint  = 108 ! integer for node setpoint control type
-INTEGER, PARAMETER, PUBLIC :: iMassFlowRateMaxSetpoint  = 109 ! integer for node setpoint control type
+  ! MODULE PARAMETER DEFINITIONS
+  INTEGER, PARAMETER, PUBLIC :: iTemperatureSetpoint      = 101 ! integer for node setpoint control type
+  INTEGER, PARAMETER, PUBLIC :: iTemperatureMinSetpoint   = 102 ! integer for node setpoint control type
+  INTEGER, PARAMETER, PUBLIC :: iTemperatureMaxSetpoint   = 103 ! integer for node setpoint control type
+  INTEGER, PARAMETER, PUBLIC :: iHumidityRatioSetpoint    = 104 ! integer for node setpoint control type
+  INTEGER, PARAMETER, PUBLIC :: iHumidityRatioMinSetpoint = 105 ! integer for node setpoint control type
+  INTEGER, PARAMETER, PUBLIC :: iHumidityRatioMaxSetpoint = 106 ! integer for node setpoint control type
+  INTEGER, PARAMETER, PUBLIC :: iMassFlowRateSetpoint     = 107 ! integer for node setpoint control type
+  INTEGER, PARAMETER, PUBLIC :: iMassFlowRateMinSetpoint  = 108 ! integer for node setpoint control type
+  INTEGER, PARAMETER, PUBLIC :: iMassFlowRateMaxSetpoint  = 109 ! integer for node setpoint control type
 
-PRIVATE ! Everything private unless explicitly made public
+  PRIVATE ! Everything private unless explicitly made public
 
-          ! DERIVED TYPE DEFINITIONS:
+  ! DERIVED TYPE DEFINITIONS:
 
-          ! MODULE VARIABLE TYPE DECLARATIONS:
+  ! MODULE VARIABLE TYPE DECLARATIONS:
 
-          ! MODULE VARIABLE DECLARATIONS:
-LOGICAL, SAVE :: GetEMSUserInput = .TRUE.  ! Flag to prevent input from being read multiple times
-LOGICAL, SAVE :: FinishProcessingUserInput = .TRUE. ! Flag to indicate still need to process input
+  ! MODULE VARIABLE DECLARATIONS:
+  LOGICAL, SAVE :: GetEMSUserInput = .TRUE.  ! Flag to prevent input from being read multiple times
+  LOGICAL, SAVE :: FinishProcessingUserInput = .TRUE. ! Flag to indicate still need to process input
 
-          ! SUBROUTINE SPECIFICATIONS:
-PUBLIC CheckIfAnyEMS
-PUBLIC ManageEMS
-PRIVATE ReportEMS
-PRIVATE GetEMSInput
-PRIVATE InitEMS
-PRIVATE ProcessEMSInput
-PRIVATE SetupPrimaryAirSystemAvailMgrAsActuators
-PRIVATE SetupNodeSetpointsAsActuators
-PRIVATE SetupZoneInfoAsInternalDataAvail
-PRIVATE SetupWindowShadingControlActuators
-PRIVATE SetupThermostatActuators
-PRIVATE SetupSurfaceConvectionActuators
-PRIVATE GetVariableTypeAndIndex
-PRIVATE EchoOutActuatorKeyChoices
-PRIVATE EchoOutInternalVariableChoices
-PUBLIC UpdateEMSTrendVariables
-PUBLIC CheckIfNodeSetpointManagedByEMS
+  ! SUBROUTINE SPECIFICATIONS:
+  PUBLIC CheckIfAnyEMS
+  PUBLIC ManageEMS
+  PRIVATE ReportEMS
+  PRIVATE GetEMSInput
+  PRIVATE InitEMS
+  PRIVATE ProcessEMSInput
+  PRIVATE SetupPrimaryAirSystemAvailMgrAsActuators
+  PRIVATE SetupNodeSetpointsAsActuators
+  PRIVATE SetupZoneInfoAsInternalDataAvail
+  PRIVATE SetupWindowShadingControlActuators
+  PRIVATE SetupThermostatActuators
+  PRIVATE SetupSurfaceConvectionActuators
+  PRIVATE GetVariableTypeAndIndex
+  PRIVATE EchoOutActuatorKeyChoices
+  PRIVATE EchoOutInternalVariableChoices
+  PUBLIC UpdateEMSTrendVariables
+  PUBLIC CheckIfNodeSetpointManagedByEMS
 
 CONTAINS
 
-SUBROUTINE CheckIFAnyEMS
+  SUBROUTINE CheckIFAnyEMS
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Brent Griffith
-          !       DATE WRITTEN   April 2009
-          !       MODIFIED       Rui Zhang February 2010
-          !       RE-ENGINEERED  na
+    ! SUBROUTINE INFORMATION:
+    !       AUTHOR         Brent Griffith
+    !       DATE WRITTEN   April 2009
+    !       MODIFIED       Rui Zhang February 2010
+    !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Determine if EMS is used in model and set flag
-          ! This needs to be checked early so calls to SetupEMSActuator
-          ! can be avoided if there is no EMS in model.
-          ! We cannot do error checking during the full get input until later in the simulation.
+    ! PURPOSE OF THIS SUBROUTINE:
+    ! Determine if EMS is used in model and set flag
+    ! This needs to be checked early so calls to SetupEMSActuator
+    ! can be avoided if there is no EMS in model.
+    ! We cannot do error checking during the full get input until later in the simulation.
 
-          ! METHODOLOGY EMPLOYED:
-          ! Get number of EMS-related input objects and set
-          ! global logical AnyEnergyManagementSystemInModel
+    ! METHODOLOGY EMPLOYED:
+    ! Get number of EMS-related input objects and set
+    ! global logical AnyEnergyManagementSystemInModel
 
-          ! REFERENCES:
-          ! na
+    ! REFERENCES:
+    ! na
 
-          ! USE STATEMENTS:
-!  USE DataIPShortcuts
-  USE InputProcessor , ONLY: GetNumObjectsFound
-  USE DataGlobals_HPSimIntegrated ,    ONLY: AnyEnergyManagementSystemInModel
-  USE General,         ONLY: ScanForReports
+    ! USE STATEMENTS:
+    !  USE DataIPShortcuts
+    USE InputProcessor , ONLY: GetNumObjectsFound
+    USE DataGlobals_HPSimIntegrated ,    ONLY: AnyEnergyManagementSystemInModel
+    USE General,         ONLY: ScanForReports
 
-  IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
+    IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-          ! na
+    ! SUBROUTINE ARGUMENT DEFINITIONS:
+    ! na
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+    ! SUBROUTINE PARAMETER DEFINITIONS:
+    ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+    ! INTERFACE BLOCK SPECIFICATIONS:
+    ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+    ! DERIVED TYPE DEFINITIONS:
+    ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+    ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
 
-  INTEGER, EXTERNAL :: GetNewUnitNumber
-  INTEGER :: write_stat
-  CHARACTER(len=MaxNameLength) :: cCurrentModuleObject
+    INTEGER, EXTERNAL :: GetNewUnitNumber
+    INTEGER :: write_stat
+    CHARACTER(len=MaxNameLength) :: cCurrentModuleObject
 
-  cCurrentModuleObject = 'EnergyManagementSystem:Sensor'
-  NumSensors = GetNumObjectsFound(TRIM(cCurrentModuleObject))
+    cCurrentModuleObject = 'EnergyManagementSystem:Sensor'
+    NumSensors = GetNumObjectsFound(TRIM(cCurrentModuleObject))
 
-  cCurrentModuleObject = 'EnergyManagementSystem:Actuator'
-  numActuatorsUsed = GetNumObjectsFound(TRIM(cCurrentModuleObject))
+    cCurrentModuleObject = 'EnergyManagementSystem:Actuator'
+    numActuatorsUsed = GetNumObjectsFound(TRIM(cCurrentModuleObject))
 
-  cCurrentModuleObject = 'EnergyManagementSystem:ProgramCallingManager'
-  NumProgramCallManagers = GetNumObjectsFound(TRIM(cCurrentModuleObject))
+    cCurrentModuleObject = 'EnergyManagementSystem:ProgramCallingManager'
+    NumProgramCallManagers = GetNumObjectsFound(TRIM(cCurrentModuleObject))
 
-  cCurrentModuleObject = 'EnergyManagementSystem:Program'
-  NumErlPrograms = GetNumObjectsFound(TRIM(cCurrentModuleObject))
+    cCurrentModuleObject = 'EnergyManagementSystem:Program'
+    NumErlPrograms = GetNumObjectsFound(TRIM(cCurrentModuleObject))
 
-  cCurrentModuleObject = 'EnergyManagementSystem:Subroutine'
-  NumErlSubroutines = GetNumObjectsFound(TRIM(cCurrentModuleObject))
+    cCurrentModuleObject = 'EnergyManagementSystem:Subroutine'
+    NumErlSubroutines = GetNumObjectsFound(TRIM(cCurrentModuleObject))
 
-  cCurrentModuleObject = 'EnergyManagementSystem:GlobalVariable'
-  NumUserGlobalVariables = GetNumObjectsFound(TRIM(cCurrentModuleObject))
+    cCurrentModuleObject = 'EnergyManagementSystem:GlobalVariable'
+    NumUserGlobalVariables = GetNumObjectsFound(TRIM(cCurrentModuleObject))
 
-  cCurrentModuleObject = 'EnergyManagementSystem:OutputVariable'
-  NumEMSOutputVariables = GetNumObjectsFound(TRIM(cCurrentModuleObject))
+    cCurrentModuleObject = 'EnergyManagementSystem:OutputVariable'
+    NumEMSOutputVariables = GetNumObjectsFound(TRIM(cCurrentModuleObject))
 
-  cCurrentModuleObject = 'EnergyManagementSystem:MeteredOutputVariable'
-  NumEMSMeteredOutputVariables= GetNumObjectsFound(TRIM(cCurrentModuleObject))
+    cCurrentModuleObject = 'EnergyManagementSystem:MeteredOutputVariable'
+    NumEMSMeteredOutputVariables= GetNumObjectsFound(TRIM(cCurrentModuleObject))
 
-  cCurrentModuleObject = 'EnergyManagementSystem:CurveOrTableIndexVariable'
-  NumEMSCurveIndices   = GetNumObjectsFound(TRIM(cCurrentModuleObject))
+    cCurrentModuleObject = 'EnergyManagementSystem:CurveOrTableIndexVariable'
+    NumEMSCurveIndices   = GetNumObjectsFound(TRIM(cCurrentModuleObject))
 
-  cCurrentModuleObject = 'ExternalInterface:Variable'
-  NumExternalInterfaceGlobalVariables = GetNumObjectsFound(TRIM(cCurrentModuleObject))
+    cCurrentModuleObject = 'ExternalInterface:Variable'
+    NumExternalInterfaceGlobalVariables = GetNumObjectsFound(TRIM(cCurrentModuleObject))
 
-  ! added for FMI
-  cCurrentModuleObject = 'ExternalInterface:FunctionalMockupUnit:To:Variable'
-  NumExternalInterfaceFunctionalMockupUnitGlobalVariables = GetNumObjectsFound(TRIM(cCurrentModuleObject))
+    ! added for FMI
+    cCurrentModuleObject = 'ExternalInterface:FunctionalMockupUnit:To:Variable'
+    NumExternalInterfaceFunctionalMockupUnitGlobalVariables = GetNumObjectsFound(TRIM(cCurrentModuleObject))
 
-  cCurrentModuleObject = 'ExternalInterface:Actuator'
-  NumExternalInterfaceActuatorsUsed = GetNumObjectsFound(TRIM(cCurrentModuleObject))
+    cCurrentModuleObject = 'ExternalInterface:Actuator'
+    NumExternalInterfaceActuatorsUsed = GetNumObjectsFound(TRIM(cCurrentModuleObject))
 
-  ! added for FMI
-  cCurrentModuleObject = 'ExternalInterface:FunctionalMockupUnit:To:Actuator'
-  NumExternalInterfaceFunctionalMockupUnitActuatorsUsed = GetNumObjectsFound(TRIM(cCurrentModuleObject))
+    ! added for FMI
+    cCurrentModuleObject = 'ExternalInterface:FunctionalMockupUnit:To:Actuator'
+    NumExternalInterfaceFunctionalMockupUnitActuatorsUsed = GetNumObjectsFound(TRIM(cCurrentModuleObject))
 
-  cCurrentModuleObject = 'EnergyManagementSystem:ConstructionIndexVariable'
-  NumEMSConstructionIndices = GetNumObjectsFound(TRIM(cCurrentModuleObject))
+    cCurrentModuleObject = 'EnergyManagementSystem:ConstructionIndexVariable'
+    NumEMSConstructionIndices = GetNumObjectsFound(TRIM(cCurrentModuleObject))
 
-  ! added for FMI
-  IF ((NumSensors + numActuatorsUsed + NumProgramCallManagers + NumErlPrograms + NumErlSubroutines &
-      + NumUserGlobalVariables + NumEMSOutputVariables + NumEMSCurveIndices &
-      + NumExternalInterfaceGlobalVariables + NumExternalInterfaceActuatorsUsed &
-      + NumEMSConstructionIndices + NumEMSMeteredOutputVariables + NumExternalInterfaceFunctionalMockupUnitActuatorsUsed &
-      + NumExternalInterfaceFunctionalMockupUnitGlobalVariables) > 0 ) THEN
+    ! added for FMI
+    IF ((NumSensors + numActuatorsUsed + NumProgramCallManagers + NumErlPrograms + NumErlSubroutines &
+    + NumUserGlobalVariables + NumEMSOutputVariables + NumEMSCurveIndices &
+    + NumExternalInterfaceGlobalVariables + NumExternalInterfaceActuatorsUsed &
+    + NumEMSConstructionIndices + NumEMSMeteredOutputVariables + NumExternalInterfaceFunctionalMockupUnitActuatorsUsed &
+    + NumExternalInterfaceFunctionalMockupUnitGlobalVariables) > 0 ) THEN
     AnyEnergyManagementSystemInModel = .TRUE.
   ELSE
     AnyEnergyManagementSystemInModel = .FALSE.
@@ -175,16 +175,16 @@ SUBROUTINE CheckIFAnyEMS
       OutputEMSFileUnitNum=GetNewUnitNumber()
       OPEN (OutputEMSFileUnitNum,FILE='eplusout.edd',ACTION='write',IOSTAT=write_stat)
       IF (write_stat /= 0) THEN
-       CALL ShowFatalError('CheckIFAnyEMS: Could not open file "eplusout.edd" for output (write).')
+        CALL ShowFatalError('CheckIFAnyEMS: Could not open file "eplusout.edd" for output (write).')
       ENDIF
     ENDIF
   ELSE
     CALL ScanForReports('EnergyManagementSystem', OutputEDDFile)
     IF (OutputEDDFile) THEN
       CALL ShowWarningError('CheckIFAnyEMS: No EnergyManagementSystem has been set up in the input file but'//  &
-         ' output is requested.')
+      ' output is requested.')
       CALL ShowContinueError('No EDD file will be produced. Refer to EMS Application Guide and/or InputOutput Reference'//  &
-         ' to set up your EnergyManagementSystem.')
+      ' to set up your EnergyManagementSystem.')
     ENDIF
   ENDIF
 
@@ -192,48 +192,48 @@ SUBROUTINE CheckIFAnyEMS
 
 END SUBROUTINE CheckIFAnyEMS
 
-          ! MODULE SUBROUTINES:
+! MODULE SUBROUTINES:
 SUBROUTINE ManageEMS(iCalledFrom, ProgramManagerToRun)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Peter Graham Ellis
-          !       DATE WRITTEN   June 2006
-          !       MODIFIED       na
-          !       RE-ENGINEERED  Brent Griffith, April 2009
-          !                      added calling point argument and logic.
-          !                      Collapsed SimulateEMS into this routine
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Peter Graham Ellis
+  !       DATE WRITTEN   June 2006
+  !       MODIFIED       na
+  !       RE-ENGINEERED  Brent Griffith, April 2009
+  !                      added calling point argument and logic.
+  !                      Collapsed SimulateEMS into this routine
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          !
+  ! PURPOSE OF THIS SUBROUTINE:
+  !
 
-          ! METHODOLOGY EMPLOYED:
-          ! Standard EnergyPlus methodology.
+  ! METHODOLOGY EMPLOYED:
+  ! Standard EnergyPlus methodology.
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataGlobals_HPSimIntegrated, ONLY: WarmupFlag, DoingSizing, ZoneTSReporting, HVACTSReporting, &
-                         KickOffSimulation, AnyEnergyManagementSystemInModel, BeginEnvrnFlag, &
-                         emsCallFromSetupSimulation, emsCallFromExternalInterface, emsCallFromBeginNewEvironment, &
-                         emsCallFromUserDefinedComponentModel !, ShowFatalError
+  KickOffSimulation, AnyEnergyManagementSystemInModel, BeginEnvrnFlag, &
+  emsCallFromSetupSimulation, emsCallFromExternalInterface, emsCallFromBeginNewEvironment, &
+  emsCallFromUserDefinedComponentModel !, ShowFatalError
 
   USE RuntimeLanguageProcessor, ONLY: EvaluateStack, BeginEnvrnInitializeRuntimeLanguage
   USE OutputProcessor, ONLY: MeterType, NumEnergyMeters, EnergyMeters, RealVariables, RealVariableType, NumOfRVariable, RVar, &
-    RVariableTypes
+  RVariableTypes
 
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   INTEGER, INTENT (IN) :: iCalledFrom ! indicates where subroutine was called from, parameters in DataGlobals_HPSimIntegrated.
   INTEGER, INTENT (IN), OPTIONAL :: ProgramManagerToRun  ! specific program manager to run
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
 
   INTEGER  :: ErlVariableNum     ! local index
   INTEGER  :: ProgramManagerNum  ! local index and loop
@@ -243,7 +243,7 @@ SUBROUTINE ManageEMS(iCalledFrom, ProgramManagerToRun)
   TYPE(ErlValueType)        :: ReturnValue  ! local Erl value structure
   LOGICAL  :: AnyProgramRan  ! local logical
   INTEGER  :: tmpInteger
-!  INTEGER  :: ProgramNum
+  !  INTEGER  :: ProgramNum
 
   ! FLOW:
   IF ( .NOT. AnyEnergyManagementSystemInModel) RETURN ! quick return if nothing to do
@@ -257,7 +257,7 @@ SUBROUTINE ManageEMS(iCalledFrom, ProgramManagerToRun)
     RETURN
   ENDIF
 
- ! Run the Erl programs depending on calling point.
+  ! Run the Erl programs depending on calling point.
   AnyProgramRan = .FALSE.
   IF (iCalledFrom /= emsCallFromUserDefinedComponentModel) THEN
     DO ProgramManagerNum = 1, NumProgramCallManagers
@@ -272,21 +272,21 @@ SUBROUTINE ManageEMS(iCalledFrom, ProgramManagerToRun)
   ELSE ! call specific program manager
     IF (PRESENT(ProgramManagerToRun)) THEN
       DO ErlProgramNum = 1, EMSProgramCallManager(ProgramManagerToRun)%NumErlPrograms
-          ReturnValue = EvaluateStack(EMSProgramCallManager(ProgramManagerToRun)%ErlProgramARR(ErlProgramNum))
-          AnyProgramRan = .TRUE.
+        ReturnValue = EvaluateStack(EMSProgramCallManager(ProgramManagerToRun)%ErlProgramARR(ErlProgramNum))
+        AnyProgramRan = .TRUE.
       ENDDO
     ENDIF
   ENDIF
 
   IF (iCalledFrom == emsCallFromExternalInterface) THEN
-     AnyProgramRan = .TRUE.
+    AnyProgramRan = .TRUE.
   ENDIF
 
   IF (.NOT. AnyProgramRan) RETURN
 
-    ! Set actuated variables with new values
+  ! Set actuated variables with new values
   DO ActuatorUsedLoop = 1, numActuatorsUsed + NumExternalInterfaceActuatorsUsed &
-                              + NumExternalInterfaceFunctionalMockupUnitActuatorsUsed
+    + NumExternalInterfaceFunctionalMockupUnitActuatorsUsed
     ErlVariableNum = EMSActuatorUsed(ActuatorUsedLoop)%ErlVariableNum
     IF (.NOT. (ErlVariableNum >0)) CYCLE ! this can happen for good reason during sizing
 
@@ -331,43 +331,43 @@ END SUBROUTINE ManageEMS
 
 SUBROUTINE InitEMS (iCalledFrom)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Brent Griffith
-          !       DATE WRITTEN   May 2009
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Brent Griffith
+  !       DATE WRITTEN   May 2009
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! collect routines needed to initialize EMS
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! collect routines needed to initialize EMS
 
-          ! METHODOLOGY EMPLOYED:
-          ! <description>
+  ! METHODOLOGY EMPLOYED:
+  ! <description>
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataGlobals_HPSimIntegrated, ONLY: WarmupFlag, DoingSizing, KickOffSimulation, BeginEnvrnFlag, emsCallFromZoneSizing, &
-                         emsCallFromSystemSizing, emsCallFromUserDefinedComponentModel !, ShowFatalError
+  emsCallFromSystemSizing, emsCallFromUserDefinedComponentModel !, ShowFatalError
   USE RuntimeLanguageProcessor, ONLY: InitializeRuntimeLanguage, SetErlValueNumber
   USE ScheduleManager, ONLY : GetCurrentScheduleValue
 
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   INTEGER, INTENT (IN) :: iCalledFrom ! indicates where subroutine was called from, parameters in DataGlobals_HPSimIntegrated.
 
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
 
   INTEGER  :: InternalVarUsedNum ! local index and loop
   INTEGER  :: InternVarAvailNum  ! local index
@@ -389,91 +389,91 @@ SUBROUTINE InitEMS (iCalledFrom)
   IF (FinishProcessingUserInput .AND. .NOT. DoingSizing .AND. .NOT. KickOffSimulation) THEN !
     CALL SetupNodeSetpointsAsActuators
     CALL SetupPrimaryAirSystemAvailMgrAsActuators
-!    CALL SetupWindowShadingControlActuators !this is too late for including in sizing, moved to GetEMSUserInput
-!    CALL SetupThermostatActuators !this is too late for including in sizing, moved to GetEMSUserInput
-!    CALL SetupSurfaceConvectionActuators !this is too late for including in sizing, moved to GetEMSUserInput
+    !    CALL SetupWindowShadingControlActuators !this is too late for including in sizing, moved to GetEMSUserInput
+    !    CALL SetupThermostatActuators !this is too late for including in sizing, moved to GetEMSUserInput
+    !    CALL SetupSurfaceConvectionActuators !this is too late for including in sizing, moved to GetEMSUserInput
     FinishProcessingUserInput = .FALSE.
   END IF
 
   CALL InitializeRuntimeLanguage
 
   IF ((BeginEnvrnFlag) .OR. (iCalledFrom == emsCallFromZoneSizing) .OR. (iCalledFrom == emsCallFromSystemSizing) &
-      .OR. (iCalledFrom == emsCallFromUserDefinedComponentModel) )  THEN
+  .OR. (iCalledFrom == emsCallFromUserDefinedComponentModel) )  THEN
 
-    ! another pass at trying to setup input data.
-    IF (FinishProcessingUserInput) CALL ProcessEMSInput(.FALSE.)
+  ! another pass at trying to setup input data.
+  IF (FinishProcessingUserInput) CALL ProcessEMSInput(.FALSE.)
 
-    ! update internal data variables being used by Erl
-    DO InternalVarUsedNum = 1, NumInternalVariablesUsed
-      ErlVariableNum = EMSInternalVarsUsed(InternalVarUsedNum)%ErlVariableNum
-      InternVarAvailNum  =  EMSInternalVarsUsed(InternalVarUsedNum)%InternVarNum
-      IF (.NOT. (InternVarAvailNum > 0 )) CYCLE ! sometimes executes before completely finished setting up.
-      IF (.NOT. (ErlVariableNum > 0 )) CYCLE
+  ! update internal data variables being used by Erl
+  DO InternalVarUsedNum = 1, NumInternalVariablesUsed
+    ErlVariableNum = EMSInternalVarsUsed(InternalVarUsedNum)%ErlVariableNum
+    InternVarAvailNum  =  EMSInternalVarsUsed(InternalVarUsedNum)%InternVarNum
+    IF (.NOT. (InternVarAvailNum > 0 )) CYCLE ! sometimes executes before completely finished setting up.
+    IF (.NOT. (ErlVariableNum > 0 )) CYCLE
 
-      SELECT CASE (EMSInternalVarsAvailable(InternVarAvailNum)%PntrVarTypeUsed)
+    SELECT CASE (EMSInternalVarsAvailable(InternVarAvailNum)%PntrVarTypeUsed)
 
-      CASE (PntrReal)
+    CASE (PntrReal)
 
-          ErlVariable(ErlVariableNum)%Value = SetErlValueNumber(EMSInternalVarsAvailable(InternVarAvailNum)%RealValue)
+      ErlVariable(ErlVariableNum)%Value = SetErlValueNumber(EMSInternalVarsAvailable(InternVarAvailNum)%RealValue)
 
-      CASE (PntrInteger)
+    CASE (PntrInteger)
 
-          tmpReal = REAL(EMSInternalVarsAvailable(InternVarAvailNum)%IntValue, r64 )
-          ErlVariable(ErlVariableNum)%Value = SetErlValueNumber(tmpReal)
+      tmpReal = REAL(EMSInternalVarsAvailable(InternVarAvailNum)%IntValue, r64 )
+      ErlVariable(ErlVariableNum)%Value = SetErlValueNumber(tmpReal)
 
-      END SELECT
+    END SELECT
 
-    ENDDO
+  ENDDO
 
-  ENDIF
+ENDIF
 
-  ! Update sensors with current data
-  DO SensorNum = 1, NumSensors
-    ErlVariableNum = Sensor(SensorNum)%VariableNum
-    IF ((ErlVariableNum > 0) .AND. (Sensor(SensorNum)%Index > 0)) THEN
-      IF (Sensor(SensorNum)%SchedNum == 0) THEN ! not a schedule so get from output processor
+! Update sensors with current data
+DO SensorNum = 1, NumSensors
+  ErlVariableNum = Sensor(SensorNum)%VariableNum
+  IF ((ErlVariableNum > 0) .AND. (Sensor(SensorNum)%Index > 0)) THEN
+    IF (Sensor(SensorNum)%SchedNum == 0) THEN ! not a schedule so get from output processor
 
-        ErlVariable(ErlVariableNum)%Value =   &
-           SetErlValueNumber(GetInternalVariableValue(Sensor(SensorNum)%Type, Sensor(SensorNum)%Index) , &
-                                                    OrigValue = ErlVariable(ErlVariableNum)%Value )
-      ELSE ! schedule so use schedule service
+      ErlVariable(ErlVariableNum)%Value =   &
+      SetErlValueNumber(GetInternalVariableValue(Sensor(SensorNum)%Type, Sensor(SensorNum)%Index) , &
+      OrigValue = ErlVariable(ErlVariableNum)%Value )
+    ELSE ! schedule so use schedule service
 
-        ErlVariable(ErlVariableNum)%Value = &
-           SetErlValueNumber(GetCurrentScheduleValue(Sensor(SensorNum)%SchedNum), &
-                                                    OrigValue = ErlVariable(ErlVariableNum)%Value )
-      ENDIF
+      ErlVariable(ErlVariableNum)%Value = &
+      SetErlValueNumber(GetCurrentScheduleValue(Sensor(SensorNum)%SchedNum), &
+      OrigValue = ErlVariable(ErlVariableNum)%Value )
     ENDIF
-  END DO
+  ENDIF
+END DO
 
-  RETURN
+RETURN
 
 END SUBROUTINE InitEMS
 
 SUBROUTINE ReportEMS
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Peter Graham Ellis
-          !       DATE WRITTEN   June 2006
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Peter Graham Ellis
+  !       DATE WRITTEN   June 2006
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Calculates report variables.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! Calculates report variables.
 
-          ! METHODOLOGY EMPLOYED:
-          ! Standard EnergyPlus methodology.
+  ! METHODOLOGY EMPLOYED:
+  ! Standard EnergyPlus methodology.
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE RuntimeLanguageProcessor, ONLY: ReportRuntimeLanguage
 
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   !INTEGER, INTENT(IN) :: ListNum
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
 
-          ! FLOW:
+  ! FLOW:
   CALL ReportRuntimeLanguage
 
   RETURN
@@ -483,60 +483,60 @@ END SUBROUTINE ReportEMS
 
 SUBROUTINE GetEMSInput
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Peter Graham Ellis
-          !       DATE WRITTEN   June 2006
-          !       MODIFIED       BG April 2009, finishing, renaming, etc.
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Peter Graham Ellis
+  !       DATE WRITTEN   June 2006
+  !       MODIFIED       BG April 2009, finishing, renaming, etc.
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Gets the EMS input from the input file.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! Gets the EMS input from the input file.
 
-          ! METHODOLOGY EMPLOYED:
-          ! Standard EnergyPlus methodology.
+  ! METHODOLOGY EMPLOYED:
+  ! Standard EnergyPlus methodology.
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataGlobals_HPSimIntegrated, ONLY: MaxNameLength, AnyEnergyManagementSystemInModel, &
-                         emsCallFromZoneSizing , emsCallFromSystemSizing , emsCallFromBeginNewEvironment, &
-                         emsCallFromBeginNewEvironmentAfterWarmUp , emsCallFromBeginTimestepBeforePredictor, &
-                         emsCallFromBeforeHVACManagers, emsCallFromAfterHVACManagers,  emsCallFromHVACIterationLoop, &
-                         emsCallFromEndZoneTimestepBeforeZoneReporting, emsCallFromEndZoneTimestepAfterZoneReporting, &
-                         emsCallFromEndSystemTimestepBeforeHVACReporting, emsCallFromEndSystemTimestepAfterHVACReporting, &
-                         emsCallFromComponentGetInput, emsCallFromUserDefinedComponentModel !, ShowSevereError, &
-                         !ShowWarningError, ShowFatalError, ShowContinueError
+  emsCallFromZoneSizing , emsCallFromSystemSizing , emsCallFromBeginNewEvironment, &
+  emsCallFromBeginNewEvironmentAfterWarmUp , emsCallFromBeginTimestepBeforePredictor, &
+  emsCallFromBeforeHVACManagers, emsCallFromAfterHVACManagers,  emsCallFromHVACIterationLoop, &
+  emsCallFromEndZoneTimestepBeforeZoneReporting, emsCallFromEndZoneTimestepAfterZoneReporting, &
+  emsCallFromEndSystemTimestepBeforeHVACReporting, emsCallFromEndSystemTimestepAfterHVACReporting, &
+  emsCallFromComponentGetInput, emsCallFromUserDefinedComponentModel !, ShowSevereError, &
+  !ShowWarningError, ShowFatalError, ShowContinueError
   USE DataInterfaces, ONLY: SetupOutputVariable
   USE InputProcessor, ONLY: GetNumObjectsFound, GetObjectItem, VerifyName, FindItemInList, MakeUpperCase, SameString,   &
-     GetObjectDefMaxArgs
-!  USE OutputProcessor, ONLY: GetReportVarPointerForEMS
-!  USE DataIPShortCuts
+  GetObjectDefMaxArgs
+  !  USE OutputProcessor, ONLY: GetReportVarPointerForEMS
+  !  USE DataIPShortCuts
 
   USE RuntimeLanguageProcessor, ONLY: InitializeRuntimeLanguage, FindEMSVariable, NewEMSVariable, &
-       ExternalInterfaceInitializeErlVariable, SetErlValueNumber
+  ExternalInterfaceInitializeErlVariable, SetErlValueNumber
 
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! SUBROUTINE PARAMETER DEFINITIONS:
   CHARACTER(len=*), PARAMETER :: Blank = ' '
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
 
   INTEGER                     :: StackNum
   INTEGER                     :: SensorNum
   INTEGER                     :: ActuatorNum
   INTEGER                     :: ActuatorVariableNum
-!  INTEGER                     :: ProgramNum
+  !  INTEGER                     :: ProgramNum
   INTEGER                     :: VariableNum  ! local do loop index
   INTEGER                     :: NumAlphas ! Number of elements in the alpha array
   INTEGER                     :: NumNums   ! Number of elements in the numeric array
   INTEGER                     :: AlphaNum
   INTEGER                     :: IOStat    ! IO Status when calling get input subroutine
-!  CHARACTER(len=MaxNameLength), DIMENSION(99) :: AlphArray  ! Character string data  ! 99 should really be some kind of constant
-!  REAL(r64), DIMENSION(1)          :: NumArray  ! Numeric data
+  !  CHARACTER(len=MaxNameLength), DIMENSION(99) :: AlphArray  ! Character string data  ! 99 should really be some kind of constant
+  !  REAL(r64), DIMENSION(1)          :: NumArray  ! Numeric data
   LOGICAL                     :: IsNotOK   ! Flag to verify name
   LOGICAL                     :: IsBlank   ! Flag for blank name
   LOGICAL                     :: ErrorsFound = .FALSE.
   INTEGER, EXTERNAL           :: GetMeterIndex
-!  CHARACTER(len=MaxNameLength)   :: objNameMsg = ' '
+  !  CHARACTER(len=MaxNameLength)   :: objNameMsg = ' '
   CHARACTER(len=MaxNameLength+40),ALLOCATABLE, DIMENSION(:) :: cAlphaFieldNames
   CHARACTER(len=MaxNameLength+40),ALLOCATABLE, DIMENSION(:) :: cNumericFieldNames
   LOGICAL, ALLOCATABLE, DIMENSION(:) :: lNumericFieldBlanks
@@ -560,7 +560,7 @@ SUBROUTINE GetEMSInput
   INTEGER :: TotalArgs = 0 !argument for call to GetObjectDefMaxArgs
   LOGICAL :: errFlag
 
-          ! FLOW:
+  ! FLOW:
   cCurrentModuleObject = 'EnergyManagementSystem:Sensor'
   CALL GetObjectDefMaxArgs(cCurrentModuleObject,TotalArgs,NumAlphas,NumNums)
   MaxNumNumbers=NumNums
@@ -621,8 +621,8 @@ SUBROUTINE GetEMSInput
 
     DO SensorNum = 1, NumSensors
       CALL GetObjectItem(TRIM(cCurrentModuleObject), SensorNum, cAlphaArgs, NumAlphas, rNumericArgs, NumNums, IOSTAT ,&
-                      AlphaBlank=lAlphaFieldBlanks, NumBlank=lNumericFieldBlanks, &
-                      AlphaFieldnames=cAlphaFieldNames,NumericFieldNames=cNumericFieldNames)
+      AlphaBlank=lAlphaFieldBlanks, NumBlank=lNumericFieldBlanks, &
+      AlphaFieldnames=cAlphaFieldNames,NumericFieldNames=cNumericFieldNames)
 
       IsNotOK = .FALSE.
       IsBlank = .FALSE.
@@ -683,28 +683,28 @@ SUBROUTINE GetEMSInput
 
   IF (numActuatorsUsed + NumExternalInterfaceActuatorsUsed + NumExternalInterfaceFunctionalMockupUnitActuatorsUsed > 0) THEN
     ALLOCATE(EMSActuatorUsed(numActuatorsUsed + NumExternalInterfaceActuatorsUsed &
-                              + NumExternalInterfaceFunctionalMockupUnitActuatorsUsed))
+    + NumExternalInterfaceFunctionalMockupUnitActuatorsUsed))
     DO ActuatorNum = 1, numActuatorsUsed + NumExternalInterfaceActuatorsUsed &
-                            + NumExternalInterfaceFunctionalMockupUnitActuatorsUsed
-       ! If we process the ExternalInterface actuators, all we need to do is to change the
-       ! name of the module object, and shift the ActuatorNum in GetObjectItem
-       IF ( ActuatorNum <= numActuatorsUsed ) THEN
-         CALL GetObjectItem(TRIM(cCurrentModuleObject), ActuatorNum, cAlphaArgs, NumAlphas, rNumericArgs, &
-               NumNums, IOSTAT, AlphaBlank=lAlphaFieldBlanks, NumBlank=lNumericFieldBlanks, &
-               AlphaFieldnames=cAlphaFieldNames,NumericFieldNames=cNumericFieldNames)
-       ELSE IF ( ActuatorNum > numActuatorsUsed .AND. ActuatorNum <= numActuatorsUsed + NumExternalInterfaceActuatorsUsed) THEN
-         cCurrentModuleObject = 'ExternalInterface:Actuator'
-         CALL GetObjectItem(TRIM(cCurrentModuleObject), ActuatorNum-numActuatorsUsed, cAlphaArgs, NumAlphas, rNumericArgs, &
-               NumNums, IOSTAT, AlphaBlank=lAlphaFieldBlanks, NumBlank=lNumericFieldBlanks, &
-               AlphaFieldnames=cAlphaFieldNames,NumericFieldNames=cNumericFieldNames)
-       ELSE IF ( ActuatorNum > numActuatorsUsed + NumExternalInterfaceActuatorsUsed .AND. ActuatorNum <= numActuatorsUsed &
-                              + NumExternalInterfaceActuatorsUsed + NumExternalInterfaceFunctionalMockupUnitActuatorsUsed) THEN
-         cCurrentModuleObject = 'ExternalInterface:FunctionalMockupUnit:To:Actuator'
-         CALL GetObjectItem(TRIM(cCurrentModuleObject), ActuatorNum-numActuatorsUsed-NumExternalInterfaceActuatorsUsed, &
-                           cAlphaArgs, NumAlphas, rNumericArgs, &
-                           NumNums, IOSTAT, AlphaBlank=lAlphaFieldBlanks, NumBlank=lNumericFieldBlanks, &
-                           AlphaFieldnames=cAlphaFieldNames,NumericFieldNames=cNumericFieldNames)
-       END IF
+      + NumExternalInterfaceFunctionalMockupUnitActuatorsUsed
+      ! If we process the ExternalInterface actuators, all we need to do is to change the
+      ! name of the module object, and shift the ActuatorNum in GetObjectItem
+      IF ( ActuatorNum <= numActuatorsUsed ) THEN
+        CALL GetObjectItem(TRIM(cCurrentModuleObject), ActuatorNum, cAlphaArgs, NumAlphas, rNumericArgs, &
+        NumNums, IOSTAT, AlphaBlank=lAlphaFieldBlanks, NumBlank=lNumericFieldBlanks, &
+        AlphaFieldnames=cAlphaFieldNames,NumericFieldNames=cNumericFieldNames)
+      ELSE IF ( ActuatorNum > numActuatorsUsed .AND. ActuatorNum <= numActuatorsUsed + NumExternalInterfaceActuatorsUsed) THEN
+        cCurrentModuleObject = 'ExternalInterface:Actuator'
+        CALL GetObjectItem(TRIM(cCurrentModuleObject), ActuatorNum-numActuatorsUsed, cAlphaArgs, NumAlphas, rNumericArgs, &
+        NumNums, IOSTAT, AlphaBlank=lAlphaFieldBlanks, NumBlank=lNumericFieldBlanks, &
+        AlphaFieldnames=cAlphaFieldNames,NumericFieldNames=cNumericFieldNames)
+      ELSE IF ( ActuatorNum > numActuatorsUsed + NumExternalInterfaceActuatorsUsed .AND. ActuatorNum <= numActuatorsUsed &
+        + NumExternalInterfaceActuatorsUsed + NumExternalInterfaceFunctionalMockupUnitActuatorsUsed) THEN
+        cCurrentModuleObject = 'ExternalInterface:FunctionalMockupUnit:To:Actuator'
+        CALL GetObjectItem(TRIM(cCurrentModuleObject), ActuatorNum-numActuatorsUsed-NumExternalInterfaceActuatorsUsed, &
+        cAlphaArgs, NumAlphas, rNumericArgs, &
+        NumNums, IOSTAT, AlphaBlank=lAlphaFieldBlanks, NumBlank=lNumericFieldBlanks, &
+        AlphaFieldnames=cAlphaFieldNames,NumericFieldNames=cNumericFieldNames)
+      END IF
 
       IsNotOK = .FALSE.
       IsBlank = .FALSE.
@@ -730,9 +730,9 @@ SUBROUTINE GetEMSInput
           VariableNum = NewEMSVariable(cAlphaArgs(1), 0)
           EMSActuatorUsed(ActuatorNum)%ErlVariableNum = VariableNum
           IF ( ActuatorNum > numActuatorsUsed ) THEN
-             ! Initialize variables for the ExternalInterface variables
-             CALL ExternalInterfaceInitializeErlVariable( VariableNum, &
-                  SetErlValueNumber(rNumericArgs(1)), lNumericFieldBlanks(1) )
+            ! Initialize variables for the ExternalInterface variables
+            CALL ExternalInterfaceInitializeErlVariable( VariableNum, &
+            SetErlValueNumber(rNumericArgs(1)), lNumericFieldBlanks(1) )
           ENDIF
         END IF
       END IF
@@ -772,13 +772,13 @@ SUBROUTINE GetEMSInput
 
     DO InternVarNum = 1, NumInternalVariablesUsed
       CALL GetObjectItem(TRIM(cCurrentModuleObject), InternVarNum, cAlphaArgs, NumAlphas, rNumericArgs, NumNums, &
-                      IOSTAT, AlphaBlank=lAlphaFieldBlanks, NumBlank=lNumericFieldBlanks, &
-                      AlphaFieldnames=cAlphaFieldNames,NumericFieldNames=cNumericFieldNames)
+      IOSTAT, AlphaBlank=lAlphaFieldBlanks, NumBlank=lNumericFieldBlanks, &
+      AlphaFieldnames=cAlphaFieldNames,NumericFieldNames=cNumericFieldNames)
 
       IsNotOK = .FALSE.
       IsBlank = .FALSE.
       CALL VerifyName(cAlphaArgs(1), EMSInternalVarsUsed%Name, InternVarNum - 1, IsNotOK, &
-                  IsBlank,TRIM(cCurrentModuleObject)//' Name')
+      IsBlank,TRIM(cCurrentModuleObject)//' Name')
       IF (IsNotOK) THEN
         ErrorsFound = .TRUE.
         IF (IsBlank) cAlphaArgs(1) = 'xxxxx'
@@ -831,13 +831,13 @@ SUBROUTINE GetEMSInput
     DO CallManagerNum = 1, NumProgramCallManagers
 
       CALL GetObjectItem(TRIM(cCurrentModuleObject), CallManagerNum, cAlphaArgs, NumAlphas, rNumericArgs, NumNums, &
-                      IOSTAT, AlphaBlank=lAlphaFieldBlanks, NumBlank=lNumericFieldBlanks, &
-                      AlphaFieldnames=cAlphaFieldNames,NumericFieldNames=cNumericFieldNames)
+      IOSTAT, AlphaBlank=lAlphaFieldBlanks, NumBlank=lNumericFieldBlanks, &
+      AlphaFieldnames=cAlphaFieldNames,NumericFieldNames=cNumericFieldNames)
 
       IsNotOK = .FALSE.
       IsBlank = .FALSE.
       CALL VerifyName(cAlphaArgs(1), EMSProgramCallManager%Name, CallManagerNum - 1, &
-                        IsNotOK, IsBlank,TRIM(cCurrentModuleObject)//' Name')
+      IsNotOK, IsBlank,TRIM(cCurrentModuleObject)//' Name')
       IF (IsNotOK) THEN
         ErrorsFound = .TRUE.
         IF (IsBlank) cAlphaArgs(1) = 'xxxxx'
@@ -947,48 +947,48 @@ END SUBROUTINE GetEMSInput
 
 SUBROUTINE ProcessEMSInput(reportErrors)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         B. Griffith
-          !       DATE WRITTEN   May 2009
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         B. Griffith
+  !       DATE WRITTEN   May 2009
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! contains Some input checks that need to be deferred until later in the simulation
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! contains Some input checks that need to be deferred until later in the simulation
 
-          ! METHODOLOGY EMPLOYED:
-          ! Loop over objects doing input checks.
-          ! Had to break up get user input into two phases because
-          ! the actuators can't be set up until all the HVAC systems are read in, sized, etc.
-          ! but we also want to allow customizing sizing calcs which occur much earlier in the simulation.
-          !  so here we do a final pass and throw the errors that would usually occur during get input.
+  ! METHODOLOGY EMPLOYED:
+  ! Loop over objects doing input checks.
+  ! Had to break up get user input into two phases because
+  ! the actuators can't be set up until all the HVAC systems are read in, sized, etc.
+  ! but we also want to allow customizing sizing calcs which occur much earlier in the simulation.
+  !  so here we do a final pass and throw the errors that would usually occur during get input.
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
-!  USE DataIPShortcuts, ONLY: cCurrentModuleObject
+  ! USE STATEMENTS:
+  !  USE DataIPShortcuts, ONLY: cCurrentModuleObject
   USE InputProcessor,  ONLY: SameString
   !USE DataGlobals_HPSimIntegrated,  ONLY: ShowSevereError, ShowWarningError, ShowContinueError, ShowFatalError
   USE RuntimeLanguageProcessor, ONLY: BeginEnvrnInitializeRuntimeLanguage
   USE ScheduleManager,   ONLY: GetScheduleIndex
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   LOGICAL, INTENT(IN)  :: reportErrors !.  If true, then report out errors ,otherwise setup what we can
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER :: SensorNum ! local loop
-!  INTEGER :: VariableNum  ! local do loop index
+  !  INTEGER :: VariableNum  ! local do loop index
   INTEGER :: VarIndex
   INTEGER, EXTERNAL           :: GetMeterIndex
   INTEGER :: VarType
@@ -1042,7 +1042,7 @@ SUBROUTINE ProcessEMSInput(reportErrors)
             Sensor(SensorNum)%CheckedOkay = .FALSE.
             IF (reportErrors) THEN
               CALL ShowSevereError('Invalid Output:Variable or Output:Meter Index Key Name ='//  &
-                 TRIM(Sensor(SensorNum)%UniqueKeyName))
+              TRIM(Sensor(SensorNum)%UniqueKeyName))
               CALL ShowContinueError('For Output:Variable or Output:Meter = '//TRIM(Sensor(SensorNum)%OutputVarName))
               CALL ShowContinueError('Entered in '//TRIM(cCurrentModuleObject)//'='//TRIM(Sensor(SensorNum)%Name))
               CALL ShowContinueError('Schedule Name not found.')
@@ -1058,14 +1058,14 @@ SUBROUTINE ProcessEMSInput(reportErrors)
 
   ! added for FMI
   DO ActuatorNum = 1, numActuatorsUsed + NumExternalInterfaceActuatorsUsed + NumExternalInterfaceFunctionalMockupUnitActuatorsUsed
-     ! If we process the ExternalInterface actuators, all we need to do is to change the
+    ! If we process the ExternalInterface actuators, all we need to do is to change the
 
     IF ( ActuatorNum <= numActuatorsUsed ) THEN
       cCurrentModuleObject = 'EnergyManagementSystem:Actuator'
     ELSE IF ( ActuatorNum > numActuatorsUsed .AND. ActuatorNum <= numActuatorsUsed + NumExternalInterfaceActuatorsUsed) THEN
       cCurrentModuleObject = 'ExternalInterface:Actuator'
     ELSE IF ( ActuatorNum > numActuatorsUsed + NumExternalInterfaceActuatorsUsed .AND. ActuatorNum <= numActuatorsUsed &
-                           + NumExternalInterfaceActuatorsUsed + NumExternalInterfaceFunctionalMockupUnitActuatorsUsed) THEN
+      + NumExternalInterfaceActuatorsUsed + NumExternalInterfaceFunctionalMockupUnitActuatorsUsed) THEN
       cCurrentModuleObject = 'ExternalInterface:FunctionalMockupUnit:To:Actuator'
     END IF
 
@@ -1075,153 +1075,153 @@ SUBROUTINE ProcessEMSInput(reportErrors)
     FoundActuatorName = .FALSE.
     DO ActuatorVariableNum = 1, numEMSActuatorsAvailable
       IF (SameString(EMSActuatorAvailable(ActuatorVariableNum)%ComponentTypeName , &
-                     EMSActuatorUsed(ActuatorNum)%ComponentTypeName )) THEN
-        FoundObjectType = .TRUE.
-        IF (SameString(EMSActuatorAvailable(ActuatorVariableNum)%UniqueIDName , &
-                       EMSActuatorUsed(ActuatorNum)%UniqueIDName )) THEN
-          FoundObjectName = .TRUE.
-          IF (SameString(EMSActuatorAvailable(ActuatorVariableNum)%ControlTypeName , &
-                         EMSActuatorUsed(ActuatorNum)%ControlTypeName )) THEN
-            FoundActuatorName = .TRUE.
-            EXIT
-          END IF
-        END IF
-      END IF
-    END DO
-
-    IF (.NOT. FoundObjectType) THEN
-      IF (reportErrors) THEN
-        CALL ShowSevereError('Invalid Actuated Component Type ='//TRIM(EMSActuatorUsed(ActuatorNum)%ComponentTypeName))
-        CALL ShowContinueError('Entered in '//TRIM(cCurrentModuleObject)//'='//TRIM(EMSActuatorUsed(ActuatorNum)%Name))
-        CALL ShowContinueError('Component Type not found')
-        IF (OutputEDDFile) THEN
-          CALL ShowContinueError('Review .edd file for valid component types.')
-        ELSE
-          CALL ShowContinueError('Use Output:EnergyManagementSystem object to create .edd file for valid component types.')
-        ENDIF
-        ErrorsFound = .TRUE.
-      ENDIF
+      EMSActuatorUsed(ActuatorNum)%ComponentTypeName )) THEN
+      FoundObjectType = .TRUE.
+      IF (SameString(EMSActuatorAvailable(ActuatorVariableNum)%UniqueIDName , &
+      EMSActuatorUsed(ActuatorNum)%UniqueIDName )) THEN
+      FoundObjectName = .TRUE.
+      IF (SameString(EMSActuatorAvailable(ActuatorVariableNum)%ControlTypeName , &
+      EMSActuatorUsed(ActuatorNum)%ControlTypeName )) THEN
+      FoundActuatorName = .TRUE.
+      EXIT
     END IF
-
-    IF (.NOT. FoundObjectName) THEN
-      IF (reportErrors) THEN
-        CALL ShowSevereError('Invalid Actuated Component Unique Name ='//TRIM(EMSActuatorUsed(ActuatorNum)%UniqueIDName))
-        CALL ShowContinueError('Entered in '//TRIM(cCurrentModuleObject)//'='//TRIM(EMSActuatorUsed(ActuatorNum)%Name))
-        CALL ShowContinueError('Component Unique key name not found ')
-        IF (OutputEDDFile) THEN
-          CALL ShowContinueError('Review edd file for valid component names.')
-        ELSE
-          CALL ShowContinueError('Use Output:EnergyManagementSystem object to create .edd file for valid component names.')
-        ENDIF
-        ErrorsFound = .TRUE.
-      ENDIF
-    END IF
-
-    IF (.NOT. FoundActuatorName) THEN
-      IF (reportErrors) THEN
-        CALL ShowSevereError('Invalid Actuated Component Control Type ='//TRIM(EMSActuatorUsed(ActuatorNum)%ControlTypeName))
-        CALL ShowContinueError('Entered in '//TRIM(cCurrentModuleObject)//'='//TRIM(EMSActuatorUsed(ActuatorNum)%Name))
-        CALL ShowContinueError('Control Type not found')
-        IF (OutputEDDFile) THEN
-          CALL ShowContinueError('Review edd file for valid component control types.')
-        ELSE
-          CALL ShowContinueError('Use Output:EnergyManagementSystem object to create '//  &
-             '.edd file for valid component control types.')
-        ENDIF
-        ErrorsFound = .TRUE.
-      ENDIF
-    ELSE
-      EMSActuatorUsed(ActuatorNum)%ActuatorVariableNum = ActuatorVariableNum
-      EMSActuatorUsed(ActuatorNum)%CheckedOkay = .TRUE.
-    END IF
-  END DO  ! ActuatorNum
-
-  cCurrentModuleObject = 'EnergyManagementSystem:InternalVariable'
-  DO InternVarNum = 1, NumInternalVariablesUsed
-    IF (EMSInternalVarsUsed(InternVarNum)%CheckedOkay) CYCLE
-    FoundObjectType = .FALSE.
-    FoundObjectName = .FALSE.
-    DO InternalVarAvailNum = 1, numEMSInternalVarsAvailable
-      IF (SameString(EMSInternalVarsAvailable(InternalVarAvailNum)%DataTypeName , &
-                     EMSInternalVarsUsed(InternVarNum)%InternalDataTypeName)) THEN
-        FoundObjectType = .TRUE.
-        IF (SameString(EMSInternalVarsAvailable(InternalVarAvailNum)%UniqueIDName , &
-                       EMSInternalVarsUsed(InternVarNum)%UniqueIDName)) THEN
-          FoundObjectName = .TRUE.
-          EXIT ! InternalVarAvailNum now holds needed index pointer
-        END IF
-      END IF
-    ENDDO
-
-    IF (.not. FoundObjectType) THEN
-      IF (reportErrors) THEN
-        CALL ShowSevereError('Invalid Internal Data Type ='//TRIM(EMSInternalVarsUsed(InternVarNum)%InternalDataTypeName))
-        CALL ShowContinueError('Entered in '//TRIM(cCurrentModuleObject)//'='//TRIM(EMSInternalVarsUsed(InternVarNum)%Name))
-        CALL ShowContinueError('Internal data type name not found')
-        ErrorsFound = .TRUE.
-      ENDIF
-    ENDIF
-
-    IF (.NOT. FoundObjectName) THEN
-      IF (reportErrors) THEN
-        CALL ShowSevereError('Invalid Internal Data Index Key Name ='//TRIM(EMSInternalVarsUsed(InternVarNum)%UniqueIDName))
-        CALL ShowContinueError('Entered in '//TRIM(cCurrentModuleObject)//'='//TRIM(EMSInternalVarsUsed(InternVarNum)%Name))
-        CALL ShowContinueError('Internal data unique identifier not found')
-        ErrorsFound = .TRUE.
-      ENDIF
-    ELSE
-      EMSInternalVarsUsed(InternVarNum)%InternVarNum = InternalVarAvailNum
-      EMSInternalVarsUsed(InternVarNum)%CheckedOkay  = .TRUE.
-    ENDIF
-
-  ENDDO
-  IF (reportErrors) THEN
-    CALL EchoOutActuatorKeyChoices
-    CALL EchoOutInternalVariableChoices
-  ENDIF
-
-  IF (ErrorsFound) THEN
-    CALL ShowFatalError('Errors found in processing Energy Management System input. Preceding condition causes termination.')
   END IF
+END IF
+END DO
 
+IF (.NOT. FoundObjectType) THEN
   IF (reportErrors) THEN
-    CALL BeginEnvrnInitializeRuntimeLanguage
+    CALL ShowSevereError('Invalid Actuated Component Type ='//TRIM(EMSActuatorUsed(ActuatorNum)%ComponentTypeName))
+    CALL ShowContinueError('Entered in '//TRIM(cCurrentModuleObject)//'='//TRIM(EMSActuatorUsed(ActuatorNum)%Name))
+    CALL ShowContinueError('Component Type not found')
+    IF (OutputEDDFile) THEN
+      CALL ShowContinueError('Review .edd file for valid component types.')
+    ELSE
+      CALL ShowContinueError('Use Output:EnergyManagementSystem object to create .edd file for valid component types.')
+    ENDIF
+    ErrorsFound = .TRUE.
   ENDIF
+END IF
 
-  RETURN
+IF (.NOT. FoundObjectName) THEN
+  IF (reportErrors) THEN
+    CALL ShowSevereError('Invalid Actuated Component Unique Name ='//TRIM(EMSActuatorUsed(ActuatorNum)%UniqueIDName))
+    CALL ShowContinueError('Entered in '//TRIM(cCurrentModuleObject)//'='//TRIM(EMSActuatorUsed(ActuatorNum)%Name))
+    CALL ShowContinueError('Component Unique key name not found ')
+    IF (OutputEDDFile) THEN
+      CALL ShowContinueError('Review edd file for valid component names.')
+    ELSE
+      CALL ShowContinueError('Use Output:EnergyManagementSystem object to create .edd file for valid component names.')
+    ENDIF
+    ErrorsFound = .TRUE.
+  ENDIF
+END IF
+
+IF (.NOT. FoundActuatorName) THEN
+  IF (reportErrors) THEN
+    CALL ShowSevereError('Invalid Actuated Component Control Type ='//TRIM(EMSActuatorUsed(ActuatorNum)%ControlTypeName))
+    CALL ShowContinueError('Entered in '//TRIM(cCurrentModuleObject)//'='//TRIM(EMSActuatorUsed(ActuatorNum)%Name))
+    CALL ShowContinueError('Control Type not found')
+    IF (OutputEDDFile) THEN
+      CALL ShowContinueError('Review edd file for valid component control types.')
+    ELSE
+      CALL ShowContinueError('Use Output:EnergyManagementSystem object to create '//  &
+      '.edd file for valid component control types.')
+    ENDIF
+    ErrorsFound = .TRUE.
+  ENDIF
+ELSE
+  EMSActuatorUsed(ActuatorNum)%ActuatorVariableNum = ActuatorVariableNum
+  EMSActuatorUsed(ActuatorNum)%CheckedOkay = .TRUE.
+END IF
+END DO  ! ActuatorNum
+
+cCurrentModuleObject = 'EnergyManagementSystem:InternalVariable'
+DO InternVarNum = 1, NumInternalVariablesUsed
+  IF (EMSInternalVarsUsed(InternVarNum)%CheckedOkay) CYCLE
+  FoundObjectType = .FALSE.
+  FoundObjectName = .FALSE.
+  DO InternalVarAvailNum = 1, numEMSInternalVarsAvailable
+    IF (SameString(EMSInternalVarsAvailable(InternalVarAvailNum)%DataTypeName , &
+    EMSInternalVarsUsed(InternVarNum)%InternalDataTypeName)) THEN
+    FoundObjectType = .TRUE.
+    IF (SameString(EMSInternalVarsAvailable(InternalVarAvailNum)%UniqueIDName , &
+    EMSInternalVarsUsed(InternVarNum)%UniqueIDName)) THEN
+    FoundObjectName = .TRUE.
+    EXIT ! InternalVarAvailNum now holds needed index pointer
+  END IF
+END IF
+ENDDO
+
+IF (.not. FoundObjectType) THEN
+  IF (reportErrors) THEN
+    CALL ShowSevereError('Invalid Internal Data Type ='//TRIM(EMSInternalVarsUsed(InternVarNum)%InternalDataTypeName))
+    CALL ShowContinueError('Entered in '//TRIM(cCurrentModuleObject)//'='//TRIM(EMSInternalVarsUsed(InternVarNum)%Name))
+    CALL ShowContinueError('Internal data type name not found')
+    ErrorsFound = .TRUE.
+  ENDIF
+ENDIF
+
+IF (.NOT. FoundObjectName) THEN
+  IF (reportErrors) THEN
+    CALL ShowSevereError('Invalid Internal Data Index Key Name ='//TRIM(EMSInternalVarsUsed(InternVarNum)%UniqueIDName))
+    CALL ShowContinueError('Entered in '//TRIM(cCurrentModuleObject)//'='//TRIM(EMSInternalVarsUsed(InternVarNum)%Name))
+    CALL ShowContinueError('Internal data unique identifier not found')
+    ErrorsFound = .TRUE.
+  ENDIF
+ELSE
+  EMSInternalVarsUsed(InternVarNum)%InternVarNum = InternalVarAvailNum
+  EMSInternalVarsUsed(InternVarNum)%CheckedOkay  = .TRUE.
+ENDIF
+
+ENDDO
+IF (reportErrors) THEN
+  CALL EchoOutActuatorKeyChoices
+  CALL EchoOutInternalVariableChoices
+ENDIF
+
+IF (ErrorsFound) THEN
+  CALL ShowFatalError('Errors found in processing Energy Management System input. Preceding condition causes termination.')
+END IF
+
+IF (reportErrors) THEN
+  CALL BeginEnvrnInitializeRuntimeLanguage
+ENDIF
+
+RETURN
 
 END SUBROUTINE ProcessEMSInput
 
 
 SUBROUTINE GetVariableTypeAndIndex(VarName, VarKeyName, VarType, VarIndex)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Peter Graham Ellis
-          !       DATE WRITTEN   June 2006
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Peter Graham Ellis
+  !       DATE WRITTEN   June 2006
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! local helper routine intended to lookup report variables only.
-          !    Use GetMeterIndex for meters.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! local helper routine intended to lookup report variables only.
+  !    Use GetMeterIndex for meters.
 
-          ! METHODOLOGY EMPLOYED:
-          ! make calls to OutputProcessor methods GetVariableKeyCountandType and GetVariableKeys
+  ! METHODOLOGY EMPLOYED:
+  ! make calls to OutputProcessor methods GetVariableKeyCountandType and GetVariableKeys
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
 
   USE RuntimeLanguageProcessor, ONLY: EvaluateStack
   USE DataInterfaces, ONLY:GetVariableKeyCountandType, GetVariableKeys
 
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   CHARACTER(len=*), INTENT(IN) :: VarName
   CHARACTER(len=*), INTENT(IN) :: VarKeyName
   INTEGER, INTENT(OUT) :: VarType
   INTEGER, INTENT(OUT) :: VarIndex
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER                :: NumKeys
   INTEGER                :: KeyNum
   INTEGER                :: AvgOrSum
@@ -1231,7 +1231,7 @@ SUBROUTINE GetVariableTypeAndIndex(VarName, VarKeyName, VarType, VarIndex)
   INTEGER, DIMENSION(:), ALLOCATABLE   :: KeyIndex
   LOGICAL :: Found
 
-          ! FLOW:
+  ! FLOW:
   VarType = 0
   VarIndex = 0
   Found = .FALSE.
@@ -1266,40 +1266,40 @@ END SUBROUTINE GetVariableTypeAndIndex
 
 SUBROUTINE EchoOutActuatorKeyChoices
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Brent Griffith
-          !       DATE WRITTEN   April 2009
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Brent Griffith
+  !       DATE WRITTEN   April 2009
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! echo out actuators registered with SetupEMSActuator for user access
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! echo out actuators registered with SetupEMSActuator for user access
 
-          ! METHODOLOGY EMPLOYED:
-          ! mine structure and write to edd file
-          ! note this executes after final processing and sizing-related calling points may already execute Erl programs
+  ! METHODOLOGY EMPLOYED:
+  ! mine structure and write to edd file
+  ! note this executes after final processing and sizing-related calling points may already execute Erl programs
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE InputProcessor, ONLY: FindItemInList
 
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-          ! na
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER :: ActuatorLoop
   CHARACTER(len=MaxNameLength), DIMENSION(:), ALLOCATABLE :: TempTypeName
   CHARACTER(len=MaxNameLength), DIMENSION(:), ALLOCATABLE :: TempCntrlType
@@ -1310,17 +1310,17 @@ SUBROUTINE EchoOutActuatorKeyChoices
   IF (OutputEMSActuatorAvailFull) THEN
 
     WRITE(OutputEMSFileUnitNum, '(A)') '! <EnergyManagementSystem:Actuator Available>, Component Unique Name,' &
-                                           //' Component Type,  Control Type, Units'
+    //' Component Type,  Control Type, Units'
     Do ActuatorLoop =1, numEMSActuatorsAvailable
       WRITE(OutputEMSFileUnitNum, '(A)') 'EnergyManagementSystem:Actuator Available,' &
-                                              //Trim(EMSActuatorAvailable(ActuatorLoop)%UniqueIDName) &
-                                         //','//Trim(EMSActuatorAvailable(ActuatorLoop)%ComponentTypeName)  &
-                                         //','//Trim(EMSActuatorAvailable(ActuatorLoop)%ControlTypeName) &
-                                         //','//Trim(EMSActuatorAvailable(ActuatorLoop)%Units)
+      //Trim(EMSActuatorAvailable(ActuatorLoop)%UniqueIDName) &
+      //','//Trim(EMSActuatorAvailable(ActuatorLoop)%ComponentTypeName)  &
+      //','//Trim(EMSActuatorAvailable(ActuatorLoop)%ControlTypeName) &
+      //','//Trim(EMSActuatorAvailable(ActuatorLoop)%Units)
     ENDDO
   ELSE IF (OutputEMSActuatorAvailSmall) THEN
     WRITE(OutputEMSFileUnitNum, '(A)') '! <EnergyManagementSystem:Actuator Available>, *, Component Type, '// &
-                                          'Control Type, Units'
+    'Control Type, Units'
 
     ALLOCATE(TempTypeName(numEMSActuatorsAvailable))
     TempTypeName = EMSActuatorAvailable%ComponentTypeName
@@ -1331,9 +1331,9 @@ SUBROUTINE EchoOutActuatorKeyChoices
     DO ActuatorLoop =1, numEMSActuatorsAvailable
       IF (ActuatorLoop+1 <= numEMSActuatorsAvailable) THEN
         FoundTypeName = FindItemInList(TempTypeName(ActuatorLoop), TempTypeName(ActuatorLoop+1:numEMSActuatorsAvailable), &
-                                 (numEMSActuatorsAvailable - (ActuatorLoop+1)) )
+        (numEMSActuatorsAvailable - (ActuatorLoop+1)) )
         FoundControlType = FindItemInList(TempCntrlType(ActuatorLoop), TempCntrlType(ActuatorLoop+1:numEMSActuatorsAvailable), &
-                                 (numEMSActuatorsAvailable - (ActuatorLoop+1)) )
+        (numEMSActuatorsAvailable - (ActuatorLoop+1)) )
       ELSE
         FoundTypeName = 1
         FoundControlType = 1
@@ -1345,10 +1345,10 @@ SUBROUTINE EchoOutActuatorKeyChoices
     DO ActuatorLoop =1, numEMSActuatorsAvailable
       IF (.NOT. NonUniqueARRflag(ActuatorLoop)) Then
         WRITE(OutputEMSFileUnitNum, '(A)') 'EnergyManagementSystem:Actuator Available,' &
-                                              //' *' &
-                                         //','//Trim(EMSActuatorAvailable(ActuatorLoop)%ComponentTypeName)  &
-                                         //','//Trim(EMSActuatorAvailable(ActuatorLoop)%ControlTypeName) &
-                                         //','//Trim(EMSActuatorAvailable(ActuatorLoop)%Units)
+        //' *' &
+        //','//Trim(EMSActuatorAvailable(ActuatorLoop)%ComponentTypeName)  &
+        //','//Trim(EMSActuatorAvailable(ActuatorLoop)%ControlTypeName) &
+        //','//Trim(EMSActuatorAvailable(ActuatorLoop)%Units)
       ENDIF
     ENDDO
 
@@ -1363,38 +1363,38 @@ END SUBROUTINE EchoOutActuatorKeyChoices
 
 SUBROUTINE EchoOutInternalVariableChoices
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Brent Griffith
-          !       DATE WRITTEN   April 2009
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Brent Griffith
+  !       DATE WRITTEN   April 2009
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! echo out actuators registered with SetupEMSActuator for user access
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! echo out actuators registered with SetupEMSActuator for user access
 
-          ! METHODOLOGY EMPLOYED:
-          ! mine structure and write to eio file
+  ! METHODOLOGY EMPLOYED:
+  ! mine structure and write to eio file
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS
+  ! USE STATEMENTS
   USE InputProcessor, ONLY: FindItemInList
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-          ! na
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER :: InternalDataLoop
   CHARACTER(len=MaxNameLength), DIMENSION(:), ALLOCATABLE :: TempTypeName
   LOGICAL, DIMENSION(:), ALLOCATABLE                      :: UniqueARRflag
@@ -1403,12 +1403,12 @@ SUBROUTINE EchoOutInternalVariableChoices
   IF (OutputEMSInternalVarsFull) THen
 
     WRITE(OutputEMSFileUnitNum, '(A)') '! <EnergyManagementSystem:InternalVariable Available>, Unique Name, Internal Data Type' &
-                     //', Units '
+    //', Units '
     DO InternalDataLoop =1, numEMSInternalVarsAvailable
       WRITE(OutputEMSFileUnitNum, '(A)') 'EnergyManagementSystem:InternalVariable Available,'&
-                                         //Trim(EMSInternalVarsAvailable(InternalDataLoop)%UniqueIDName) &
-                                         //','//Trim(EMSInternalVarsAvailable(InternalDataLoop)%DataTypeName) &
-                                         //','//Trim(EMSInternalVarsAvailable(InternalDataLoop)%Units )
+      //Trim(EMSInternalVarsAvailable(InternalDataLoop)%UniqueIDName) &
+      //','//Trim(EMSInternalVarsAvailable(InternalDataLoop)%DataTypeName) &
+      //','//Trim(EMSInternalVarsAvailable(InternalDataLoop)%Units )
     ENDDO
 
   ELSE IF (OutputEMSInternalVarsSmall) THEN
@@ -1420,7 +1420,7 @@ SUBROUTINE EchoOutInternalVariableChoices
     DO InternalDataLoop =1, numEMSInternalVarsAvailable
       IF (InternalDataLoop+1 <= numEMSInternalVarsAvailable) THEN
         Found = FindItemInList(TempTypeName(InternalDataLoop), TempTypeName(InternalDataLoop+1:numEMSInternalVarsAvailable), &
-                                 (numEMSInternalVarsAvailable - (InternalDataLoop+1)) )
+        (numEMSInternalVarsAvailable - (InternalDataLoop+1)) )
       ELSE
         Found = 0
       ENDIF
@@ -1429,9 +1429,9 @@ SUBROUTINE EchoOutInternalVariableChoices
     DO InternalDataLoop =1, numEMSInternalVarsAvailable
       IF (UniqueARRflag(InternalDataLoop)) Then
         WRITE(OutputEMSFileUnitNum, '(A)') 'EnergyManagementSystem:InternalVariable Available,'&
-                                         //' *' &
-                                         //','//Trim(EMSInternalVarsAvailable(InternalDataLoop)%DataTypeName) &
-                                         //','//Trim(EMSInternalVarsAvailable(InternalDataLoop)%Units )
+        //' *' &
+        //','//Trim(EMSInternalVarsAvailable(InternalDataLoop)%DataTypeName) &
+        //','//Trim(EMSInternalVarsAvailable(InternalDataLoop)%Units )
       ENDIF
     ENDDO
 
@@ -1445,48 +1445,48 @@ END SUBROUTINE EchoOutInternalVariableChoices
 
 SUBROUTINE SetupNodeSetpointsAsActuators
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Brent Griffith
-          !       DATE WRITTEN   May 2009
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Brent Griffith
+  !       DATE WRITTEN   May 2009
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! make system nodes in model available for EMS control
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! make system nodes in model available for EMS control
 
-          ! METHODOLOGY EMPLOYED:
-          ! Loop over node structures and make calls to SetupEMSActuator
-          ! the pattern for the basic node setpoints is a little different in that the actuators directly
-          ! affect the node variables, rather than using seperate logical override flag and ems values
+  ! METHODOLOGY EMPLOYED:
+  ! Loop over node structures and make calls to SetupEMSActuator
+  ! the pattern for the basic node setpoints is a little different in that the actuators directly
+  ! affect the node variables, rather than using seperate logical override flag and ems values
 
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataLoopNode,      ONLY: Node, NodeID, NumOfNodes
   USE DataInterfaces,    ONLY: SetupEMSActuator
   USE OutAirNodeManager, ONLY: NumOutsideAirNodes, OutsideAirNodeList
 
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-          ! na
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER  :: LoopNode  !local do loop index
   LOGICAL  :: lDummy ! not going to setup a pointer to logical control
-                              ! (could this ever cause a fault?)
-                              ! make it optional in Setup call?
+  ! (could this ever cause a fault?)
+  ! make it optional in Setup call?
   INTEGER  :: OutsideAirNodeNum ! local do loop index
   INTEGER  :: NodeNum ! local index.
 
@@ -1495,25 +1495,25 @@ SUBROUTINE SetupNodeSetpointsAsActuators
   IF (NumOfNodes > 0 ) THEN
 
     DO LoopNode = 1, NumOfNodes
-    ! setup the setpoint for each type of variable that can be controlled
+      ! setup the setpoint for each type of variable that can be controlled
       CALL SetupEMSActuator ('System Node Setpoint', NodeID(LoopNode), &
-                              'Temperature Setpoint', '[C]', lDummy, Node(LoopNode)%TempSetPoint )
+      'Temperature Setpoint', '[C]', lDummy, Node(LoopNode)%TempSetPoint )
       CALL SetupEMSActuator ('System Node Setpoint', NodeID(LoopNode), &
-                              'Temperature Minimum Setpoint', '[C]', lDummy, Node(LoopNode)%TempMin )
+      'Temperature Minimum Setpoint', '[C]', lDummy, Node(LoopNode)%TempMin )
       CALL SetupEMSActuator ('System Node Setpoint', NodeID(LoopNode), &
-                              'Temperature Maximum Setpoint', '[C]', lDummy, Node(LoopNode)%TempMax )
+      'Temperature Maximum Setpoint', '[C]', lDummy, Node(LoopNode)%TempMax )
       CALL SetupEMSActuator ('System Node Setpoint', NodeID(LoopNode), &
-                              'Humidity Ratio Setpoint', '[kgWater/kgDryAir]', lDummy, Node(LoopNode)%HumRatSetPoint )
+      'Humidity Ratio Setpoint', '[kgWater/kgDryAir]', lDummy, Node(LoopNode)%HumRatSetPoint )
       CALL SetupEMSActuator ('System Node Setpoint', NodeID(LoopNode), &
-                              'Humidity Ratio Maximum Setpoint', '[kgWater/kgDryAir]', lDummy, Node(LoopNode)%HumRatMax )
+      'Humidity Ratio Maximum Setpoint', '[kgWater/kgDryAir]', lDummy, Node(LoopNode)%HumRatMax )
       CALL SetupEMSActuator ('System Node Setpoint', NodeID(LoopNode), &
-                              'Humidity Ratio Minimum Setpoint', '[kgWater/kgDryAir]', lDummy, Node(LoopNode)%HumRatMin )
+      'Humidity Ratio Minimum Setpoint', '[kgWater/kgDryAir]', lDummy, Node(LoopNode)%HumRatMin )
       CALL SetupEMSActuator ('System Node Setpoint', NodeID(LoopNode), &
-                              'Mass Flow Rate Setpoint', '[kg/s]', lDummy, Node(LoopNode)%MassFlowRateSetPoint )
+      'Mass Flow Rate Setpoint', '[kg/s]', lDummy, Node(LoopNode)%MassFlowRateSetPoint )
       CALL SetupEMSActuator ('System Node Setpoint', NodeID(LoopNode), &
-                              'Mass Flow Rate Maximum Available Setpoint', '[kg/s]', lDummy, Node(LoopNode)%MassFlowRateMaxAvail )
+      'Mass Flow Rate Maximum Available Setpoint', '[kg/s]', lDummy, Node(LoopNode)%MassFlowRateMaxAvail )
       CALL SetupEMSActuator ('System Node Setpoint', NodeID(LoopNode), &
-                              'Mass Flow Rate Minimum Available Setpoint', '[kg/s]', lDummy, Node(LoopNode)%MassFlowRateMinAvail )
+      'Mass Flow Rate Minimum Available Setpoint', '[kg/s]', lDummy, Node(LoopNode)%MassFlowRateMinAvail )
     ENDDO
 
   ENDIF ! NumOfNodes > 0
@@ -1522,11 +1522,11 @@ SUBROUTINE SetupNodeSetpointsAsActuators
     DO OutsideAirNodeNum = 1, NumOutsideAirNodes
       NodeNum = OutsideAirNodeList(OutsideAirNodeNum)
       CALL SetupEMSActuator ('Outdoor Air System Node', NodeID(NodeNum), &
-                                'Drybulb Temperature' , '[C]', Node(NodeNum)%EMSOverrideOutAirDryBulb, &
-                                Node(NodeNum)%EMSValueForOutAirDryBulb )
+      'Drybulb Temperature' , '[C]', Node(NodeNum)%EMSOverrideOutAirDryBulb, &
+      Node(NodeNum)%EMSValueForOutAirDryBulb )
       CALL SetupEMSActuator ('Outdoor Air System Node', NodeID(NodeNum), &
-                                'Wetbulb Temperature' , '[C]', Node(NodeNum)%EMSOverrideOutAirWetBulb, &
-                                Node(NodeNum)%EMSValueForOutAirWetBulb )
+      'Wetbulb Temperature' , '[C]', Node(NodeNum)%EMSOverrideOutAirWetBulb, &
+      Node(NodeNum)%EMSValueForOutAirWetBulb )
     ENDDO
   ENDIF
 
@@ -1536,42 +1536,42 @@ END SUBROUTINE SetupNodeSetpointsAsActuators
 
 SUBROUTINE UpdateEMSTrendVariables
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Brent Griffith
-          !       DATE WRITTEN   May 2009
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Brent Griffith
+  !       DATE WRITTEN   May 2009
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Logged trend data
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! Logged trend data
 
-          ! METHODOLOGY EMPLOYED:
-          ! Store current value of Erl Variable in Trend stack
-          ! Trend arrays are pushed so that the latest value is
-          !  always at index 1.  old values get lost.
+  ! METHODOLOGY EMPLOYED:
+  ! Store current value of Erl Variable in Trend stack
+  ! Trend arrays are pushed so that the latest value is
+  !  always at index 1.  old values get lost.
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   Use DataGlobals_HPSimIntegrated, ONLY: AnyEnergyManagementSystemInModel
 
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-          ! na
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-          ! na
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! na
   INTEGER   :: TrendNum = 0 ! local loop counter
   INTEGER   :: ErlVarNum = 0 !
   INTEGER   :: TrendDepth = 0
@@ -1591,7 +1591,7 @@ SUBROUTINE UpdateEMSTrendVariables
       TrendVariable(TrendNum)%tempTrendARR = TrendVariable(TrendNum)%TrendValARR
       TrendVariable(TrendNum)%TrendValARR(1) = currentVal
       TrendVariable(TrendNum)%TrendValARR(2:TrendDepth) = &
-                        TrendVariable(TrendNum)%tempTrendARR(1:TrendDepth -1)
+      TrendVariable(TrendNum)%tempTrendARR(1:TrendDepth -1)
 
     ENDIF
   ENDDO
@@ -1602,41 +1602,41 @@ END SUBROUTINE UpdateEMSTrendVariables
 
 SUBROUTINE CheckIfNodeSetpointManagedByEMS(NodeNum, SetpointType, ErrorFlag )
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Brent Griffith
-          !       DATE WRITTEN   May 2009
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Brent Griffith
+  !       DATE WRITTEN   May 2009
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Provide method to verify that a specific node is (probably) managed by EMS
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! Provide method to verify that a specific node is (probably) managed by EMS
 
-          ! METHODOLOGY EMPLOYED:
-          ! <description>
+  ! METHODOLOGY EMPLOYED:
+  ! <description>
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE InputProcessor, ONLY: SameString
   USE DataLoopNode,   ONLY: NodeID
 
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   INTEGER, INTENT(IN)    :: NodeNum ! index of node being checked.
   INTEGER, INTENT(IN)    :: SetpointType
   LOGICAL, INTENT(INOUT) :: ErrorFlag
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER :: Loop = 0 ! local do loop index
   CHARACTER(len=MaxNameLength) :: cControlTypeName
   CHARACTER(len=MaxNameLength) :: cComponentTypeName
@@ -1671,56 +1671,56 @@ SUBROUTINE CheckIfNodeSetpointManagedByEMS(NodeNum, SetpointType, ErrorFlag )
 
   DO loop = 1, numActuatorsUsed + NumExternalInterfaceActuatorsUsed
     IF ( (SameString( EMSActuatorUsed(loop)%ComponentTypeName, cComponentTypeName)) &
-        .AND. (SameString( EMSActuatorUsed(loop)%UniqueIDName, cNodeName ))  &
-        .AND. (SameString( EMSActuatorUsed(loop)%ControlTypeName, cControlTypeName)) ) THEN
-      FoundControl = .TRUE.
-    ENDIF
+    .AND. (SameString( EMSActuatorUsed(loop)%UniqueIDName, cNodeName ))  &
+    .AND. (SameString( EMSActuatorUsed(loop)%ControlTypeName, cControlTypeName)) ) THEN
+    FoundControl = .TRUE.
+  ENDIF
 
-  ENDDO
+ENDDO
 
-  IF ((.NOT. ErrorFlag) .AND. (.NOT. FoundControl)) ErrorFlag = .TRUE.
+IF ((.NOT. ErrorFlag) .AND. (.NOT. FoundControl)) ErrorFlag = .TRUE.
 
-  RETURN
+RETURN
 
 END SUBROUTINE CheckIfNodeSetpointManagedByEMS
 
 SUBROUTINE SetupPrimaryAirSystemAvailMgrAsActuators
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Brent Griffith
-          !       DATE WRITTEN   May 2009
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Brent Griffith
+  !       DATE WRITTEN   May 2009
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! make air system status available as EMS actuator
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! make air system status available as EMS actuator
 
-          ! METHODOLOGY EMPLOYED:
-          ! <description>
+  ! METHODOLOGY EMPLOYED:
+  ! <description>
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataAirLoop    , ONLY: PriAirSysAvailMgr
   USE DataAirSystems , ONLY: PrimaryAirSystem
   USE DataInterfaces , ONLY: SetupEMSActuator
 
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-          ! na
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER :: numAirLoops = 0
   INTEGER :: loop = 0
   LOGICAL  :: lDummy
@@ -1729,8 +1729,8 @@ SUBROUTINE SetupPrimaryAirSystemAvailMgrAsActuators
   IF (ALLOCATED(PriAirSysAvailMgr)) THEN
     numAirLoops = SIZE(PriAirSysAvailMgr)
     DO loop = 1, numAirLoops
-          CALL SetupEMSActuator('AirLoopHVAC', PrimaryAirSystem(loop)%Name,  &
-                 'Availability Status', '[ ]', lDummy, PriAirSysAvailMgr(loop)%AvailStatus )
+      CALL SetupEMSActuator('AirLoopHVAC', PrimaryAirSystem(loop)%Name,  &
+      'Availability Status', '[ ]', lDummy, PriAirSysAvailMgr(loop)%AvailStatus )
 
     ENDDO
 
@@ -1744,41 +1744,41 @@ END SUBROUTINE SetupPrimaryAirSystemAvailMgrAsActuators
 
 SUBROUTINE SetupWindowShadingControlActuators
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Brent Griffith
-          !       DATE WRITTEN   May 2009
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Brent Griffith
+  !       DATE WRITTEN   May 2009
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! make calls to SetupEMSactuator for public data for Window Shades
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! make calls to SetupEMSactuator for public data for Window Shades
 
-          ! METHODOLOGY EMPLOYED:
-          ! Loop thru SurfaceWindow and register any shading controls
+  ! METHODOLOGY EMPLOYED:
+  ! Loop thru SurfaceWindow and register any shading controls
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataSurfaces, Only: Surface, SurfaceWindow, TotSurfaces, SurfaceClass_Window, &
-                           ExternalEnvironment
+  ExternalEnvironment
   Use DataInterfaces, Only: SetupEMSActuator
 
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-          ! na
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER :: loopSurfNum = 0 ! local do loop index
 
   Do loopSurfNum  =1, TotSurfaces
@@ -1788,13 +1788,13 @@ SUBROUTINE SetupWindowShadingControlActuators
     IF(Surface(loopSurfNum)%WindowShadingControlPtr == 0) CYCLE
 
     CALL SetupEMSActuator('Window Shading Control',   Surface(loopSurfNum)%Name, &
-                           'Control Status', '[ShadeStatus]', &
-      SurfaceWindow(loopSurfNum)%ShadingFlagEMSOn, SurfaceWindow(loopSurfNum)%ShadingFlagEMSValue)
+    'Control Status', '[ShadeStatus]', &
+    SurfaceWindow(loopSurfNum)%ShadingFlagEMSOn, SurfaceWindow(loopSurfNum)%ShadingFlagEMSValue)
 
     IF (SurfaceWindow(loopSurfNum)%MovableSlats) THEN
       CALL SetupEMSActuator('Window Shading Control',   Surface(loopSurfNum)%Name, &
-                           'Slat Angle', '[degrees]', &
-        SurfaceWindow(loopSurfNum)%SlatAngThisTSDegEMSon, SurfaceWindow(loopSurfNum)%SlatAngThisTSDegEMSValue)
+      'Slat Angle', '[degrees]', &
+      SurfaceWindow(loopSurfNum)%SlatAngThisTSDegEMSon, SurfaceWindow(loopSurfNum)%SlatAngThisTSDegEMSValue)
 
     ENDIF
 
@@ -1805,74 +1805,74 @@ END SUBROUTINE SetupWindowShadingControlActuators
 
 SUBROUTINE SetupThermostatActuators
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Brent Griffith
-          !       DATE WRITTEN   May 2009
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Brent Griffith
+  !       DATE WRITTEN   May 2009
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Make zone thermostats, humidistats, and comfort controls available to EMS
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! Make zone thermostats, humidistats, and comfort controls available to EMS
 
-          ! METHODOLOGY EMPLOYED:
-          ! Loop over structures and call SetupEMSactuator for public data in DataZoneControls.
+  ! METHODOLOGY EMPLOYED:
+  ! Loop over structures and call SetupEMSactuator for public data in DataZoneControls.
 
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataZoneControls
   USE DataInterfaces,   ONLY: SetupEMSActuator
 
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-          ! na
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER :: Loop = 0 ! local do loop index
 
   DO Loop = 1, NumTempControlledZones
     CALL SetupEMSActuator('Zone Temperature Control',  TempControlledZone(loop)%ZoneName, &
-                           'Heating Setpoint', '[C]', &
-                           TempControlledZone(loop)%EMSOverrideHeatingSetpointOn, &
-                           TempControlledZone(loop)%EMSOverrideHeatingSetpointValue)
+    'Heating Setpoint', '[C]', &
+    TempControlledZone(loop)%EMSOverrideHeatingSetpointOn, &
+    TempControlledZone(loop)%EMSOverrideHeatingSetpointValue)
     CALL SetupEMSActuator('Zone Temperature Control',  TempControlledZone(loop)%ZoneName, &
-                           'Cooling Setpoint', '[C]', &
-                           TempControlledZone(loop)%EMSOverrideCoolingSetpointOn, &
-                           TempControlledZone(loop)%EMSOverrideCoolingSetpointValue)
+    'Cooling Setpoint', '[C]', &
+    TempControlledZone(loop)%EMSOverrideCoolingSetpointOn, &
+    TempControlledZone(loop)%EMSOverrideCoolingSetpointValue)
   ENDDO
 
   DO Loop = 1, NumHumidityControlZones
     CALL SetupEMSActuator('Zone Humidity Control',  HumidityControlZone(loop)%ZoneName, &
-                           'Relative Humidity Humidifying Setpoint', '[%]', &
-                           HumidityControlZone(loop)%EMSOverrideHumidifySetpointOn, &
-                           HumidityControlZone(loop)%EMSOverrideHumidifySetpointValue)
+    'Relative Humidity Humidifying Setpoint', '[%]', &
+    HumidityControlZone(loop)%EMSOverrideHumidifySetpointOn, &
+    HumidityControlZone(loop)%EMSOverrideHumidifySetpointValue)
     CALL SetupEMSActuator('Zone Humidity Control',  HumidityControlZone(loop)%ZoneName, &
-                           'Relative Humidity Dehumidifying Setpoint', '[%]', &
-                           HumidityControlZone(loop)%EMSOverrideDehumidifySetpointOn, &
-                           HumidityControlZone(loop)%EMSOverrideDehumidifySetpointValue)
+    'Relative Humidity Dehumidifying Setpoint', '[%]', &
+    HumidityControlZone(loop)%EMSOverrideDehumidifySetpointOn, &
+    HumidityControlZone(loop)%EMSOverrideDehumidifySetpointValue)
   ENDDO
 
   DO Loop = 1, NumComfortControlledZones
     CALL SetupEMSActuator('Zone Comfort Control',  ComfortControlledZone(loop)%ZoneName, &
-                           'Heating Setpoint', '[PMV]', &
-                           ComfortControlledZone(loop)%EMSOverrideHeatingSetpointOn, &
-                           ComfortControlledZone(loop)%EMSOverrideHeatingSetpointValue)
+    'Heating Setpoint', '[PMV]', &
+    ComfortControlledZone(loop)%EMSOverrideHeatingSetpointOn, &
+    ComfortControlledZone(loop)%EMSOverrideHeatingSetpointValue)
     CALL SetupEMSActuator('Zone Comfort Control',  ComfortControlledZone(loop)%ZoneName, &
-                           'Cooling Setpoint', '[PMV]', &
-                           ComfortControlledZone(loop)%EMSOverrideCoolingSetpointOn, &
-                           ComfortControlledZone(loop)%EMSOverrideCoolingSetpointValue)
+    'Cooling Setpoint', '[PMV]', &
+    ComfortControlledZone(loop)%EMSOverrideCoolingSetpointOn, &
+    ComfortControlledZone(loop)%EMSOverrideCoolingSetpointValue)
   ENDDO
 
   RETURN
@@ -1881,52 +1881,52 @@ END SUBROUTINE SetupThermostatActuators
 
 SUBROUTINE SetupSurfaceConvectionActuators
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Brent Griffith
-          !       DATE WRITTEN   May 2009
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Brent Griffith
+  !       DATE WRITTEN   May 2009
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Setup EMS actuators available for surface convection coefficients
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! Setup EMS actuators available for surface convection coefficients
 
-          ! METHODOLOGY EMPLOYED:
-          ! access public data and loop over it.
+  ! METHODOLOGY EMPLOYED:
+  ! access public data and loop over it.
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataInterfaces,ONLY: SetupEMSActuator
   USE DataSurfaces,  ONLY: Surface, TotSurfaces
 
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-          ! na
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER :: SurfNum ! local loop index.
 
 
   DO SurfNum = 1, TotSurfaces
     CALL SetupEMSActuator('Surface',  Surface(SurfNum)%Name, &
-                           'Interior Surface Convection Heat Transfer Coefficient', '[W/m2-K]', &
-                           Surface(SurfNum)%EMSOverrideIntConvCoef, &
-                           Surface(SurfNum)%EMSValueForIntConvCoef)
+    'Interior Surface Convection Heat Transfer Coefficient', '[W/m2-K]', &
+    Surface(SurfNum)%EMSOverrideIntConvCoef, &
+    Surface(SurfNum)%EMSValueForIntConvCoef)
     CALL SetupEMSActuator('Surface',  Surface(SurfNum)%Name, &
-                           'Exterior Surface Convection Heat Transfer Coefficient', '[W/m2-K]', &
-                           Surface(SurfNum)%EMSOverrideExtConvCoef, &
-                           Surface(SurfNum)%EMSValueForExtConvCoef)
+    'Exterior Surface Convection Heat Transfer Coefficient', '[W/m2-K]', &
+    Surface(SurfNum)%EMSOverrideExtConvCoef, &
+    Surface(SurfNum)%EMSValueForExtConvCoef)
   ENDDO
 
   RETURN
@@ -1935,60 +1935,60 @@ END SUBROUTINE SetupSurfaceConvectionActuators
 
 SUBROUTINE SetupSurfaceConstructionActuators
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         B. Griffith
-          !       DATE WRITTEN   Jan 2012
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         B. Griffith
+  !       DATE WRITTEN   Jan 2012
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! setup EMS actuators available for surface construction
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! setup EMS actuators available for surface construction
 
-          ! METHODOLOGY EMPLOYED:
-          ! <description>
+  ! METHODOLOGY EMPLOYED:
+  ! <description>
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataInterfaces,  ONLY: SetupEMSActuator
   USE DataSurfaces,    ONLY: Surface, TotSurfaces
   USE DataHeatBalance, ONLY: TotConstructs
 
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-          ! na
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER :: SurfNum ! local loop index.
   DO SurfNum = 1, TotSurfaces
 
     IF (.NOT. Surface(SurfNum)%HeatTransSurf) CYCLE
 
     CALL SetupEMSActuator('Surface',  Surface(SurfNum)%Name, &
-                           'Construction State', '[ ]', &
-                           Surface(SurfNum)%EMSConstructionOverrideON, &
-                           Surface(SurfNum)%EMSConstructionOverrideValue)
+    'Construction State', '[ ]', &
+    Surface(SurfNum)%EMSConstructionOverrideON, &
+    Surface(SurfNum)%EMSConstructionOverrideValue)
   ENDDO
 
   !Setup error checking storage
 
   IF (.NOT. ALLOCATED(EMSConstructActuatorChecked)) &
-    ALLOCATE(EMSConstructActuatorChecked(TotSurfaces, TotConstructs))
+  ALLOCATE(EMSConstructActuatorChecked(TotSurfaces, TotConstructs))
   EMSConstructActuatorChecked = .FALSE.
 
   IF (.NOT. ALLOCATED(EMSConstructActuatorIsOkay)) &
-    ALLOCATE(EMSConstructActuatorIsOkay(TotSurfaces, TotConstructs))
+  ALLOCATE(EMSConstructActuatorIsOkay(TotSurfaces, TotConstructs))
   EMSConstructActuatorIsOkay = .FALSE.
 
   RETURN
@@ -1998,41 +1998,41 @@ END SUBROUTINE SetupSurfaceConstructionActuators
 
 SUBROUTINE SetupZoneInfoAsInternalDataAvail
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Brent Griffith
-          !       DATE WRITTEN   May 2009
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Brent Griffith
+  !       DATE WRITTEN   May 2009
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! set up zone-related info as internal data
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! set up zone-related info as internal data
 
-          ! METHODOLOGY EMPLOYED:
-          ! <description>
+  ! METHODOLOGY EMPLOYED:
+  ! <description>
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataGlobals_HPSimIntegrated, ONLY: NumOfZones
   USE DataInterfaces, ONLY: SetupEMSInternalVariable
   USE DataHeatBalance, ONLY: Zone
 
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-          ! na
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
 
   INTEGER :: ZoneNum
 
@@ -2040,13 +2040,13 @@ SUBROUTINE SetupZoneInfoAsInternalDataAvail
     DO ZoneNum = 1, NumOfZones
 
       CALL SetupEMSInternalVariable('Zone Floor Area', Zone(ZoneNum)%Name, '[m2]', &
-                                    Zone(ZoneNum)%FloorArea )
+      Zone(ZoneNum)%FloorArea )
       CALL SetupEMSInternalVariable('Zone Air Volume', Zone(ZoneNum)%Name, '[m3]', &
-                                    Zone(ZoneNum)%Volume )
+      Zone(ZoneNum)%Volume )
       CALL SetupEMSInternalVariable('Zone Multiplier', Zone(ZoneNum)%Name, '[ ]', &
-                                    Zone(ZoneNum)%Multiplier )
+      Zone(ZoneNum)%Multiplier )
       CALL SetupEMSInternalVariable('Zone List Multiplier', Zone(ZoneNum)%Name, '[ ]', &
-                                    Zone(ZoneNum)%ListMultiplier )
+      Zone(ZoneNum)%ListMultiplier )
     ENDDO
 
   ENDIF
@@ -2061,7 +2061,7 @@ END SUBROUTINE SetupZoneInfoAsInternalDataAvail
 
 !     NOTICE
 !
-!     Copyright © 1996-2012 The Board of Trustees of the University of Illinois
+!     Copyright ï¿½ 1996-2012 The Board of Trustees of the University of Illinois
 !     and The Regents of the University of California through Ernest Orlando Lawrence
 !     Berkeley National Laboratory.  All rights reserved.
 !
@@ -2090,30 +2090,30 @@ END MODULE EMSManager
 !
 SUBROUTINE SetupEMSRealActuator(cComponentTypeName, cUniqueIDName, cControlTypeName, cUnits, lEMSActuated, rValue )
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Peter Graham Ellis
-          !       DATE WRITTEN   June 2006
-          !       MODIFIED       Brent Griffith April 2009,
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Peter Graham Ellis
+  !       DATE WRITTEN   June 2006
+  !       MODIFIED       Brent Griffith April 2009,
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! register a new actuator for EMS
-          !   set  up pointer to logical and real value
-          !
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! register a new actuator for EMS
+  !   set  up pointer to logical and real value
+  !
 
-          ! METHODOLOGY EMPLOYED:
-          ! push size of ActuatorVariable and add a new one.
-          !  check for duplicates.
+  ! METHODOLOGY EMPLOYED:
+  ! push size of ActuatorVariable and add a new one.
+  !  check for duplicates.
 
-          ! USE STATEMENTS:
-!  USE DataGlobals_HPSimIntegrated, ONLY: ShowSevereError
+  ! USE STATEMENTS:
+  !  USE DataGlobals_HPSimIntegrated, ONLY: ShowSevereError
   USE InputProcessor, ONLY: MakeUpperCase
   USE DataPrecisionGlobals
   USE DataRuntimeLanguage
 
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   CHARACTER(len=*), INTENT(IN)  :: cComponentTypeName
   CHARACTER(len=*), INTENT(IN)  :: cUniqueIDName
   CHARACTER(len=*), INTENT(IN)  :: cControlTypeName
@@ -2121,7 +2121,7 @@ SUBROUTINE SetupEMSRealActuator(cComponentTypeName, cUniqueIDName, cControlTypeN
   LOGICAL, TARGET, INTENT(IN)   :: lEMSActuated
   REAL(r64), TARGET, INTENT(IN) :: rValue
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER :: ActuatorVariableNum
   LOGICAL :: FoundActuatorType
   LOGICAL :: FoundDuplicate
@@ -2130,7 +2130,7 @@ SUBROUTINE SetupEMSRealActuator(cComponentTypeName, cUniqueIDName, cControlTypeN
   CHARACTER(len=MaxNameLength) :: UpperCaseActuatorName
   TYPE(EMSActuatorAvailableType), DIMENSION(:), ALLOCATABLE :: TempEMSActuatorAvailable
 
-          ! FLOW:
+  ! FLOW:
 
   FoundActuatorType = .FALSE.
   FoundDuplicate = .FALSE.
@@ -2141,79 +2141,79 @@ SUBROUTINE SetupEMSRealActuator(cComponentTypeName, cUniqueIDName, cControlTypeN
 
   DO ActuatorVariableNum = 1, numEMSActuatorsAvailable
     IF ((EMSActuatorAvailable(ActuatorVariableNum)%ComponentTypeName == UpperCaseObjectType)  &
-      .AND. (EMSActuatorAvailable(ActuatorVariableNum)%ControlTypeName == UpperCaseActuatorName)) THEN
+    .AND. (EMSActuatorAvailable(ActuatorVariableNum)%ControlTypeName == UpperCaseActuatorName)) THEN
 
-      FoundActuatorType = .TRUE.
+    FoundActuatorType = .TRUE.
 
-      IF (EMSActuatorAvailable(ActuatorVariableNum)%UniqueIDName == UpperCaseObjectName) THEN
-        FoundDuplicate = .TRUE.
-        EXIT
-      END IF
+    IF (EMSActuatorAvailable(ActuatorVariableNum)%UniqueIDName == UpperCaseObjectName) THEN
+      FoundDuplicate = .TRUE.
+      EXIT
     END IF
-  END DO
+  END IF
+END DO
 
-  IF (FoundDuplicate) THEN
-    CALL ShowSevereError('Duplicate actuator was sent to SetupEMSActuator.')
+IF (FoundDuplicate) THEN
+  CALL ShowSevereError('Duplicate actuator was sent to SetupEMSActuator.')
+ELSE
+  ! Add new actuator
+  IF (numEMSActuatorsAvailable == 0) THEN
+    ALLOCATE(EMSActuatorAvailable(VarsAvailableAllocInc))
+    numEMSActuatorsAvailable = 1
+    maxEMSActuatorsAvailable = VarsAvailableAllocInc
   ELSE
-    ! Add new actuator
-    IF (numEMSActuatorsAvailable == 0) THEN
-      ALLOCATE(EMSActuatorAvailable(VarsAvailableAllocInc))
-      numEMSActuatorsAvailable = 1
-      maxEMSActuatorsAvailable = VarsAvailableAllocInc
-    ELSE
-      IF (numEMSActuatorsAvailable+1 > maxEMSActuatorsAvailable) THEN
-        ALLOCATE(TempEMSActuatorAvailable(maxEMSActuatorsAvailable+VarsAvailableAllocInc))
-        TempEMSActuatorAvailable(1:numEMSActuatorsAvailable) = EMSActuatorAvailable(1:numEMSActuatorsAvailable)
-        DEALLOCATE(EMSActuatorAvailable)
-        ALLOCATE(EMSActuatorAvailable(maxEMSActuatorsAvailable+VarsAvailableAllocInc))
-        EMSActuatorAvailable(1:numEMSActuatorsAvailable) = TempEMSActuatorAvailable(1:numEMSActuatorsAvailable)
-        DEALLOCATE(TempEMSActuatorAvailable)
-        maxEMSActuatorsAvailable=maxEMSActuatorsAvailable+VarsAvailableAllocInc
-      ENDIF
-      numEMSActuatorsAvailable = numEMSActuatorsAvailable + 1
-    END IF
-
-    ActuatorVariableNum = numEMSActuatorsAvailable
-    EMSActuatorAvailable(ActuatorVariableNum)%ComponentTypeName = cComponentTypeName
-    EMSActuatorAvailable(ActuatorVariableNum)%UniqueIDName      = cUniqueIDName
-    EMSActuatorAvailable(ActuatorVariableNum)%ControlTypeName   = cControlTypeName
-    EMSActuatorAvailable(ActuatorVariableNum)%Units             = cUnits
-    EMSActuatorAvailable(ActuatorVariableNum)%Actuated         => lEMSActuated  ! Pointer assigment
-    EMSActuatorAvailable(ActuatorVariableNum)%RealValue        => rValue        ! Pointer assigment
-    EMSActuatorAvailable(ActuatorVariableNum)%PntrVarTypeUsed  = PntrReal
-
+    IF (numEMSActuatorsAvailable+1 > maxEMSActuatorsAvailable) THEN
+      ALLOCATE(TempEMSActuatorAvailable(maxEMSActuatorsAvailable+VarsAvailableAllocInc))
+      TempEMSActuatorAvailable(1:numEMSActuatorsAvailable) = EMSActuatorAvailable(1:numEMSActuatorsAvailable)
+      DEALLOCATE(EMSActuatorAvailable)
+      ALLOCATE(EMSActuatorAvailable(maxEMSActuatorsAvailable+VarsAvailableAllocInc))
+      EMSActuatorAvailable(1:numEMSActuatorsAvailable) = TempEMSActuatorAvailable(1:numEMSActuatorsAvailable)
+      DEALLOCATE(TempEMSActuatorAvailable)
+      maxEMSActuatorsAvailable=maxEMSActuatorsAvailable+VarsAvailableAllocInc
+    ENDIF
+    numEMSActuatorsAvailable = numEMSActuatorsAvailable + 1
   END IF
 
-  RETURN
+  ActuatorVariableNum = numEMSActuatorsAvailable
+  EMSActuatorAvailable(ActuatorVariableNum)%ComponentTypeName = cComponentTypeName
+  EMSActuatorAvailable(ActuatorVariableNum)%UniqueIDName      = cUniqueIDName
+  EMSActuatorAvailable(ActuatorVariableNum)%ControlTypeName   = cControlTypeName
+  EMSActuatorAvailable(ActuatorVariableNum)%Units             = cUnits
+  EMSActuatorAvailable(ActuatorVariableNum)%Actuated         => lEMSActuated  ! Pointer assigment
+  EMSActuatorAvailable(ActuatorVariableNum)%RealValue        => rValue        ! Pointer assigment
+  EMSActuatorAvailable(ActuatorVariableNum)%PntrVarTypeUsed  = PntrReal
+
+END IF
+
+RETURN
 
 END SUBROUTINE SetupEMSRealActuator
 
 SUBROUTINE SetupEMSIntegerActuator(cComponentTypeName, cUniqueIDName, cControlTypeName, cUnits, lEMSActuated, iValue )
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Brent Griffith
-          !       DATE WRITTEN   May 2009
-          !       MODIFIED
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Brent Griffith
+  !       DATE WRITTEN   May 2009
+  !       MODIFIED
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! register a new actuator for EMS
-          !   set  up pointer to logical and integer value
-          !
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! register a new actuator for EMS
+  !   set  up pointer to logical and integer value
+  !
 
-          ! METHODOLOGY EMPLOYED:
-          ! push size of ActuatorVariable and add a new one.
-          !  check for duplicates.
+  ! METHODOLOGY EMPLOYED:
+  ! push size of ActuatorVariable and add a new one.
+  !  check for duplicates.
 
-          ! USE STATEMENTS:
-!  USE DataGlobals_HPSimIntegrated, ONLY: ShowSevereError, ShowContinueError
+  ! USE STATEMENTS:
+  !  USE DataGlobals_HPSimIntegrated, ONLY: ShowSevereError, ShowContinueError
   USE InputProcessor, ONLY: MakeUpperCase
   USE DataPrecisionGlobals
   USE DataRuntimeLanguage
 
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   CHARACTER(len=*), INTENT(IN)  :: cComponentTypeName
   CHARACTER(len=*), INTENT(IN)  :: cUniqueIDName
   CHARACTER(len=*), INTENT(IN)  :: cControlTypeName
@@ -2221,7 +2221,7 @@ SUBROUTINE SetupEMSIntegerActuator(cComponentTypeName, cUniqueIDName, cControlTy
   LOGICAL, TARGET, INTENT(IN)   :: lEMSActuated
   INTEGER, TARGET, INTENT(IN)   :: iValue
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER :: ActuatorVariableNum
   LOGICAL :: FoundActuatorType
   LOGICAL :: FoundDuplicate
@@ -2230,12 +2230,12 @@ SUBROUTINE SetupEMSIntegerActuator(cComponentTypeName, cUniqueIDName, cControlTy
   CHARACTER(len=MaxNameLength) :: UpperCaseActuatorName
   TYPE(EMSActuatorAvailableType), DIMENSION(:), ALLOCATABLE :: TempEMSActuatorAvailable
 
-          ! FLOW:
-!  IF (.NOT. ActuatorFileOpen) THEN
-!    !OPEN(88,file='eplusout.add')
-!    !WRITE(88, '(A)') 'Object Type,Actuator Name'
-!    ActuatorFileOpen = .TRUE.
-!  END IF
+  ! FLOW:
+  !  IF (.NOT. ActuatorFileOpen) THEN
+  !    !OPEN(88,file='eplusout.add')
+  !    !WRITE(88, '(A)') 'Object Type,Actuator Name'
+  !    ActuatorFileOpen = .TRUE.
+  !  END IF
 
   FoundActuatorType = .FALSE.
   FoundDuplicate = .FALSE.
@@ -2246,79 +2246,79 @@ SUBROUTINE SetupEMSIntegerActuator(cComponentTypeName, cUniqueIDName, cControlTy
 
   DO ActuatorVariableNum = 1, numEMSActuatorsAvailable
     IF ((EMSActuatorAvailable(ActuatorVariableNum)%ComponentTypeName == UpperCaseObjectType)  &
-      .AND. (EMSActuatorAvailable(ActuatorVariableNum)%ControlTypeName == UpperCaseActuatorName)) THEN
+    .AND. (EMSActuatorAvailable(ActuatorVariableNum)%ControlTypeName == UpperCaseActuatorName)) THEN
 
-      FoundActuatorType = .TRUE.
+    FoundActuatorType = .TRUE.
 
-      IF (EMSActuatorAvailable(ActuatorVariableNum)%UniqueIDName == UpperCaseObjectName) THEN
-        FoundDuplicate = .TRUE.
-        EXIT
-      END IF
+    IF (EMSActuatorAvailable(ActuatorVariableNum)%UniqueIDName == UpperCaseObjectName) THEN
+      FoundDuplicate = .TRUE.
+      EXIT
     END IF
-  END DO
+  END IF
+END DO
 
-  IF (FoundDuplicate) THEN
-    CALL ShowSevereError('Duplicate actuator was sent to SetupEMSIntegerActuator.')
+IF (FoundDuplicate) THEN
+  CALL ShowSevereError('Duplicate actuator was sent to SetupEMSIntegerActuator.')
+ELSE
+  ! Add new actuator
+  IF (numEMSActuatorsAvailable == 0) THEN
+    ALLOCATE(EMSActuatorAvailable(VarsAvailableAllocInc))
+    numEMSActuatorsAvailable = 1
+    maxEMSActuatorsAvailable = VarsAvailableAllocInc
   ELSE
-    ! Add new actuator
-    IF (numEMSActuatorsAvailable == 0) THEN
-      ALLOCATE(EMSActuatorAvailable(VarsAvailableAllocInc))
-      numEMSActuatorsAvailable = 1
-      maxEMSActuatorsAvailable = VarsAvailableAllocInc
-    ELSE
-      IF (numEMSActuatorsAvailable+1 > maxEMSActuatorsAvailable) THEN
-        ALLOCATE(TempEMSActuatorAvailable(maxEMSActuatorsAvailable+VarsAvailableAllocInc))
-        TempEMSActuatorAvailable(1:numEMSActuatorsAvailable) = EMSActuatorAvailable(1:numEMSActuatorsAvailable)
-        DEALLOCATE(EMSActuatorAvailable)
-        ALLOCATE(EMSActuatorAvailable(maxEMSActuatorsAvailable+VarsAvailableAllocInc))
-        EMSActuatorAvailable(1:numEMSActuatorsAvailable) = TempEMSActuatorAvailable(1:numEMSActuatorsAvailable)
-        DEALLOCATE(TempEMSActuatorAvailable)
-        maxEMSActuatorsAvailable=maxEMSActuatorsAvailable+VarsAvailableAllocInc
-      ENDIF
-      numEMSActuatorsAvailable = numEMSActuatorsAvailable + 1
-    END IF
-
-    ActuatorVariableNum = numEMSActuatorsAvailable
-    EMSActuatorAvailable(ActuatorVariableNum)%ComponentTypeName = cComponentTypeName
-    EMSActuatorAvailable(ActuatorVariableNum)%UniqueIDName      = cUniqueIDName
-    EMSActuatorAvailable(ActuatorVariableNum)%ControlTypeName   = cControlTypeName
-    EMSActuatorAvailable(ActuatorVariableNum)%Units             = cUnits
-    EMSActuatorAvailable(ActuatorVariableNum)%Actuated         => lEMSActuated  ! Pointer assigment
-    EMSActuatorAvailable(ActuatorVariableNum)%IntValue         => iValue        ! Pointer assigment
-    EMSActuatorAvailable(ActuatorVariableNum)%PntrVarTypeUsed   = PntrInteger
-
+    IF (numEMSActuatorsAvailable+1 > maxEMSActuatorsAvailable) THEN
+      ALLOCATE(TempEMSActuatorAvailable(maxEMSActuatorsAvailable+VarsAvailableAllocInc))
+      TempEMSActuatorAvailable(1:numEMSActuatorsAvailable) = EMSActuatorAvailable(1:numEMSActuatorsAvailable)
+      DEALLOCATE(EMSActuatorAvailable)
+      ALLOCATE(EMSActuatorAvailable(maxEMSActuatorsAvailable+VarsAvailableAllocInc))
+      EMSActuatorAvailable(1:numEMSActuatorsAvailable) = TempEMSActuatorAvailable(1:numEMSActuatorsAvailable)
+      DEALLOCATE(TempEMSActuatorAvailable)
+      maxEMSActuatorsAvailable=maxEMSActuatorsAvailable+VarsAvailableAllocInc
+    ENDIF
+    numEMSActuatorsAvailable = numEMSActuatorsAvailable + 1
   END IF
 
-  RETURN
+  ActuatorVariableNum = numEMSActuatorsAvailable
+  EMSActuatorAvailable(ActuatorVariableNum)%ComponentTypeName = cComponentTypeName
+  EMSActuatorAvailable(ActuatorVariableNum)%UniqueIDName      = cUniqueIDName
+  EMSActuatorAvailable(ActuatorVariableNum)%ControlTypeName   = cControlTypeName
+  EMSActuatorAvailable(ActuatorVariableNum)%Units             = cUnits
+  EMSActuatorAvailable(ActuatorVariableNum)%Actuated         => lEMSActuated  ! Pointer assigment
+  EMSActuatorAvailable(ActuatorVariableNum)%IntValue         => iValue        ! Pointer assigment
+  EMSActuatorAvailable(ActuatorVariableNum)%PntrVarTypeUsed   = PntrInteger
+
+END IF
+
+RETURN
 
 END SUBROUTINE SetupEMSIntegerActuator
 
 SUBROUTINE SetupEMSLogicalActuator(cComponentTypeName, cUniqueIDName, cControlTypeName, cUnits, lEMSActuated, lValue )
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Brent Griffith
-          !       DATE WRITTEN   August 2009
-          !       MODIFIED
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Brent Griffith
+  !       DATE WRITTEN   August 2009
+  !       MODIFIED
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! register a new actuator for EMS
-          !   set  up pointer to logical and logical value
-          !
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! register a new actuator for EMS
+  !   set  up pointer to logical and logical value
+  !
 
-          ! METHODOLOGY EMPLOYED:
-          ! push size of ActuatorVariable and add a new one.
-          !  check for duplicates.
+  ! METHODOLOGY EMPLOYED:
+  ! push size of ActuatorVariable and add a new one.
+  !  check for duplicates.
 
-          ! USE STATEMENTS:
-!  USE DataGlobals_HPSimIntegrated, ONLY: ShowSevereError, ShowContinueError
+  ! USE STATEMENTS:
+  !  USE DataGlobals_HPSimIntegrated, ONLY: ShowSevereError, ShowContinueError
   USE InputProcessor, ONLY: MakeUpperCase
   USE DataPrecisionGlobals
   USE DataRuntimeLanguage
 
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   CHARACTER(len=*), INTENT(IN)  :: cComponentTypeName
   CHARACTER(len=*), INTENT(IN)  :: cUniqueIDName
   CHARACTER(len=*), INTENT(IN)  :: cControlTypeName
@@ -2326,7 +2326,7 @@ SUBROUTINE SetupEMSLogicalActuator(cComponentTypeName, cUniqueIDName, cControlTy
   LOGICAL, TARGET, INTENT(IN)   :: lEMSActuated
   LOGICAL, TARGET, INTENT(IN)   :: lValue
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER :: ActuatorVariableNum
   LOGICAL :: FoundActuatorType
   LOGICAL :: FoundDuplicate
@@ -2335,7 +2335,7 @@ SUBROUTINE SetupEMSLogicalActuator(cComponentTypeName, cUniqueIDName, cControlTy
   CHARACTER(len=MaxNameLength) :: UpperCaseActuatorName
   TYPE(EMSActuatorAvailableType), DIMENSION(:), ALLOCATABLE :: TempEMSActuatorAvailable
 
-          ! FLOW:
+  ! FLOW:
   FoundActuatorType = .FALSE.
   FoundDuplicate = .FALSE.
 
@@ -2345,95 +2345,95 @@ SUBROUTINE SetupEMSLogicalActuator(cComponentTypeName, cUniqueIDName, cControlTy
 
   DO ActuatorVariableNum = 1, numEMSActuatorsAvailable
     IF ((EMSActuatorAvailable(ActuatorVariableNum)%ComponentTypeName == UpperCaseObjectType)  &
-      .AND. (EMSActuatorAvailable(ActuatorVariableNum)%ControlTypeName == UpperCaseActuatorName)) THEN
+    .AND. (EMSActuatorAvailable(ActuatorVariableNum)%ControlTypeName == UpperCaseActuatorName)) THEN
 
-      FoundActuatorType = .TRUE.
+    FoundActuatorType = .TRUE.
 
-      IF (EMSActuatorAvailable(ActuatorVariableNum)%UniqueIDName == UpperCaseObjectName) THEN
-        FoundDuplicate = .TRUE.
-        EXIT
-      END IF
+    IF (EMSActuatorAvailable(ActuatorVariableNum)%UniqueIDName == UpperCaseObjectName) THEN
+      FoundDuplicate = .TRUE.
+      EXIT
     END IF
-  END DO
+  END IF
+END DO
 
-  IF (FoundDuplicate) THEN
-    CALL ShowSevereError('Duplicate actuator was sent to SetupEMSLogicalActuator.')
+IF (FoundDuplicate) THEN
+  CALL ShowSevereError('Duplicate actuator was sent to SetupEMSLogicalActuator.')
+ELSE
+  ! Add new actuator
+  IF (numEMSActuatorsAvailable == 0) THEN
+    ALLOCATE(EMSActuatorAvailable(VarsAvailableAllocInc))
+    numEMSActuatorsAvailable = 1
+    maxEMSActuatorsAvailable = VarsAvailableAllocInc
   ELSE
-    ! Add new actuator
-    IF (numEMSActuatorsAvailable == 0) THEN
-      ALLOCATE(EMSActuatorAvailable(VarsAvailableAllocInc))
-      numEMSActuatorsAvailable = 1
-      maxEMSActuatorsAvailable = VarsAvailableAllocInc
-    ELSE
-      IF (numEMSActuatorsAvailable+1 > maxEMSActuatorsAvailable) THEN
-        ALLOCATE(TempEMSActuatorAvailable(maxEMSActuatorsAvailable+VarsAvailableAllocInc))
-        TempEMSActuatorAvailable(1:numEMSActuatorsAvailable) = EMSActuatorAvailable(1:numEMSActuatorsAvailable)
-        DEALLOCATE(EMSActuatorAvailable)
-        ALLOCATE(EMSActuatorAvailable(maxEMSActuatorsAvailable+VarsAvailableAllocInc))
-        EMSActuatorAvailable(1:numEMSActuatorsAvailable) = TempEMSActuatorAvailable(1:numEMSActuatorsAvailable)
-        DEALLOCATE(TempEMSActuatorAvailable)
-        maxEMSActuatorsAvailable=maxEMSActuatorsAvailable+VarsAvailableAllocInc
-      ENDIF
-      numEMSActuatorsAvailable = numEMSActuatorsAvailable + 1
-    END IF
-
-    ActuatorVariableNum = numEMSActuatorsAvailable
-    EMSActuatorAvailable(ActuatorVariableNum)%ComponentTypeName = cComponentTypeName
-    EMSActuatorAvailable(ActuatorVariableNum)%UniqueIDName      = cUniqueIDName
-    EMSActuatorAvailable(ActuatorVariableNum)%ControlTypeName   = cControlTypeName
-    EMSActuatorAvailable(ActuatorVariableNum)%Units             = cUnits
-    EMSActuatorAvailable(ActuatorVariableNum)%Actuated         => lEMSActuated  ! Pointer assigment
-    EMSActuatorAvailable(ActuatorVariableNum)%LogValue         => lValue        ! Pointer assigment
-    EMSActuatorAvailable(ActuatorVariableNum)%PntrVarTypeUsed   = PntrLogical
-
+    IF (numEMSActuatorsAvailable+1 > maxEMSActuatorsAvailable) THEN
+      ALLOCATE(TempEMSActuatorAvailable(maxEMSActuatorsAvailable+VarsAvailableAllocInc))
+      TempEMSActuatorAvailable(1:numEMSActuatorsAvailable) = EMSActuatorAvailable(1:numEMSActuatorsAvailable)
+      DEALLOCATE(EMSActuatorAvailable)
+      ALLOCATE(EMSActuatorAvailable(maxEMSActuatorsAvailable+VarsAvailableAllocInc))
+      EMSActuatorAvailable(1:numEMSActuatorsAvailable) = TempEMSActuatorAvailable(1:numEMSActuatorsAvailable)
+      DEALLOCATE(TempEMSActuatorAvailable)
+      maxEMSActuatorsAvailable=maxEMSActuatorsAvailable+VarsAvailableAllocInc
+    ENDIF
+    numEMSActuatorsAvailable = numEMSActuatorsAvailable + 1
   END IF
 
-  RETURN
+  ActuatorVariableNum = numEMSActuatorsAvailable
+  EMSActuatorAvailable(ActuatorVariableNum)%ComponentTypeName = cComponentTypeName
+  EMSActuatorAvailable(ActuatorVariableNum)%UniqueIDName      = cUniqueIDName
+  EMSActuatorAvailable(ActuatorVariableNum)%ControlTypeName   = cControlTypeName
+  EMSActuatorAvailable(ActuatorVariableNum)%Units             = cUnits
+  EMSActuatorAvailable(ActuatorVariableNum)%Actuated         => lEMSActuated  ! Pointer assigment
+  EMSActuatorAvailable(ActuatorVariableNum)%LogValue         => lValue        ! Pointer assigment
+  EMSActuatorAvailable(ActuatorVariableNum)%PntrVarTypeUsed   = PntrLogical
+
+END IF
+
+RETURN
 
 END SUBROUTINE SetupEMSLogicalActuator
 
 SUBROUTINE SetupEMSRealInternalVariable(cDataTypeName, cUniqueIDName, cUnits,  rValue )
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Brent Griffith
-          !       DATE WRITTEN   May 2009
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Brent Griffith
+  !       DATE WRITTEN   May 2009
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Setup internal data source and make available to EMS
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! Setup internal data source and make available to EMS
 
-          ! METHODOLOGY EMPLOYED:
-          ! <description>
+  ! METHODOLOGY EMPLOYED:
+  ! <description>
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE InputProcessor, ONLY: SameString
   USE DataPrecisionGlobals
   USE DataRuntimeLanguage
-!  USE DataGlobals_HPSimIntegrated, ONLY :ShowSevereError, ShowContinueError
+  !  USE DataGlobals_HPSimIntegrated, ONLY :ShowSevereError, ShowContinueError
 
 
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
 
   CHARACTER(len=*), INTENT(IN)  :: cDataTypeName
   CHARACTER(len=*), INTENT(IN)  :: cUniqueIDName
   CHARACTER(len=*), INTENT(IN)  :: cUnits
   REAL(r64), TARGET, INTENT(IN) :: rValue
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER :: InternalVarAvailNum ! loop index
   LOGICAL :: FoundInternalDataType
   LOGICAL :: FoundDuplicate
@@ -2444,88 +2444,88 @@ SUBROUTINE SetupEMSRealInternalVariable(cDataTypeName, cUniqueIDName, cUnits,  r
 
   DO InternalVarAvailNum = 1, numEMSInternalVarsAvailable
     IF ((SameString(cDataTypeName, EMSInternalVarsAvailable(InternalVarAvailNum)%DataTypeName )) &
-         .AND. (SameString(cUniqueIDName, EMSInternalVarsAvailable(InternalVarAvailNum)%UniqueIDName)) ) THEN
-      FoundDuplicate = .TRUE.
-      EXIT
-    ENDIF
-  ENDDO
+    .AND. (SameString(cUniqueIDName, EMSInternalVarsAvailable(InternalVarAvailNum)%UniqueIDName)) ) THEN
+    FoundDuplicate = .TRUE.
+    EXIT
+  ENDIF
+ENDDO
 
-  IF (FoundDuplicate) THEN
-    CALL ShowSevereError('Duplicate internal variable was sent to SetupEMSInternalVariable.')
-    CALL ShowContinueError('Internal variable type = '//TRIM(cDataTypeName)//' ; name = '//TRIM(cUniqueIDName) )
-    CALL ShowContinueError('Called from SetupEMSRealInternalVariable.')
+IF (FoundDuplicate) THEN
+  CALL ShowSevereError('Duplicate internal variable was sent to SetupEMSInternalVariable.')
+  CALL ShowContinueError('Internal variable type = '//TRIM(cDataTypeName)//' ; name = '//TRIM(cUniqueIDName) )
+  CALL ShowContinueError('Called from SetupEMSRealInternalVariable.')
+ELSE
+  ! add new internal data variable
+  IF (numEMSInternalVarsAvailable == 0) THEN
+    ALLOCATE(EMSInternalVarsAvailable(varsAvailableAllocInc))
+    numEMSInternalVarsAvailable = 1
+    maxEMSInternalVarsAvailable = varsAvailableAllocInc
   ELSE
-    ! add new internal data variable
-    IF (numEMSInternalVarsAvailable == 0) THEN
-      ALLOCATE(EMSInternalVarsAvailable(varsAvailableAllocInc))
-      numEMSInternalVarsAvailable = 1
-      maxEMSInternalVarsAvailable = varsAvailableAllocInc
-    ELSE
-      IF (numEMSInternalVarsAvailable+1 > maxEMSInternalVarsAvailable) THEN
-        ALLOCATE(tmpEMSInternalVarsAvailable(maxEMSInternalVarsAvailable+varsAvailableAllocInc))
-        tmpEMSInternalVarsAvailable(1:numEMSInternalVarsAvailable) = EMSInternalVarsAvailable(1:numEMSInternalVarsAvailable)
-        DEALLOCATE(EMSInternalVarsAvailable)
-        ALLOCATE(EMSInternalVarsAvailable(maxEMSInternalVarsAvailable+varsAvailableAllocInc))
-        EMSInternalVarsAvailable(1:numEMSInternalVarsAvailable) = tmpEMSInternalVarsAvailable(1:numEMSInternalVarsAvailable)
-        DEALLOCATE(tmpEMSInternalVarsAvailable)
-        maxEMSInternalVarsAvailable=maxEMSInternalVarsAvailable+varsAvailableAllocInc
-      ENDIF
-      numEMSInternalVarsAvailable = numEMSInternalVarsAvailable + 1
+    IF (numEMSInternalVarsAvailable+1 > maxEMSInternalVarsAvailable) THEN
+      ALLOCATE(tmpEMSInternalVarsAvailable(maxEMSInternalVarsAvailable+varsAvailableAllocInc))
+      tmpEMSInternalVarsAvailable(1:numEMSInternalVarsAvailable) = EMSInternalVarsAvailable(1:numEMSInternalVarsAvailable)
+      DEALLOCATE(EMSInternalVarsAvailable)
+      ALLOCATE(EMSInternalVarsAvailable(maxEMSInternalVarsAvailable+varsAvailableAllocInc))
+      EMSInternalVarsAvailable(1:numEMSInternalVarsAvailable) = tmpEMSInternalVarsAvailable(1:numEMSInternalVarsAvailable)
+      DEALLOCATE(tmpEMSInternalVarsAvailable)
+      maxEMSInternalVarsAvailable=maxEMSInternalVarsAvailable+varsAvailableAllocInc
     ENDIF
-
-    InternalVarAvailNum = numEMSInternalVarsAvailable
-    EMSInternalVarsAvailable(InternalVarAvailNum)%DataTypeName = cDataTypeName
-    EMSInternalVarsAvailable(InternalVarAvailNum)%UniqueIDName = cUniqueIDName
-    EMSInternalVarsAvailable(InternalVarAvailNum)%Units        = cUnits
-    EMSInternalVarsAvailable(InternalVarAvailNum)%RealValue    => rValue
-    EMSInternalVarsAvailable(InternalVarAvailNum)%PntrVarTypeUsed = PntrReal
+    numEMSInternalVarsAvailable = numEMSInternalVarsAvailable + 1
   ENDIF
 
-  RETURN
+  InternalVarAvailNum = numEMSInternalVarsAvailable
+  EMSInternalVarsAvailable(InternalVarAvailNum)%DataTypeName = cDataTypeName
+  EMSInternalVarsAvailable(InternalVarAvailNum)%UniqueIDName = cUniqueIDName
+  EMSInternalVarsAvailable(InternalVarAvailNum)%Units        = cUnits
+  EMSInternalVarsAvailable(InternalVarAvailNum)%RealValue    => rValue
+  EMSInternalVarsAvailable(InternalVarAvailNum)%PntrVarTypeUsed = PntrReal
+ENDIF
+
+RETURN
 
 END SUBROUTINE SetupEMSRealInternalVariable
 
 SUBROUTINE SetupEMSIntegerInternalVariable(cDataTypeName, cUniqueIDName, cUnits,  iValue )
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Brent Griffith
-          !       DATE WRITTEN   May 2009
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Brent Griffith
+  !       DATE WRITTEN   May 2009
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Setup internal data source and make available to EMS
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! Setup internal data source and make available to EMS
 
-          ! METHODOLOGY EMPLOYED:
-          ! <description>
+  ! METHODOLOGY EMPLOYED:
+  ! <description>
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE InputProcessor, ONLY: SameString
   USE DataPrecisionGlobals
   USE DataRuntimeLanguage
-!  USE DataGlobals_HPSimIntegrated, ONLY :ShowSevereError, ShowContinueError
+  !  USE DataGlobals_HPSimIntegrated, ONLY :ShowSevereError, ShowContinueError
 
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
 
   CHARACTER(len=*), INTENT(IN)  :: cDataTypeName
   CHARACTER(len=*), INTENT(IN)  :: cUniqueIDName
   CHARACTER(len=*), INTENT(IN)  :: cUnits
   INTEGER, TARGET, INTENT(IN)   :: iValue
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER :: InternalVarAvailNum ! loop index
   LOGICAL :: FoundInternalDataType
   LOGICAL :: FoundDuplicate
@@ -2536,43 +2536,43 @@ SUBROUTINE SetupEMSIntegerInternalVariable(cDataTypeName, cUniqueIDName, cUnits,
 
   DO InternalVarAvailNum = 1, numEMSInternalVarsAvailable
     IF ((SameString(cDataTypeName, EMSInternalVarsAvailable(InternalVarAvailNum)%DataTypeName )) &
-         .AND. (SameString(cUniqueIDName, EMSInternalVarsAvailable(InternalVarAvailNum)%UniqueIDName)) ) THEN
-      FoundDuplicate = .TRUE.
-      EXIT
-    ENDIF
-  ENDDO
+    .AND. (SameString(cUniqueIDName, EMSInternalVarsAvailable(InternalVarAvailNum)%UniqueIDName)) ) THEN
+    FoundDuplicate = .TRUE.
+    EXIT
+  ENDIF
+ENDDO
 
-  IF (FoundDuplicate) THEN
-    CALL ShowSevereError('Duplicate internal variable was sent to SetupEMSInternalVariable.')
-    CALL ShowContinueError('Internal variable type = '//TRIM(cDataTypeName)//' ; name = '//TRIM(cUniqueIDName) )
-    CALL ShowContinueError('called from SetupEMSIntegerInternalVariable')
+IF (FoundDuplicate) THEN
+  CALL ShowSevereError('Duplicate internal variable was sent to SetupEMSInternalVariable.')
+  CALL ShowContinueError('Internal variable type = '//TRIM(cDataTypeName)//' ; name = '//TRIM(cUniqueIDName) )
+  CALL ShowContinueError('called from SetupEMSIntegerInternalVariable')
+ELSE
+  ! add new internal data variable
+  IF (numEMSInternalVarsAvailable == 0) THEN
+    ALLOCATE(EMSInternalVarsAvailable(varsAvailableAllocInc))
+    numEMSInternalVarsAvailable = 1
+    maxEMSInternalVarsAvailable = varsAvailableAllocInc
   ELSE
-    ! add new internal data variable
-    IF (numEMSInternalVarsAvailable == 0) THEN
-      ALLOCATE(EMSInternalVarsAvailable(varsAvailableAllocInc))
-      numEMSInternalVarsAvailable = 1
-      maxEMSInternalVarsAvailable = varsAvailableAllocInc
-    ELSE
-      IF (numEMSInternalVarsAvailable+1 > maxEMSInternalVarsAvailable) THEN
-        ALLOCATE(tmpEMSInternalVarsAvailable(maxEMSInternalVarsAvailable+varsAvailableAllocInc))
-        tmpEMSInternalVarsAvailable(1:numEMSInternalVarsAvailable) = EMSInternalVarsAvailable(1:numEMSInternalVarsAvailable)
-        DEALLOCATE(EMSInternalVarsAvailable)
-        ALLOCATE(EMSInternalVarsAvailable(maxEMSInternalVarsAvailable+varsAvailableAllocInc))
-        EMSInternalVarsAvailable(1:numEMSInternalVarsAvailable) = tmpEMSInternalVarsAvailable(1:numEMSInternalVarsAvailable)
-        DEALLOCATE(tmpEMSInternalVarsAvailable)
-        maxEMSInternalVarsAvailable=maxEMSInternalVarsAvailable+varsAvailableAllocInc
-      ENDIF
-      numEMSInternalVarsAvailable = numEMSInternalVarsAvailable + 1
+    IF (numEMSInternalVarsAvailable+1 > maxEMSInternalVarsAvailable) THEN
+      ALLOCATE(tmpEMSInternalVarsAvailable(maxEMSInternalVarsAvailable+varsAvailableAllocInc))
+      tmpEMSInternalVarsAvailable(1:numEMSInternalVarsAvailable) = EMSInternalVarsAvailable(1:numEMSInternalVarsAvailable)
+      DEALLOCATE(EMSInternalVarsAvailable)
+      ALLOCATE(EMSInternalVarsAvailable(maxEMSInternalVarsAvailable+varsAvailableAllocInc))
+      EMSInternalVarsAvailable(1:numEMSInternalVarsAvailable) = tmpEMSInternalVarsAvailable(1:numEMSInternalVarsAvailable)
+      DEALLOCATE(tmpEMSInternalVarsAvailable)
+      maxEMSInternalVarsAvailable=maxEMSInternalVarsAvailable+varsAvailableAllocInc
     ENDIF
-
-    InternalVarAvailNum = numEMSInternalVarsAvailable
-    EMSInternalVarsAvailable(InternalVarAvailNum)%DataTypeName = cDataTypeName
-    EMSInternalVarsAvailable(InternalVarAvailNum)%UniqueIDName = cUniqueIDName
-    EMSInternalVarsAvailable(InternalVarAvailNum)%Units        = cUnits
-    EMSInternalVarsAvailable(InternalVarAvailNum)%IntValue    => iValue
-    EMSInternalVarsAvailable(InternalVarAvailNum)%PntrVarTypeUsed = PntrInteger
+    numEMSInternalVarsAvailable = numEMSInternalVarsAvailable + 1
   ENDIF
 
-  RETURN
+  InternalVarAvailNum = numEMSInternalVarsAvailable
+  EMSInternalVarsAvailable(InternalVarAvailNum)%DataTypeName = cDataTypeName
+  EMSInternalVarsAvailable(InternalVarAvailNum)%UniqueIDName = cUniqueIDName
+  EMSInternalVarsAvailable(InternalVarAvailNum)%Units        = cUnits
+  EMSInternalVarsAvailable(InternalVarAvailNum)%IntValue    => iValue
+  EMSInternalVarsAvailable(InternalVarAvailNum)%PntrVarTypeUsed = PntrInteger
+ENDIF
+
+RETURN
 
 END SUBROUTINE SetupEMSIntegerInternalVariable

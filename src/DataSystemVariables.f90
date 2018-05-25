@@ -1,36 +1,36 @@
 MODULE DataSystemVariables      ! EnergyPlus Data-Only Module
 
-          ! MODULE INFORMATION:
-          !       AUTHOR         Linda K. Lawrie
-          !       DATE WRITTEN   May 2006
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! MODULE INFORMATION:
+  !       AUTHOR         Linda K. Lawrie
+  !       DATE WRITTEN   May 2006
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS MODULE:
-          ! This data-only module is a repository for system (such as environment) variables that are set
-          ! before a run or set of runs.
+  ! PURPOSE OF THIS MODULE:
+  ! This data-only module is a repository for system (such as environment) variables that are set
+  ! before a run or set of runs.
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! OTHER NOTES:
-          ! na
+  ! OTHER NOTES:
+  ! na
 
-          ! USE STATEMENTS:
-USE DataPrecisionGlobals
-USE DataStringGlobals, ONLY: pathChar
+  ! USE STATEMENTS:
+  USE DataPrecisionGlobals
+  USE DataStringGlobals, ONLY: pathChar
 
-IMPLICIT NONE   ! Enforce explicit typing of all variables
+  IMPLICIT NONE   ! Enforce explicit typing of all variables
 
-PUBLIC          ! By definition, all variables which are placed in this data
-                ! -only module should be available to other modules and routines.
-                ! Thus, all variables in this module must be PUBLIC.
+  PUBLIC          ! By definition, all variables which are placed in this data
+  ! -only module should be available to other modules and routines.
+  ! Thus, all variables in this module must be PUBLIC.
 
 
-          ! MODULE PARAMETER DEFINITIONS:
+  ! MODULE PARAMETER DEFINITIONS:
   INTEGER, PARAMETER :: iASCII_CR=13      ! endline value when just CR instead of CR/LF
   INTEGER, PARAMETER :: iUnicode_end=0    ! endline value when Unicode file
   CHARACTER(len=1), PARAMETER :: tabchar=CHAR(9)
@@ -63,21 +63,21 @@ PUBLIC          ! By definition, all variables which are placed in this data
   CHARACTER(len=*),  PARAMETER :: cProgramPath='program_path'
   CHARACTER(len=*),  PARAMETER :: cTimingFlag='TimingFlag'
   CHARACTER(LEN=*),  PARAMETER :: TrackAirLoopEnvVar='TRACK_AIRLOOP' ! To generate a file with runtime statistics
-                                                                     ! for each controller on each air loop
+  ! for each controller on each air loop
   CHARACTER(LEN=*),  PARAMETER :: TraceAirLoopEnvVar='TRACE_AIRLOOP'  ! To generate a trace file with the converged
-                                            ! solutions of all controllers on each air loop at each call to SimAirLoop()
+  ! solutions of all controllers on each air loop at each call to SimAirLoop()
   CHARACTER(LEN=*),  PARAMETER :: TraceHVACControllerEnvVar='TRACE_HVACCONTROLLER' ! To generate a trace file for
-                                            !  each individual HVAC controller with all controller iterations
+  !  each individual HVAC controller with all controller iterations
 
   CHARACTER(len=*),  PARAMETER :: MinReportFrequencyEnvVar='MINREPORTFREQUENCY' ! environment var for reporting frequency.
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! MODULE VARIABLE DECLARATIONS:
+  ! MODULE VARIABLE DECLARATIONS:
   LOGICAL :: DDOnly=.false.              ! TRUE if design days (sizingperiod:*) only are to be run.
   LOGICAL :: ReverseDD=.false.           ! TRUE if reverse design days (reordering sizingperiod:*) are to be run.
   LOGICAL :: FullAnnualRun=.false.       ! TRUE if full annual simulation is to be run.
@@ -86,15 +86,15 @@ PUBLIC          ! By definition, all variables which are placed in this data
   LOGICAL :: SutherlandHodgman=.true.    ! TRUE if SutherlandHodgman algorithm for polygon clipping is to be used.
   LOGICAL :: DetailedSkyDiffuseAlgorithm=.false.  ! use detailed diffuse shading algorithm for sky (shading transmittance varies)
   LOGICAL :: TrackAirLoopEnvFlag=.FALSE. ! If TRUE generates a file with runtime statistics for each HVAC
-                                         !  controller on each air loop
+  !  controller on each air loop
   LOGICAL :: TraceAirLoopEnvFlag=.FALSE. ! If TRUE generates a trace file with the converged solutions of all
-                                         ! HVAC controllers on each air loop at each call to SimAirLoop()
+  ! HVAC controllers on each air loop at each call to SimAirLoop()
   LOGICAL :: TraceHVACControllerEnvFlag=.FALSE. ! If TRUE generates a trace file for each individual HVAC
-                                                ! controller with all controller iterations
+  ! controller with all controller iterations
   LOGICAL :: ReportDuringWarmup=.false.  ! True when the report outputs even during warmup
   LOGICAL :: ReportDetailedWarmupConvergence=.false.  ! True when the detailed warmup convergence is requested
   LOGICAL :: UpdateDataDuringWarmupExternalInterface=.false.   ! variable sets in the external interface.
-                                                               ! This update the value during the warmup added for FMI
+  ! This update the value during the warmup added for FMI
   REAL(r64)   :: Elapsed_Time=0.0d0          ! For showing elapsed time at end of run
   REAL(r64)   :: Time_Start=0.0d0            ! Call to CPU_Time for start time of simulation
   REAL(r64)   :: Time_Finish=0.0d0           ! Call to CPU_Time for end time of simulation
@@ -122,160 +122,160 @@ PUBLIC          ! By definition, all variables which are placed in this data
 
 CONTAINS
 
-subroutine CheckForActualFileName(InputFileName,FileFound,CheckedFileName)
+  subroutine CheckForActualFileName(InputFileName,FileFound,CheckedFileName)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Linda Lawrie
-          !       DATE WRITTEN   October 2011
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+    ! SUBROUTINE INFORMATION:
+    !       AUTHOR         Linda Lawrie
+    !       DATE WRITTEN   October 2011
+    !       MODIFIED       na
+    !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! With the Windows version, there are subfolders set and the input file names may not
-          ! be accurate. This searches a few folders (CurrentWorkingFolder, Program folder) to see
-          ! if the file can be found. (It may have been input with full path so that is checked first.)
+    ! PURPOSE OF THIS SUBROUTINE:
+    ! With the Windows version, there are subfolders set and the input file names may not
+    ! be accurate. This searches a few folders (CurrentWorkingFolder, Program folder) to see
+    ! if the file can be found. (It may have been input with full path so that is checked first.)
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+    ! METHODOLOGY EMPLOYED:
+    ! na
 
-          ! REFERENCES:
-          ! na
+    ! REFERENCES:
+    ! na
 
-          ! USE STATEMENTS:
-  USE DataStringGlobals, ONLY: CurrentWorkingFolder, ProgramPath
+    ! USE STATEMENTS:
+    USE DataStringGlobals, ONLY: CurrentWorkingFolder, ProgramPath
 
-  IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
+    IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-  CHARACTER(len=*), INTENT(IN) :: InputFileName ! name as input for object
-  LOGICAL, INTENT(INOUT) :: FileFound           ! Set to true if file found and is in CheckedFileName
-  CHARACTER(len=*), INTENT(INOUT) :: CheckedFileName  ! Blank if not found.
+    ! SUBROUTINE ARGUMENT DEFINITIONS:
+    CHARACTER(len=*), INTENT(IN) :: InputFileName ! name as input for object
+    LOGICAL, INTENT(INOUT) :: FileFound           ! Set to true if file found and is in CheckedFileName
+    CHARACTER(len=*), INTENT(INOUT) :: CheckedFileName  ! Blank if not found.
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-  CHARACTER(len=*), PARAMETER :: blank=' '
+    ! SUBROUTINE PARAMETER DEFINITIONS:
+    CHARACTER(len=*), PARAMETER :: blank=' '
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+    ! INTERFACE BLOCK SPECIFICATIONS:
+    ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+    ! DERIVED TYPE DEFINITIONS:
+    ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-  LOGICAL :: FileExist
-  INTEGER, SAVE :: EchoInputFile  ! found unit number for "eplusout.audit"
-  INTEGER, EXTERNAL :: FindUnitNumber
-  LOGICAL, SAVE :: firstTime=.true.
-  INTEGER :: pos
+    ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+    LOGICAL :: FileExist
+    INTEGER, SAVE :: EchoInputFile  ! found unit number for "eplusout.audit"
+    INTEGER, EXTERNAL :: FindUnitNumber
+    LOGICAL, SAVE :: firstTime=.true.
+    INTEGER :: pos
 
-  IF (firstTime) THEN
-    EchoInputFile=FindUnitNumber('eplusout.audit')
-    envinputpath1=blank
-    CALL Get_Environment_Variable(cInputPath1,envinputpath1)
-    IF (envinputpath1 /= blank) THEN
-      pos=INDEX(envinputpath1,pathchar,.true.)  ! look backwards for pathchar
-      IF (Pos /= 0) envinputpath1=envinputpath1(1:pos)
+    IF (firstTime) THEN
+      EchoInputFile=FindUnitNumber('eplusout.audit')
+      envinputpath1=blank
+      CALL Get_Environment_Variable(cInputPath1,envinputpath1)
+      IF (envinputpath1 /= blank) THEN
+        pos=INDEX(envinputpath1,pathchar,.true.)  ! look backwards for pathchar
+        IF (Pos /= 0) envinputpath1=envinputpath1(1:pos)
+      ENDIF
+      envinputpath2=blank
+      CALL Get_Environment_Variable(cInputPath2,envinputpath2)
+      programpath=blank
+      CALL Get_Environment_Variable(cProgramPath,programpath)
+      firsttime=.false.
     ENDIF
-    envinputpath2=blank
-    CALL Get_Environment_Variable(cInputPath2,envinputpath2)
-    programpath=blank
-    CALL Get_Environment_Variable(cProgramPath,programpath)
-    firsttime=.false.
-  ENDIF
 
-  CheckedFileName=blank
-  INQUIRE(File=trim(InputFileName),Exist=FileExist)
-  IF (FileExist) THEN
-    FileFound=.true.
-    CheckedFileName=InputFileName
-    WRITE(EchoInputFile,'(A)') 'found (user input)='//trim(InputFileName)
+    CheckedFileName=blank
+    INQUIRE(File=trim(InputFileName),Exist=FileExist)
+    IF (FileExist) THEN
+      FileFound=.true.
+      CheckedFileName=InputFileName
+      WRITE(EchoInputFile,'(A)') 'found (user input)='//trim(InputFileName)
+      RETURN
+    ELSE
+      WRITE(EchoInputFile,'(A)') 'not found (user input)='//trim(InputFileName)
+    ENDIF
+
+    ! Look relative to input path
+    INQUIRE(File=trim(envinputpath1)//trim(InputFileName),Exist=FileExist)
+    IF (FileExist) THEN
+      FileFound=.true.
+      CheckedFileName=trim(envinputpath1)//trim(InputFileName)
+      WRITE(EchoInputFile,'(A)') 'found (epin)='//trim(CheckedFileName)
+      RETURN
+    ELSE
+      WRITE(EchoInputFile,'(A)') 'not found (epin)='//trim(envinputpath1)//trim(InputFileName)
+    ENDIF
+
+    ! Look relative to input path
+    INQUIRE(File=trim(envinputpath2)//trim(InputFileName),Exist=FileExist)
+    IF (FileExist) THEN
+      FileFound=.true.
+      CheckedFileName=trim(envinputpath2)//trim(InputFileName)
+      WRITE(EchoInputFile,'(A)') 'found (input_path)='//trim(CheckedFileName)
+      RETURN
+    ELSE
+      WRITE(EchoInputFile,'(A)') 'not found (input_path)='//trim(envinputpath2)//trim(InputFileName)
+    ENDIF
+
+    ! Look relative to program path
+    INQUIRE(File=trim(envprogrampath)//trim(InputFileName),Exist=FileExist)
+    IF (FileExist) THEN
+      FileFound=.true.
+      CheckedFileName=trim(envprogrampath)//trim(InputFileName)
+      WRITE(EchoInputFile,'(A)') 'found (program_path)='//trim(CheckedFileName)
+      RETURN
+    ELSE
+      WRITE(EchoInputFile,'(A)') 'not found (program_path)='//trim(envprogrampath)//trim(InputFileName)
+    ENDIF
+
+    IF (.not. TestAllPaths) RETURN
+
+    ! Look relative to current working folder
+    INQUIRE(File=trim(CurrentWorkingFolder)//trim(InputFileName),Exist=FileExist)
+    IF (FileExist) THEN
+      FileFound=.true.
+      CheckedFileName=trim(CurrentWorkingFolder)//trim(InputFileName)
+      WRITE(EchoInputFile,'(A)') 'found (CWF)='//trim(CheckedFileName)
+      RETURN
+    ELSE
+      WRITE(EchoInputFile,'(A)') 'not found (CWF)='//trim(CurrentWorkingFolder)//trim(InputFileName)
+    ENDIF
+
+    ! Look relative to program path
+    INQUIRE(File=trim(ProgramPath)//trim(InputFileName),Exist=FileExist)
+    IF (FileExist) THEN
+      FileFound=.true.
+      CheckedFileName=trim(ProgramPath)//trim(InputFileName)
+      WRITE(EchoInputFile,'(A)') 'found (program path - ini)='//trim(CheckedFileName)
+      RETURN
+    ELSE
+      WRITE(EchoInputFile,'(A)') 'not found (program path - ini)='//trim(ProgramPath)//trim(InputFileName)
+    ENDIF
+
     RETURN
-  ELSE
-    WRITE(EchoInputFile,'(A)') 'not found (user input)='//trim(InputFileName)
-  ENDIF
 
-  ! Look relative to input path
-  INQUIRE(File=trim(envinputpath1)//trim(InputFileName),Exist=FileExist)
-  IF (FileExist) THEN
-    FileFound=.true.
-    CheckedFileName=trim(envinputpath1)//trim(InputFileName)
-    WRITE(EchoInputFile,'(A)') 'found (epin)='//trim(CheckedFileName)
-    RETURN
-  ELSE
-    WRITE(EchoInputFile,'(A)') 'not found (epin)='//trim(envinputpath1)//trim(InputFileName)
-  ENDIF
+  end subroutine CheckForActualFileName
 
-  ! Look relative to input path
-  INQUIRE(File=trim(envinputpath2)//trim(InputFileName),Exist=FileExist)
-  IF (FileExist) THEN
-    FileFound=.true.
-    CheckedFileName=trim(envinputpath2)//trim(InputFileName)
-    WRITE(EchoInputFile,'(A)') 'found (input_path)='//trim(CheckedFileName)
-    RETURN
-  ELSE
-    WRITE(EchoInputFile,'(A)') 'not found (input_path)='//trim(envinputpath2)//trim(InputFileName)
-  ENDIF
-
-  ! Look relative to program path
-  INQUIRE(File=trim(envprogrampath)//trim(InputFileName),Exist=FileExist)
-  IF (FileExist) THEN
-    FileFound=.true.
-    CheckedFileName=trim(envprogrampath)//trim(InputFileName)
-    WRITE(EchoInputFile,'(A)') 'found (program_path)='//trim(CheckedFileName)
-    RETURN
-  ELSE
-    WRITE(EchoInputFile,'(A)') 'not found (program_path)='//trim(envprogrampath)//trim(InputFileName)
-  ENDIF
-
-  IF (.not. TestAllPaths) RETURN
-
-  ! Look relative to current working folder
-  INQUIRE(File=trim(CurrentWorkingFolder)//trim(InputFileName),Exist=FileExist)
-  IF (FileExist) THEN
-    FileFound=.true.
-    CheckedFileName=trim(CurrentWorkingFolder)//trim(InputFileName)
-    WRITE(EchoInputFile,'(A)') 'found (CWF)='//trim(CheckedFileName)
-    RETURN
-  ELSE
-    WRITE(EchoInputFile,'(A)') 'not found (CWF)='//trim(CurrentWorkingFolder)//trim(InputFileName)
-  ENDIF
-
-  ! Look relative to program path
-  INQUIRE(File=trim(ProgramPath)//trim(InputFileName),Exist=FileExist)
-  IF (FileExist) THEN
-    FileFound=.true.
-    CheckedFileName=trim(ProgramPath)//trim(InputFileName)
-    WRITE(EchoInputFile,'(A)') 'found (program path - ini)='//trim(CheckedFileName)
-    RETURN
-  ELSE
-    WRITE(EchoInputFile,'(A)') 'not found (program path - ini)='//trim(ProgramPath)//trim(InputFileName)
-  ENDIF
-
-  RETURN
-
-end subroutine CheckForActualFileName
-
-!     NOTICE
-!
-!     Copyright © 1996-2012 The Board of Trustees of the University of Illinois
-!     and The Regents of the University of California through Ernest Orlando Lawrence
-!     Berkeley National Laboratory.  All rights reserved.
-!
-!     Portions of the EnergyPlus software package have been developed and copyrighted
-!     by other individuals, companies and institutions.  These portions have been
-!     incorporated into the EnergyPlus software package under license.   For a complete
-!     list of contributors, see "Notice" located in EnergyPlus.f90.
-!
-!     NOTICE: The U.S. Government is granted for itself and others acting on its
-!     behalf a paid-up, nonexclusive, irrevocable, worldwide license in this data to
-!     reproduce, prepare derivative works, and perform publicly and display publicly.
-!     Beginning five (5) years after permission to assert copyright is granted,
-!     subject to two possible five year renewals, the U.S. Government is granted for
-!     itself and others acting on its behalf a paid-up, non-exclusive, irrevocable
-!     worldwide license in this data to reproduce, prepare derivative works,
-!     distribute copies to the public, perform publicly and display publicly, and to
-!     permit others to do so.
-!
-!     TRADEMARKS: EnergyPlus is a trademark of the US Department of Energy.
-!
+  !     NOTICE
+  !
+  !     Copyright ï¿½ 1996-2012 The Board of Trustees of the University of Illinois
+  !     and The Regents of the University of California through Ernest Orlando Lawrence
+  !     Berkeley National Laboratory.  All rights reserved.
+  !
+  !     Portions of the EnergyPlus software package have been developed and copyrighted
+  !     by other individuals, companies and institutions.  These portions have been
+  !     incorporated into the EnergyPlus software package under license.   For a complete
+  !     list of contributors, see "Notice" located in EnergyPlus.f90.
+  !
+  !     NOTICE: The U.S. Government is granted for itself and others acting on its
+  !     behalf a paid-up, nonexclusive, irrevocable, worldwide license in this data to
+  !     reproduce, prepare derivative works, and perform publicly and display publicly.
+  !     Beginning five (5) years after permission to assert copyright is granted,
+  !     subject to two possible five year renewals, the U.S. Government is granted for
+  !     itself and others acting on its behalf a paid-up, non-exclusive, irrevocable
+  !     worldwide license in this data to reproduce, prepare derivative works,
+  !     distribute copies to the public, perform publicly and display publicly, and to
+  !     permit others to do so.
+  !
+  !     TRADEMARKS: EnergyPlus is a trademark of the US Department of Energy.
+  !
 
 END MODULE DataSystemVariables

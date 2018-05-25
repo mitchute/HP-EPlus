@@ -1,73 +1,73 @@
 MODULE DataInterfaces
 
-          ! Module containing the routines dealing with Interfaces needed by some routines in EnergyPlus.
+  ! Module containing the routines dealing with Interfaces needed by some routines in EnergyPlus.
 
-          ! MODULE INFORMATION:
-          !       AUTHOR         Linda Lawrie
-          !       DATE WRITTEN   December 2009
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! MODULE INFORMATION:
+  !       AUTHOR         Linda Lawrie
+  !       DATE WRITTEN   December 2009
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS MODULE:
-          ! Provide a global public area for interface statements that are used by routines in EnergyPlus.
+  ! PURPOSE OF THIS MODULE:
+  ! Provide a global public area for interface statements that are used by routines in EnergyPlus.
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! OTHER NOTES:
-          ! na
+  ! OTHER NOTES:
+  ! na
 
-          ! USE STATEMENTS:
- USE DataPrecisionGlobals
+  ! USE STATEMENTS:
+  USE DataPrecisionGlobals
 
-IMPLICIT NONE ! Enforce explicit typing of all variables
+  IMPLICIT NONE ! Enforce explicit typing of all variables
 
-PUBLIC ! Everything private unless explicitly made public
+  PUBLIC ! Everything private unless explicitly made public
 
-          ! MODULE PARAMETER DEFINITIONS:
-          ! na
+  ! MODULE PARAMETER DEFINITIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! MODULE VARIABLE DECLARATIONS:
-          ! na
+  ! MODULE VARIABLE DECLARATIONS:
+  ! na
 
-          ! SUBROUTINE SPECIFICATIONS FOR MODULE <module_name>:
+  ! SUBROUTINE SPECIFICATIONS FOR MODULE <module_name>:
 
-    INTERFACE
-      SUBROUTINE ControlCompOutput(CompName,CompType,CompNum,FirstHVACIteration,QZnReq, &
-                                   ActuatedNode,MaxFlow,MinFlow,TempInNode,TempOutNode, &
-                                   ControlOffSet,AirMassFlow,Action,ControlCompTypeNum, &
-                                   CompErrIndex,EquipIndex,LoopNum, LoopSide, BranchIndex)
-        USE DataPrecisionGlobals
+  INTERFACE
+    SUBROUTINE ControlCompOutput(CompName,CompType,CompNum,FirstHVACIteration,QZnReq, &
+      ActuatedNode,MaxFlow,MinFlow,TempInNode,TempOutNode, &
+      ControlOffSet,AirMassFlow,Action,ControlCompTypeNum, &
+      CompErrIndex,EquipIndex,LoopNum, LoopSide, BranchIndex)
+      USE DataPrecisionGlobals
 
-        CHARACTER(len=*), INTENT (IN)           :: CompName            ! The component Name
-        CHARACTER(len=*), INTENT (IN)           :: CompType            ! Type of component
-        INTEGER, INTENT (INOUT)                 :: CompNum             ! Index of component in component array
-        LOGICAL, INTENT (IN)                    :: FirstHVACIteration  ! Flag for 1st HVAV iteration in the time step
-        REAL(r64),    INTENT (IN)               :: QZnReq              ! Zone load to be met
-        INTEGER, INTENT (IN)                    :: ActuatedNode        ! Node that controls unit output
-        REAL(r64),    INTENT (IN)               :: MaxFlow             ! Maximum water flow
-        REAL(r64),    INTENT (IN)               :: MinFlow             ! Minimum water flow
-        INTEGER, INTENT (IN), OPTIONAL          :: TempInNode          ! Inlet node for output calculation
-        INTEGER, INTENT (IN), OPTIONAL          :: TempOutNode         ! Outlet node for output calculation
-        REAL(r64),    INTENT (IN)               :: ControlOffset       ! Tolerance
-        REAL(r64),    INTENT (IN), OPTIONAL     :: AirMassFlow         ! Air mass flow rate
-        INTEGER, INTENT (IN), OPTIONAL          :: Action              ! 1=reverse; 2=normal
-        INTEGER, INTENT (INOUT)                 :: ControlCompTypeNum  ! Internal control comp for unit
-        INTEGER, INTENT (INOUT)                 :: CompErrIndex        ! Error count for recurring error
-        INTEGER, INTENT (IN), OPTIONAL          :: EquipIndex          ! Identifier for equipment of Outdoor Air Unit "ONLY"
-        INTEGER, INTENT (IN), OPTIONAL          :: LoopNum             ! for plant components, plant loop index
-        INTEGER, INTENT (IN), OPTIONAL          :: LoopSide            ! for plant components, plant loop side index
-        INTEGER, INTENT (IN), OPTIONAL          :: BranchIndex         ! for plant components, plant branch index
-      END SUBROUTINE ControlCompOutput
+      CHARACTER(len=*), INTENT (IN)           :: CompName            ! The component Name
+      CHARACTER(len=*), INTENT (IN)           :: CompType            ! Type of component
+      INTEGER, INTENT (INOUT)                 :: CompNum             ! Index of component in component array
+      LOGICAL, INTENT (IN)                    :: FirstHVACIteration  ! Flag for 1st HVAV iteration in the time step
+      REAL(r64),    INTENT (IN)               :: QZnReq              ! Zone load to be met
+      INTEGER, INTENT (IN)                    :: ActuatedNode        ! Node that controls unit output
+      REAL(r64),    INTENT (IN)               :: MaxFlow             ! Maximum water flow
+      REAL(r64),    INTENT (IN)               :: MinFlow             ! Minimum water flow
+      INTEGER, INTENT (IN), OPTIONAL          :: TempInNode          ! Inlet node for output calculation
+      INTEGER, INTENT (IN), OPTIONAL          :: TempOutNode         ! Outlet node for output calculation
+      REAL(r64),    INTENT (IN)               :: ControlOffset       ! Tolerance
+      REAL(r64),    INTENT (IN), OPTIONAL     :: AirMassFlow         ! Air mass flow rate
+      INTEGER, INTENT (IN), OPTIONAL          :: Action              ! 1=reverse; 2=normal
+      INTEGER, INTENT (INOUT)                 :: ControlCompTypeNum  ! Internal control comp for unit
+      INTEGER, INTENT (INOUT)                 :: CompErrIndex        ! Error count for recurring error
+      INTEGER, INTENT (IN), OPTIONAL          :: EquipIndex          ! Identifier for equipment of Outdoor Air Unit "ONLY"
+      INTEGER, INTENT (IN), OPTIONAL          :: LoopNum             ! for plant components, plant loop index
+      INTEGER, INTENT (IN), OPTIONAL          :: LoopSide            ! for plant components, plant loop side index
+      INTEGER, INTENT (IN), OPTIONAL          :: BranchIndex         ! for plant components, plant branch index
+    END SUBROUTINE ControlCompOutput
 
 
-    END INTERFACE
+  END INTERFACE
 
   INTERFACE GetVariableKeyCountandType
     SUBROUTINE GetVariableKeyCountandType(varName,numKeys,varType,varAvgSum,varStepType,varUnits)
@@ -109,10 +109,10 @@ PUBLIC ! Everything private unless explicitly made public
   !END INTERFACE
   INTERFACE
     SUBROUTINE ShowContinueErrorTimeStamp(Message,Unit1,Unit2)
-    !  Use when you are "continuing" an error message and want to show the environment, day and time.
-    CHARACTER(len=*) Message    ! Message automatically written to "error file"
-    INTEGER, OPTIONAL :: Unit1  ! Unit number of open formatted file for message
-    INTEGER, OPTIONAL :: Unit2  ! Unit number of open formatted file for message
+      !  Use when you are "continuing" an error message and want to show the environment, day and time.
+      CHARACTER(len=*) Message    ! Message automatically written to "error file"
+      INTEGER, OPTIONAL :: Unit1  ! Unit number of open formatted file for message
+      INTEGER, OPTIONAL :: Unit2  ! Unit number of open formatted file for message
     END SUBROUTINE
   END INTERFACE
   !INTERFACE
@@ -134,10 +134,10 @@ PUBLIC ! Everything private unless explicitly made public
   !END INTERFACE
   INTERFACE
     SUBROUTINE ShowSevereMessage(Message,Unit1,Unit2)
-    !  Use for "severe" error messages.  that don't bump counts (recurring are used)
-    CHARACTER(len=*) Message    ! Message automatically written to "error file"
-    INTEGER, OPTIONAL :: Unit1  ! Unit number of open formatted file for message
-    INTEGER, OPTIONAL :: Unit2  ! Unit number of open formatted file for message
+      !  Use for "severe" error messages.  that don't bump counts (recurring are used)
+      CHARACTER(len=*) Message    ! Message automatically written to "error file"
+      INTEGER, OPTIONAL :: Unit1  ! Unit number of open formatted file for message
+      INTEGER, OPTIONAL :: Unit2  ! Unit number of open formatted file for message
     END SUBROUTINE
   END INTERFACE
   !INTERFACE
@@ -150,74 +150,74 @@ PUBLIC ! Everything private unless explicitly made public
   !END INTERFACE
   INTERFACE
     SUBROUTINE ShowWarningMessage(Message,Unit1,Unit2)
-    !  Use for "warning" error messages that don't bump error counts
-    CHARACTER(len=*) Message    ! Message automatically written to "error file"
-    INTEGER, OPTIONAL :: Unit1  ! Unit number of open formatted file for message
-    INTEGER, OPTIONAL :: Unit2  ! Unit number of open formatted file for message
+      !  Use for "warning" error messages that don't bump error counts
+      CHARACTER(len=*) Message    ! Message automatically written to "error file"
+      INTEGER, OPTIONAL :: Unit1  ! Unit number of open formatted file for message
+      INTEGER, OPTIONAL :: Unit2  ! Unit number of open formatted file for message
     END SUBROUTINE
   END INTERFACE
-  
+
   INTERFACE
     SUBROUTINE ShowErrorMessage(Message,Unit1,Unit2)
-    CHARACTER(len=*) Message
-    INTEGER, OPTIONAL :: Unit1
-    INTEGER, OPTIONAL :: Unit2
+      CHARACTER(len=*) Message
+      INTEGER, OPTIONAL :: Unit1
+      INTEGER, OPTIONAL :: Unit2
     END SUBROUTINE
   END INTERFACE
-  
+
   INTERFACE
     SUBROUTINE ShowRecurringSevereErrorAtEnd(Message,Index,ReportMaxOf,ReportMinOf,ReportSumOf,  &
-                                                           ReportMaxUnits,ReportMinUnits,ReportSumUnits)
-    USE DataPrecisionGlobals
-    !  Use for recurring "severe" error messages shown once at end of simulation
-    !  with count of occurences and optional max, min, sum
-    CHARACTER(len=*) :: Message     ! Message automatically written to "error file" at end of simulation
-    INTEGER, INTENT(INOUT)        :: Index       ! Recurring message index, if zero, next available index is assigned
-    REAL(r64),    INTENT(IN), OPTIONAL :: ReportMaxOf ! Track and report the max of the values passed to this argument
-    REAL(r64),    INTENT(IN), OPTIONAL :: ReportMinOf ! Track and report the min of the values passed to this argument
-    REAL(r64),    INTENT(IN), OPTIONAL :: ReportSumOf ! Track and report the sum of the values passed to this argument
-    CHARACTER(len=*), INTENT(IN), OPTIONAL :: ReportMaxUnits ! optional char string (<=15 length) of units for max value
-    CHARACTER(len=*), INTENT(IN), OPTIONAL :: ReportMinUnits ! optional char string (<=15 length) of units for min value
-    CHARACTER(len=*), INTENT(IN), OPTIONAL :: ReportSumUnits ! optional char string (<=15 length) of units for sum value
+      ReportMaxUnits,ReportMinUnits,ReportSumUnits)
+      USE DataPrecisionGlobals
+      !  Use for recurring "severe" error messages shown once at end of simulation
+      !  with count of occurences and optional max, min, sum
+      CHARACTER(len=*) :: Message     ! Message automatically written to "error file" at end of simulation
+      INTEGER, INTENT(INOUT)        :: Index       ! Recurring message index, if zero, next available index is assigned
+      REAL(r64),    INTENT(IN), OPTIONAL :: ReportMaxOf ! Track and report the max of the values passed to this argument
+      REAL(r64),    INTENT(IN), OPTIONAL :: ReportMinOf ! Track and report the min of the values passed to this argument
+      REAL(r64),    INTENT(IN), OPTIONAL :: ReportSumOf ! Track and report the sum of the values passed to this argument
+      CHARACTER(len=*), INTENT(IN), OPTIONAL :: ReportMaxUnits ! optional char string (<=15 length) of units for max value
+      CHARACTER(len=*), INTENT(IN), OPTIONAL :: ReportMinUnits ! optional char string (<=15 length) of units for min value
+      CHARACTER(len=*), INTENT(IN), OPTIONAL :: ReportSumUnits ! optional char string (<=15 length) of units for sum value
     END SUBROUTINE
   END INTERFACE
   INTERFACE
     SUBROUTINE ShowRecurringWarningErrorAtEnd(Message,Index,ReportMaxOf,ReportMinOf,ReportSumOf,  &
-                                                            ReportMaxUnits,ReportMinUnits,ReportSumUnits)
-    USE DataPrecisionGlobals
-    !  Use for recurring "warning" error messages shown once at end of simulation
-    !  with count of occurences and optional max, min, sum
-    CHARACTER(len=*) :: Message     ! Message automatically written to "error file" at end of simulation
-    INTEGER, INTENT(INOUT)        :: Index       ! Recurring message index, if zero, next available index is assigned
-    REAL(r64),    INTENT(IN), OPTIONAL :: ReportMaxOf ! Track and report the max of the values passed to this argument
-    REAL(r64),    INTENT(IN), OPTIONAL :: ReportMinOf ! Track and report the min of the values passed to this argument
-    REAL(r64),    INTENT(IN), OPTIONAL :: ReportSumOf ! Track and report the sum of the values passed to this argument
-    CHARACTER(len=*), INTENT(IN), OPTIONAL :: ReportMaxUnits ! optional char string (<=15 length) of units for max value
-    CHARACTER(len=*), INTENT(IN), OPTIONAL :: ReportMinUnits ! optional char string (<=15 length) of units for min value
-    CHARACTER(len=*), INTENT(IN), OPTIONAL :: ReportSumUnits ! optional char string (<=15 length) of units for sum value
+      ReportMaxUnits,ReportMinUnits,ReportSumUnits)
+      USE DataPrecisionGlobals
+      !  Use for recurring "warning" error messages shown once at end of simulation
+      !  with count of occurences and optional max, min, sum
+      CHARACTER(len=*) :: Message     ! Message automatically written to "error file" at end of simulation
+      INTEGER, INTENT(INOUT)        :: Index       ! Recurring message index, if zero, next available index is assigned
+      REAL(r64),    INTENT(IN), OPTIONAL :: ReportMaxOf ! Track and report the max of the values passed to this argument
+      REAL(r64),    INTENT(IN), OPTIONAL :: ReportMinOf ! Track and report the min of the values passed to this argument
+      REAL(r64),    INTENT(IN), OPTIONAL :: ReportSumOf ! Track and report the sum of the values passed to this argument
+      CHARACTER(len=*), INTENT(IN), OPTIONAL :: ReportMaxUnits ! optional char string (<=15 length) of units for max value
+      CHARACTER(len=*), INTENT(IN), OPTIONAL :: ReportMinUnits ! optional char string (<=15 length) of units for min value
+      CHARACTER(len=*), INTENT(IN), OPTIONAL :: ReportSumUnits ! optional char string (<=15 length) of units for sum value
     END SUBROUTINE
   END INTERFACE
   INTERFACE
     SUBROUTINE ShowRecurringContinueErrorAtEnd(Message,Index,ReportMaxOf,ReportMinOf,ReportSumOf,  &
-                                                             ReportMaxUnits,ReportMinUnits,ReportSumUnits)
-    USE DataPrecisionGlobals
-    !  Use when "continuing" a recurring error messages (shown once at end of simulation)
-    !  over several lines with optional max, min, sum
-    CHARACTER(len=*) :: Message     ! Message automatically written to "error file" at end of simulation
-    INTEGER, INTENT(INOUT)        :: Index       ! Recurring message index, if zero, next available index is assigned
-    REAL(r64),    INTENT(IN), OPTIONAL :: ReportMaxOf ! Track and report the max of the values passed to this argument
-    REAL(r64),    INTENT(IN), OPTIONAL :: ReportMinOf ! Track and report the min of the values passed to this argument
-    REAL(r64),    INTENT(IN), OPTIONAL :: ReportSumOf ! Track and report the sum of the values passed to this argument
-    CHARACTER(len=*), INTENT(IN), OPTIONAL :: ReportMaxUnits ! optional char string (<=15 length) of units for max value
-    CHARACTER(len=*), INTENT(IN), OPTIONAL :: ReportMinUnits ! optional char string (<=15 length) of units for min value
-    CHARACTER(len=*), INTENT(IN), OPTIONAL :: ReportSumUnits ! optional char string (<=15 length) of units for sum value
+      ReportMaxUnits,ReportMinUnits,ReportSumUnits)
+      USE DataPrecisionGlobals
+      !  Use when "continuing" a recurring error messages (shown once at end of simulation)
+      !  over several lines with optional max, min, sum
+      CHARACTER(len=*) :: Message     ! Message automatically written to "error file" at end of simulation
+      INTEGER, INTENT(INOUT)        :: Index       ! Recurring message index, if zero, next available index is assigned
+      REAL(r64),    INTENT(IN), OPTIONAL :: ReportMaxOf ! Track and report the max of the values passed to this argument
+      REAL(r64),    INTENT(IN), OPTIONAL :: ReportMinOf ! Track and report the min of the values passed to this argument
+      REAL(r64),    INTENT(IN), OPTIONAL :: ReportSumOf ! Track and report the sum of the values passed to this argument
+      CHARACTER(len=*), INTENT(IN), OPTIONAL :: ReportMaxUnits ! optional char string (<=15 length) of units for max value
+      CHARACTER(len=*), INTENT(IN), OPTIONAL :: ReportMinUnits ! optional char string (<=15 length) of units for min value
+      CHARACTER(len=*), INTENT(IN), OPTIONAL :: ReportSumUnits ! optional char string (<=15 length) of units for sum value
     END SUBROUTINE
   END INTERFACE
 
   INTERFACE SetupOutputVariable
     SUBROUTINE SetupRealOutputVariable(VariableName,ActualVariable,IndexTypeKey,VariableTypeKey,KeyedValue,  &
-               ReportFreq,ResourceTypeKey,EndUseKey,EndUseSubKey,GroupKey,ZoneKey,ZoneMult,ZoneListMult,IndexGroupKey)
-    USE DataPrecisionGlobals
+      ReportFreq,ResourceTypeKey,EndUseKey,EndUseSubKey,GroupKey,ZoneKey,ZoneMult,ZoneListMult,IndexGroupKey)
+      USE DataPrecisionGlobals
       CHARACTER(len=*), INTENT(IN) :: VariableName   ! String Name of variable
       REAL(r64), INTENT(IN), TARGET     :: ActualVariable ! Actual Variable, used to set up pointer
       CHARACTER(len=*), INTENT(IN) :: IndexTypeKey    ! Zone, HeatBalance=1, HVAC, System, Plant=2
@@ -234,7 +234,7 @@ PUBLIC ! Everything private unless explicitly made public
       INTEGER, INTENT(IN), OPTIONAL :: IndexGroupKey ! Group identifier for SQL output
     END SUBROUTINE
     SUBROUTINE SetupIntegerOutputVariable(VariableName,IntActualVariable,IndexTypeKey,VariableTypeKey,KeyedValue, &
-                                           ReportFreq,IndexGroupKey)
+      ReportFreq,IndexGroupKey)
       CHARACTER(len=*), INTENT(IN) :: VariableName   ! String Name of variable
       INTEGER, INTENT(IN), TARGET  :: IntActualVariable ! Actual Variable, used to set up pointer
       CHARACTER(len=*), INTENT(IN) :: IndexTypeKey    ! Zone, HeatBalance=1, HVAC, System, Plant=2
@@ -244,8 +244,8 @@ PUBLIC ! Everything private unless explicitly made public
       INTEGER, INTENT(IN), OPTIONAL :: IndexGroupKey ! Group identifier for SQL output
     END SUBROUTINE
     SUBROUTINE SetupRealOutputVariable_IntKey(VariableName,ActualVariable,IndexTypeKey,VariableTypeKey,KeyedValue,  &
-               ReportFreq,ResourceTypeKey,EndUseKey,EndUseSubKey,GroupKey,ZoneKey,ZoneMult,ZoneListMult,IndexGroupKey)
-    USE DataPrecisionGlobals
+      ReportFreq,ResourceTypeKey,EndUseKey,EndUseSubKey,GroupKey,ZoneKey,ZoneMult,ZoneListMult,IndexGroupKey)
+      USE DataPrecisionGlobals
       CHARACTER(len=*), INTENT(IN) :: VariableName   ! String Name of variable
       REAL(r64), INTENT(IN), TARGET     :: ActualVariable ! Actual Variable, used to set up pointer
       CHARACTER(len=*), INTENT(IN) :: IndexTypeKey    ! Zone, HeatBalance=1, HVAC, System, Plant=2
@@ -340,50 +340,49 @@ PUBLIC ! Everything private unless explicitly made public
     END SUBROUTINE CalcHeatBalanceInsideSurf
   END INTERFACE
 
-INTERFACE SetupZoneInternalGain
-  SUBROUTINE SetupZoneInternalGain(ZoneNum, cComponentObject , cComponentName, &
-                                   IntGainComp_TypeOfNum, ConvectionGainRate , &
-                                   ReturnAirConvectionGainRate, ThermalRadiationGainRate, &
-                                   LatentGainRate, ReturnAirLatentGainRate, &
-                                   CarbonDioxideGainRate, GenericContamGainRate)
-    USE DataPrecisionGlobals
-    INTEGER,           INTENT(IN) :: ZoneNum
-    CHARACTER(len=*),  INTENT(IN) :: cComponentObject ! class name for device contributing internal gain
-    CHARACTER(len=*),  INTENT(IN) :: cComponentName  ! user unique name for device
-    INTEGER         ,  INTENT(IN) :: IntGainComp_TypeOfNum ! integer identify for device
-    REAL(r64), TARGET, OPTIONAL, INTENT(IN) :: ConvectionGainRate          ! target convection gain value (W)
-    REAL(r64), TARGET, OPTIONAL, INTENT(IN) :: ReturnAirConvectionGainRate ! target return air sensible gain (W)
-    REAL(r64), TARGET, OPTIONAL, INTENT(IN) :: ThermalRadiationGainRate  ! target IR radiation gain value (W)
-    REAL(r64), TARGET, OPTIONAL, INTENT(IN) :: LatentGainRate           ! target latent (energy) gain value (W)
-    REAL(r64), TARGET, OPTIONAL, INTENT(IN) :: ReturnAirLatentGainRate ! target return air latent gain (W)
-    REAL(r64), TARGET, OPTIONAL, INTENT(IN) :: CarbonDioxideGainRate ! target CO2 gain value (m3/s)
-    REAL(r64), TARGET, OPTIONAL, INTENT(IN) :: GenericContamGainRate ! target generic air contaminant value (m3/s)
-  END SUBROUTINE
-END INTERFACE
+  INTERFACE SetupZoneInternalGain
+    SUBROUTINE SetupZoneInternalGain(ZoneNum, cComponentObject , cComponentName, &
+      IntGainComp_TypeOfNum, ConvectionGainRate , &
+      ReturnAirConvectionGainRate, ThermalRadiationGainRate, &
+      LatentGainRate, ReturnAirLatentGainRate, &
+      CarbonDioxideGainRate, GenericContamGainRate)
+      USE DataPrecisionGlobals
+      INTEGER,           INTENT(IN) :: ZoneNum
+      CHARACTER(len=*),  INTENT(IN) :: cComponentObject ! class name for device contributing internal gain
+      CHARACTER(len=*),  INTENT(IN) :: cComponentName  ! user unique name for device
+      INTEGER         ,  INTENT(IN) :: IntGainComp_TypeOfNum ! integer identify for device
+      REAL(r64), TARGET, OPTIONAL, INTENT(IN) :: ConvectionGainRate          ! target convection gain value (W)
+      REAL(r64), TARGET, OPTIONAL, INTENT(IN) :: ReturnAirConvectionGainRate ! target return air sensible gain (W)
+      REAL(r64), TARGET, OPTIONAL, INTENT(IN) :: ThermalRadiationGainRate  ! target IR radiation gain value (W)
+      REAL(r64), TARGET, OPTIONAL, INTENT(IN) :: LatentGainRate           ! target latent (energy) gain value (W)
+      REAL(r64), TARGET, OPTIONAL, INTENT(IN) :: ReturnAirLatentGainRate ! target return air latent gain (W)
+      REAL(r64), TARGET, OPTIONAL, INTENT(IN) :: CarbonDioxideGainRate ! target CO2 gain value (m3/s)
+      REAL(r64), TARGET, OPTIONAL, INTENT(IN) :: GenericContamGainRate ! target generic air contaminant value (m3/s)
+    END SUBROUTINE
+  END INTERFACE
 
-!     NOTICE
-!
-!     Copyright © 1996-2012 The Board of Trustees of the University of Illinois
-!     and The Regents of the University of California through Ernest Orlando Lawrence
-!     Berkeley National Laboratory.  All rights reserved.
-!
-!     Portions of the EnergyPlus software package have been developed and copyrighted
-!     by other individuals, companies and institutions.  These portions have been
-!     incorporated into the EnergyPlus software package under license.   For a complete
-!     list of contributors, see "Notice" located in EnergyPlus.f90.
-!
-!     NOTICE: The U.S. Government is granted for itself and others acting on its
-!     behalf a paid-up, nonexclusive, irrevocable, worldwide license in this data to
-!     reproduce, prepare derivative works, and perform publicly and display publicly.
-!     Beginning five (5) years after permission to assert copyright is granted,
-!     subject to two possible five year renewals, the U.S. Government is granted for
-!     itself and others acting on its behalf a paid-up, non-exclusive, irrevocable
-!     worldwide license in this data to reproduce, prepare derivative works,
-!     distribute copies to the public, perform publicly and display publicly, and to
-!     permit others to do so.
-!
-!     TRADEMARKS: EnergyPlus is a trademark of the US Department of Energy.
-!
+  !     NOTICE
+  !
+  !     Copyright ï¿½ 1996-2012 The Board of Trustees of the University of Illinois
+  !     and The Regents of the University of California through Ernest Orlando Lawrence
+  !     Berkeley National Laboratory.  All rights reserved.
+  !
+  !     Portions of the EnergyPlus software package have been developed and copyrighted
+  !     by other individuals, companies and institutions.  These portions have been
+  !     incorporated into the EnergyPlus software package under license.   For a complete
+  !     list of contributors, see "Notice" located in EnergyPlus.f90.
+  !
+  !     NOTICE: The U.S. Government is granted for itself and others acting on its
+  !     behalf a paid-up, nonexclusive, irrevocable, worldwide license in this data to
+  !     reproduce, prepare derivative works, and perform publicly and display publicly.
+  !     Beginning five (5) years after permission to assert copyright is granted,
+  !     subject to two possible five year renewals, the U.S. Government is granted for
+  !     itself and others acting on its behalf a paid-up, non-exclusive, irrevocable
+  !     worldwide license in this data to reproduce, prepare derivative works,
+  !     distribute copies to the public, perform publicly and display publicly, and to
+  !     permit others to do so.
+  !
+  !     TRADEMARKS: EnergyPlus is a trademark of the US Department of Energy.
+  !
 
 END MODULE DataInterfaces
-

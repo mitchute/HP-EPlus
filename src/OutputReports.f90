@@ -1,24 +1,24 @@
 SUBROUTINE ReportSurfaces
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Linda K. Lawrie
-          !       DATE WRITTEN   February 1999
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Linda K. Lawrie
+  !       DATE WRITTEN   February 1999
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine calls several optional routines to report
-          ! the surfaces to output formats that can render the data
-          ! into a descriptive picture.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine calls several optional routines to report
+  ! the surfaces to output formats that can render the data
+  ! into a descriptive picture.
 
-          ! METHODOLOGY EMPLOYED:
-          ! Use a REPORT command to determine if there should be
-          ! a file created.
+  ! METHODOLOGY EMPLOYED:
+  ! Use a REPORT command to determine if there should be
+  ! a file created.
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataPrecisionGlobals
   USE DataGlobals_HPSimIntegrated, ONLY: MaxNameLength !, ShowWarningError
   USE DataErrorTracking, ONLY: AskForSurfacesReport
@@ -27,18 +27,18 @@ SUBROUTINE ReportSurfaces
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-          ! na
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! SUBROUTINE PARAMETER DEFINITIONS:
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER SurfDetails
   LOGICAL SurfVert
   LOGICAL SurfDet
@@ -99,7 +99,7 @@ SUBROUTINE ReportSurfaces
       DXFDone=.true.
     ELSE
       CALL ShowWarningError('ReportSurfaces: DXF output already generated.  DXF with option=['//TRIM(Option1)//  &
-                   '] will not be generated.')
+      '] will not be generated.')
     ENDIF
   ENDIF
 
@@ -112,7 +112,7 @@ SUBROUTINE ReportSurfaces
       CALL DXFOutWireFrame(Option2)
       DXFDone=.true.
     ELSE
-        CALL ShowWarningError('ReportSurfaces: DXF output already generated.  DXF:WireFrame will not be generated.')
+      CALL ShowWarningError('ReportSurfaces: DXF output already generated.  DXF:WireFrame will not be generated.')
     ENDIF
   ENDIF
 
@@ -123,7 +123,7 @@ SUBROUTINE ReportSurfaces
       VRMLDone=.true.
     ELSE
       CALL ShowWarningError('ReportSurfaces: VRML output already generated.  VRML with option=['//TRIM(Option1)//  &
-                    '] will not be generated.')
+      '] will not be generated.')
     ENDIF
   ENDIF
 
@@ -136,54 +136,54 @@ SUBROUTINE ReportSurfaces
     CALL DetailsForSurfaces(SurfDetails)
   ENDIF
 
- RETURN
+  RETURN
 
 END SUBROUTINE ReportSurfaces
 
 SUBROUTINE LinesOut(option)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Linda K. Lawrie
-          !       DATE WRITTEN   March 1999
-          !       MODIFIED       March 2006 -- add option for "IDF segments out"
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Linda K. Lawrie
+  !       DATE WRITTEN   March 1999
+  !       MODIFIED       March 2006 -- add option for "IDF segments out"
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine produces a file of lines in the surfaces.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine produces a file of lines in the surfaces.
 
-          ! METHODOLOGY EMPLOYED:
-          ! Use the surface absolute coordinate information to produce
-          ! lines.
+  ! METHODOLOGY EMPLOYED:
+  ! Use the surface absolute coordinate information to produce
+  ! lines.
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataPrecisionGlobals
   USE DataHeatBalance
   USE DataSurfaces
-!  USE DataGlobals_HPSimIntegrated, ONLY: ShowWarningError, ShowContinueError, ShowFatalError
+  !  USE DataGlobals_HPSimIntegrated, ONLY: ShowWarningError, ShowContinueError, ShowFatalError
   USE General, ONLY: RoundSigDigits
 
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   character(len=*), intent(IN) :: option
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! SUBROUTINE PARAMETER DEFINITIONS:
   character(len=*), parameter :: fmt700="(5(f10.2,','),f10.2)"
   character(len=*), parameter :: fmta="(A)"
   character(len=*), parameter :: fmtcoord="(2X,2(f10.2,','),f10.2,A,A)"
   character(len=*), parameter :: vertexstring='X,Y,Z ==> Vertex'
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   logical, save :: optiondone=.false.
   character(len=MaxNameLength), SAVE :: lastoption=' '
   integer unit              ! Unit number on which to write file
@@ -210,7 +210,7 @@ SUBROUTINE LinesOut(option)
   unit=getnewunitnumber()
   open(unit,file='eplusout.sln', Action='write', iostat=write_stat)
   if (write_stat /= 0) then
-   CALL ShowFatalError('LinesOut: Could not open file "eplusout.sln" for output (write).')
+    CALL ShowFatalError('LinesOut: Could not open file "eplusout.sln" for output (write).')
   endif
 
   if (option /= 'IDF') then
@@ -221,10 +221,10 @@ SUBROUTINE LinesOut(option)
       do vert=1,Surface(Surf)%Sides
         if (vert /= Surface(Surf)%Sides) then
           write(unit,fmt700) surface(surf)%vertex(vert)%x,surface(surf)%vertex(vert)%y,surface(surf)%vertex(vert)%z, &
-            surface(surf)%vertex(vert+1)%x,surface(surf)%vertex(vert+1)%y,surface(surf)%vertex(vert+1)%z
+          surface(surf)%vertex(vert+1)%x,surface(surf)%vertex(vert+1)%y,surface(surf)%vertex(vert+1)%z
         else
           write(unit,fmt700) surface(surf)%vertex(vert)%x,surface(surf)%vertex(vert)%y,surface(surf)%vertex(vert)%z, &
-            surface(surf)%vertex(1)%x,surface(surf)%vertex(1)%y,surface(surf)%vertex(1)%z
+          surface(surf)%vertex(1)%x,surface(surf)%vertex(1)%y,surface(surf)%vertex(1)%z
         endif
       enddo
     enddo
@@ -236,13 +236,13 @@ SUBROUTINE LinesOut(option)
       if (surface(surf)%sides == 0) CYCLE
       ! process heat transfer surfaces
       write(unit,fmta) ' Surface='//trim(cSurfaceClass(surface(surf)%class))//', Name='//trim(surface(surf)%Name)// &
-        ', Azimuth='//trim(roundsigdigits(surface(surf)%Azimuth,1))
+      ', Azimuth='//trim(roundsigdigits(surface(surf)%Azimuth,1))
       write(unit,fmta) '  '//trim(roundsigdigits(surface(surf)%Sides))//',  !- Number of (X,Y,Z) groups in this surface'
       do vert=1,Surface(Surf)%Sides
         optcommasemi=','
         if (vert == Surface(Surf)%Sides) optcommasemi=';'
         write(unit,fmtcoord) surface(surf)%vertex(vert)%x,surface(surf)%vertex(vert)%y,surface(surf)%vertex(vert)%z,  &
-           optcommasemi,'  !- '//trim(vertexstring)//' '//trim(roundsigdigits(vert))
+        optcommasemi,'  !- '//trim(vertexstring)//' '//trim(roundsigdigits(vert))
       enddo
     enddo
   endif
@@ -255,23 +255,23 @@ END SUBROUTINE LinesOut
 
 SUBROUTINE DXFOut(PolygonAction,ColorScheme)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Linda K. Lawrie
-          !       DATE WRITTEN   March 1999
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Linda K. Lawrie
+  !       DATE WRITTEN   March 1999
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine produces a file of DXF objects for the surfaces.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine produces a file of DXF objects for the surfaces.
 
-          ! METHODOLOGY EMPLOYED:
-          ! Use the surface absolute coordinate information to produce
-          ! lines.
+  ! METHODOLOGY EMPLOYED:
+  ! Use the surface absolute coordinate information to produce
+  ! lines.
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataPrecisionGlobals
   USE DataHeatBalance, ONLY: BuildingName,Zone
   USE DataSurfaces
@@ -284,20 +284,20 @@ SUBROUTINE DXFOut(PolygonAction,ColorScheme)
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   CHARACTER(len=*) :: PolygonAction
   CHARACTER(len=*) :: ColorScheme    ! Name from user for color scheme or blank
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   REAL(r64), dimension(4) :: StemX =(/-10.,-10.,-10.,-10./)
   REAL(r64), dimension(4) :: StemY =(/3.,3.,0.,0./)
   REAL(r64), dimension(4) :: StemZ =(/.1,0.,0.,.1/)
@@ -316,7 +316,7 @@ SUBROUTINE DXFOut(PolygonAction,ColorScheme)
   REAL(r64), dimension(4) :: NSide3X =(/-9.5,-9.5,-9.5,-9.5/)
   REAL(r64), dimension(4) :: NSide3Y =(/4.5,4.5,3.5,3.5/)
   REAL(r64), dimension(4) :: NSide3Z =(/.1,0.,0.,.1/)
-!  integer, dimension(7) :: colorno=(/3,4,5,6,2,8,9/)
+  !  integer, dimension(7) :: colorno=(/3,4,5,6,2,8,9/)
   integer unit              ! Unit number on which to write file
   integer surf              ! Loop variable for surfaces
   integer vert              ! Loop counter
@@ -375,7 +375,7 @@ SUBROUTINE DXFOut(PolygonAction,ColorScheme)
   unit=getnewunitnumber()
   open(unit,file='eplusout.dxf', Action='write', iostat=write_stat)
   if (write_stat /= 0) then
-   CALL ShowFatalError('DXFOut: Could not open file "eplusout.dxf" for output (write).')
+    CALL ShowFatalError('DXFOut: Could not open file "eplusout.dxf" for output (write).')
   endif
 
 
@@ -429,16 +429,16 @@ SUBROUTINE DXFOut(PolygonAction,ColorScheme)
   write(unit,710) 'Text - True North'
   write(unit,800) DXFcolorno(colorno_Text),StemX(1)-1.,StemY(1),StemZ(1)
   800 format('  0',/,'TEXT',/,'  8',/,'1',/,'  6',/,'Continuous',/,  &
-    ' 62',/,I3,/,' 10',/,f15.5,/,' 20',/,f15.5,/,' 30',/,f15.5,/,  &
-    ' 40',/,' .25',/,'  1',/,'True North',/,' 41',/,' 0.0',/,'  7',/,'MONOTXT',/,  &
-    '210',/,'0.0',/,'220',/,'0.0',/,'230',/,'1.0')
+  ' 62',/,I3,/,' 10',/,f15.5,/,' 20',/,f15.5,/,' 30',/,f15.5,/,  &
+  ' 40',/,' .25',/,'  1',/,'True North',/,' 41',/,' 0.0',/,'  7',/,'MONOTXT',/,  &
+  '210',/,'0.0',/,'220',/,'0.0',/,'230',/,'1.0')
 
   write(unit,710) 'Text - Building Title'
   write(unit,801) DXFcolorno(colorno_Text),StemX(1)-4.,StemY(1)-4.,StemZ(1),'Building - '//TRIM(BuildingName)
   801 format('  0',/,'TEXT',/,'  8',/,'1',/,'  6',/,'Continuous',/,  &
-    ' 62',/,I3,/,' 10',/,f15.5,/,' 20',/,f15.5,/,' 30',/,f15.5,/,  &
-    ' 40',/,' .4',/,'  1',/,A,/,' 41',/,' 0.0',/,'  7',/,'MONOTXT',/,  &
-    '210',/,'0.0',/,'220',/,'0.0',/,'230',/,'1.0')
+  ' 62',/,I3,/,' 10',/,f15.5,/,' 20',/,f15.5,/,' 30',/,f15.5,/,  &
+  ' 40',/,' .4',/,'  1',/,A,/,' 41',/,' 0.0',/,'  7',/,'MONOTXT',/,  &
+  '210',/,'0.0',/,'220',/,'0.0',/,'230',/,'1.0')
 
   ! We want to point the north arrow to true north
   write(unit,710) 'North Arrow Stem'
@@ -455,10 +455,10 @@ SUBROUTINE DXFOut(PolygonAction,ColorScheme)
   write(unit,703) DXFcolorno(colorno_Text),(NSide3X(vert),NSide3Y(vert),NSide3Z(vert),vert=1,4)
 
   703 format('  0',/,'3DFACE',/,'  8',/,'1',/,' 62',/,I3,/,  &
-    ' 10',/,f15.5,/,' 20',/,f15.5,/,' 30',/,f15.5,/,  &
-    ' 11',/,f15.5,/,' 21',/,f15.5,/,' 31',/,f15.5,/,  &
-    ' 12',/,f15.5,/,' 22',/,f15.5,/,' 32',/,f15.5,/,  &
-    ' 13',/,f15.5,/,' 23',/,f15.5,/,' 33',/,f15.5)
+  ' 10',/,f15.5,/,' 20',/,f15.5,/,' 30',/,f15.5,/,  &
+  ' 11',/,f15.5,/,' 21',/,f15.5,/,' 31',/,f15.5,/,  &
+  ' 12',/,f15.5,/,' 22',/,f15.5,/,' 32',/,f15.5,/,  &
+  ' 13',/,f15.5,/,' 23',/,f15.5,/,' 33',/,f15.5)
 
   write(unit,710) 'Zone Names'
   do zones=1,NumOfZones
@@ -496,7 +496,7 @@ SUBROUTINE DXFOut(PolygonAction,ColorScheme)
     endif
     if (surface(surf)%sides <= 4) then
       write(unit,704) TRIM(ShadeType),DXFcolorno(colorindex),(surface(surf)%vertex(vert)%x,surface(surf)%vertex(vert)%y, &
-                      surface(surf)%vertex(vert)%z,vert=1,3)
+      surface(surf)%vertex(vert)%z,vert=1,3)
       if (surface(surf)%sides == 3) then
         write(unit,705) surface(surf)%vertex(3)%x,surface(surf)%vertex(3)%y,surface(surf)%vertex(3)%z
       else
@@ -511,20 +511,20 @@ SUBROUTINE DXFOut(PolygonAction,ColorScheme)
         write(unit,715) TRIM(ShadeType),DXFcolorno(colorindex),minz,TRIM(PolylineWidth),TRIM(PolylineWidth)
         do vert=1,surface(surf)%sides
           write(unit,716) TRIM(ShadeType),  &
-                          surface(surf)%vertex(vert)%x,surface(surf)%vertex(vert)%y,surface(surf)%vertex(vert)%z
+          surface(surf)%vertex(vert)%x,surface(surf)%vertex(vert)%y,surface(surf)%vertex(vert)%z
         enddo
         write(unit,717) TRIM(ShadeType)
       else
         ntri=triangulate(surface(surf)%sides,surface(surf)%vertex,mytriangles,surface(surf)%azimuth,  &
-                   surface(surf)%tilt,surface(surf)%name,surface(surf)%class)
+        surface(surf)%tilt,surface(surf)%name,surface(surf)%class)
         do svert=1,ntri
-            vv0=mytriangles(svert)%vv0
-            vv1=mytriangles(svert)%vv1
-            vv2=mytriangles(svert)%vv2
+          vv0=mytriangles(svert)%vv0
+          vv1=mytriangles(svert)%vv1
+          vv2=mytriangles(svert)%vv2
           write(unit,704) TRIM(ShadeType),DXFcolorno(colorindex),  &
-            surface(surf)%vertex(vv0)%x,surface(surf)%vertex(vv0)%y,surface(surf)%vertex(vv0)%z, &
-            surface(surf)%vertex(vv1)%x,surface(surf)%vertex(vv1)%y,surface(surf)%vertex(vv1)%z, &
-            surface(surf)%vertex(vv2)%x,surface(surf)%vertex(vv2)%y,surface(surf)%vertex(vv2)%z
+          surface(surf)%vertex(vv0)%x,surface(surf)%vertex(vv0)%y,surface(surf)%vertex(vv0)%z, &
+          surface(surf)%vertex(vv1)%x,surface(surf)%vertex(vv1)%y,surface(surf)%vertex(vv1)%z, &
+          surface(surf)%vertex(vv2)%x,surface(surf)%vertex(vv2)%y,surface(surf)%vertex(vv2)%z
           write(unit,705) surface(surf)%vertex(vv2)%x,surface(surf)%vertex(vv2)%y,surface(surf)%vertex(vv2)%z
         enddo
         deallocate(mytriangles)
@@ -563,7 +563,7 @@ SUBROUTINE DXFOut(PolygonAction,ColorScheme)
       write(unit,710) trim(surface(surf)%ZoneName)//':'//trim(surface(surf)%Name)
       if (surface(surf)%sides <= 4) then
         write(unit,704) TRIM(TempZoneName),DXFcolorno(colorindex),(surface(surf)%vertex(vert)%x,surface(surf)%vertex(vert)%y, &
-                        surface(surf)%vertex(vert)%z,vert=1,3)
+        surface(surf)%vertex(vert)%z,vert=1,3)
         if (surface(surf)%sides == 3) then
           write(unit,705) surface(surf)%vertex(3)%x,surface(surf)%vertex(3)%y,surface(surf)%vertex(3)%z
         else
@@ -578,31 +578,31 @@ SUBROUTINE DXFOut(PolygonAction,ColorScheme)
           write(unit,715) TRIM(TempZoneName),DXFcolorno(colorindex),minz,TRIM(PolylineWidth),TRIM(PolylineWidth)
           do vert=1,surface(surf)%sides
             write(unit,716) TRIM(TempZoneName),  &
-                          surface(surf)%vertex(vert)%x,surface(surf)%vertex(vert)%y,surface(surf)%vertex(vert)%z
+            surface(surf)%vertex(vert)%x,surface(surf)%vertex(vert)%y,surface(surf)%vertex(vert)%z
           enddo
           write(unit,717) TRIM(TempZoneName)
         else
           ntri=triangulate(surface(surf)%sides,surface(surf)%vertex,mytriangles,surface(surf)%azimuth,  &
-                   surface(surf)%tilt,surface(surf)%name,surface(surf)%class)
+          surface(surf)%tilt,surface(surf)%name,surface(surf)%class)
           do svert=1,ntri
             vv0=mytriangles(svert)%vv0
             vv1=mytriangles(svert)%vv1
             vv2=mytriangles(svert)%vv2
             write(unit,704) TRIM(TempZoneName),DXFcolorno(colorindex),  &
-              surface(surf)%vertex(vv0)%x,surface(surf)%vertex(vv0)%y,surface(surf)%vertex(vv0)%z, &
-              surface(surf)%vertex(vv1)%x,surface(surf)%vertex(vv1)%y,surface(surf)%vertex(vv1)%z, &
-              surface(surf)%vertex(vv2)%x,surface(surf)%vertex(vv2)%y,surface(surf)%vertex(vv2)%z
+            surface(surf)%vertex(vv0)%x,surface(surf)%vertex(vv0)%y,surface(surf)%vertex(vv0)%z, &
+            surface(surf)%vertex(vv1)%x,surface(surf)%vertex(vv1)%y,surface(surf)%vertex(vv1)%z, &
+            surface(surf)%vertex(vv2)%x,surface(surf)%vertex(vv2)%y,surface(surf)%vertex(vv2)%z
             write(unit,705) surface(surf)%vertex(vv2)%x,surface(surf)%vertex(vv2)%y,surface(surf)%vertex(vv2)%z
           enddo
           deallocate(mytriangles)
         endif
       endif
- 715 format('  0',/,'POLYLINE',/,'  8',/,A,/,' 62',/,I3,/,' 66',/,'  1',/,  &
-    ' 10',/,' 0.0',/,' 20',/,' 0.0',/,' 30',/,f15.5,/,  &
-    ' 70',/,'   9',/,' 40',/,A,/,' 41',/,A)
- 716 format('  0',/'VERTEX',/,'  8',/,A,/,  &
-    ' 10',/,f15.5,/,' 20',/,f15.5,/,' 30',/,f15.5)
- 717 format('  0',/'SEQEND',/,'  8',/,A)
+      715 format('  0',/,'POLYLINE',/,'  8',/,A,/,' 62',/,I3,/,' 66',/,'  1',/,  &
+      ' 10',/,' 0.0',/,' 20',/,' 0.0',/,' 30',/,f15.5,/,  &
+      ' 70',/,'   9',/,' 40',/,A,/,' 41',/,A)
+      716 format('  0',/'VERTEX',/,'  8',/,A,/,  &
+      ' 10',/,f15.5,/,' 20',/,f15.5,/,' 30',/,f15.5)
+      717 format('  0',/'SEQEND',/,'  8',/,A)
 
     enddo
     ! still have to do shading surfaces for zone
@@ -616,7 +616,7 @@ SUBROUTINE DXFOut(PolygonAction,ColorScheme)
       write(unit,710) trim(surface(surf)%ZoneName)//':'//trim(surface(surf)%Name)
       if (surface(surf)%sides <= 4) then
         write(unit,704) TRIM(TempZoneName),DXFcolorno(colorindex),(surface(surf)%vertex(vert)%x,surface(surf)%vertex(vert)%y, &
-                        surface(surf)%vertex(vert)%z,vert=1,3)
+        surface(surf)%vertex(vert)%z,vert=1,3)
         if (surface(surf)%sides == 3) then
           write(unit,705) surface(surf)%vertex(3)%x,surface(surf)%vertex(3)%y,surface(surf)%vertex(3)%z
         else
@@ -631,25 +631,25 @@ SUBROUTINE DXFOut(PolygonAction,ColorScheme)
           write(unit,715) TRIM(TempZoneName),DXFcolorno(colorindex),minz,TRIM(PolylineWidth),TRIM(PolylineWidth)
           do vert=1,surface(surf)%sides
             write(unit,716) TRIM(TempZoneName),  &
-                          surface(surf)%vertex(vert)%x,surface(surf)%vertex(vert)%y,surface(surf)%vertex(vert)%z
+            surface(surf)%vertex(vert)%x,surface(surf)%vertex(vert)%y,surface(surf)%vertex(vert)%z
           enddo
           write(unit,717) TRIM(TempZoneName)
         else
           if (surface(surf)%shape == RectangularOverhang) then
             ntri=triangulate(surface(surf)%sides,surface(surf)%vertex,mytriangles,surface(surf)%azimuth,  &
-                   surface(surf)%tilt,surface(surf)%name,SurfaceClass_Overhang)
+            surface(surf)%tilt,surface(surf)%name,SurfaceClass_Overhang)
           else
             ntri=triangulate(surface(surf)%sides,surface(surf)%vertex,mytriangles,surface(surf)%azimuth,  &
-                   surface(surf)%tilt,surface(surf)%name,SurfaceClass_Fin)
+            surface(surf)%tilt,surface(surf)%name,SurfaceClass_Fin)
           endif
           do svert=1,ntri
             vv0=mytriangles(svert)%vv0
             vv1=mytriangles(svert)%vv1
             vv2=mytriangles(svert)%vv2
             write(unit,704) TRIM(TempZoneName),DXFcolorno(colorindex),  &
-              surface(surf)%vertex(vv0)%x,surface(surf)%vertex(vv0)%y,surface(surf)%vertex(vv0)%z, &
-              surface(surf)%vertex(vv1)%x,surface(surf)%vertex(vv1)%y,surface(surf)%vertex(vv1)%z, &
-              surface(surf)%vertex(vv2)%x,surface(surf)%vertex(vv2)%y,surface(surf)%vertex(vv2)%z
+            surface(surf)%vertex(vv0)%x,surface(surf)%vertex(vv0)%y,surface(surf)%vertex(vv0)%z, &
+            surface(surf)%vertex(vv1)%x,surface(surf)%vertex(vv1)%y,surface(surf)%vertex(vv1)%z, &
+            surface(surf)%vertex(vv2)%x,surface(surf)%vertex(vv2)%y,surface(surf)%vertex(vv2)%z
             write(unit,705) surface(surf)%vertex(vv2)%x,surface(surf)%vertex(vv2)%y,surface(surf)%vertex(vv2)%z
           enddo
           deallocate(mytriangles)
@@ -659,15 +659,15 @@ SUBROUTINE DXFOut(PolygonAction,ColorScheme)
   enddo
 
   704 format('  0',/,'3DFACE',/,'  8',/,A,/,' 62',/,I3,/,  &
-    ' 10',/,f15.5,/,' 20',/,f15.5,/,' 30',/,f15.5,/,  &
-    ' 11',/,f15.5,/,' 21',/,f15.5,/,' 31',/,f15.5,/,  &
-    ' 12',/,f15.5,/,' 22',/,f15.5,/,' 32',/,f15.5)
+  ' 10',/,f15.5,/,' 20',/,f15.5,/,' 30',/,f15.5,/,  &
+  ' 11',/,f15.5,/,' 21',/,f15.5,/,' 31',/,f15.5,/,  &
+  ' 12',/,f15.5,/,' 22',/,f15.5,/,' 32',/,f15.5)
 
   705 format(' 13',/,f15.5,/,' 23',/,f15.5,/,' 33',/,f15.5)
 
-!  711 format('  0',/,'LINE',/,'  8',/,A,/,' 62',/,I3)
-!  712 format(' 10',/,f15.5,/,' 20',/,f15.5,/,' 30',/,f15.5,/,  &
-!             ' 11',/,f15.5,/,' 21',/,f15.5,/,' 31',/,f15.5)
+  !  711 format('  0',/,'LINE',/,'  8',/,A,/,' 62',/,I3)
+  !  712 format(' 10',/,f15.5,/,' 20',/,f15.5,/,' 30',/,f15.5,/,  &
+  !             ' 11',/,f15.5,/,' 21',/,f15.5,/,' 31',/,f15.5)
 
 
 
@@ -688,8 +688,8 @@ SUBROUTINE DXFOut(PolygonAction,ColorScheme)
     do refpt=1,zonedaylight(zones)%TotalDaylRefPoints
       write(unit,710) trim(zone(zones)%Name)//':DayRefPt:'//TRIM(TrimSigDigits(refpt))
       write(unit,709) trim(TempZoneName),DXFcolorno(curcolorno),zonedaylight(zones)%DaylRefPtAbsCoord(refpt,1),  &
-                      zonedaylight(zones)%DaylRefPtAbsCoord(refpt,2),             &
-                      zonedaylight(zones)%DaylRefPtAbsCoord(refpt,3),.2
+      zonedaylight(zones)%DaylRefPtAbsCoord(refpt,2),             &
+      zonedaylight(zones)%DaylRefPtAbsCoord(refpt,3),.2
       curcolorno=colorno_DaylSensor2  ! ref pts 2 and later are this color
     enddo
   enddo
@@ -712,8 +712,8 @@ SUBROUTINE DXFOut(PolygonAction,ColorScheme)
       do refpt=1,IllumMapCalc(mapnum)%TotalMapRefPoints
         write(unit,710) trim(zone(zones)%Name)//':MapRefPt:'//TRIM(TrimSigDigits(refpt))
         write(unit,709) trim(TempZoneName),DXFcolorno(curcolorno),IllumMapCalc(mapnum)%MapRefPtAbsCoord(refpt,1),  &
-                        IllumMapCalc(mapnum)%MapRefPtAbsCoord(refpt,2),             &
-                        IllumMapCalc(mapnum)%MapRefPtAbsCoord(refpt,3),.05
+        IllumMapCalc(mapnum)%MapRefPtAbsCoord(refpt,2),             &
+        IllumMapCalc(mapnum)%MapRefPtAbsCoord(refpt,3),.05
       enddo
     enddo
   enddo
@@ -735,8 +735,8 @@ SUBROUTINE DXFOut(PolygonAction,ColorScheme)
     do refpt=1,zonedaylight(zones)%TotalDElightRefPts
       write(unit,710) trim(zone(zones)%Name)//':DEDayRefPt:'//TRIM(TrimSigDigits(refpt))
       write(unit,709) Trim(TempZoneName),DXFcolorno(curcolorno),zonedaylight(zones)%DaylRefPtAbsCoord(refpt,1),  &
-                      zonedaylight(zones)%DaylRefPtAbsCoord(refpt,2),             &
-                      zonedaylight(zones)%DaylRefPtAbsCoord(refpt,3),.2
+      zonedaylight(zones)%DaylRefPtAbsCoord(refpt,2),             &
+      zonedaylight(zones)%DaylRefPtAbsCoord(refpt,3),.2
       curcolorno=colorno_DaylSensor2  ! ref pts 2 and later are this color
     enddo
   enddo
@@ -745,8 +745,8 @@ SUBROUTINE DXFOut(PolygonAction,ColorScheme)
   706 format('  0',/,'ENDSEC',/,'  0',/,'EOF')
 
   709 format('  0',/,'CIRCLE',/,'  8',/,A,/,' 62',/,I3,/,  &
-    ' 10',/,f15.5,/,' 20',/,f15.5,/,' 30',/,f15.5,/,  &
-    ' 40',/,f15.5)
+  ' 10',/,f15.5,/,' 20',/,f15.5,/,' 30',/,f15.5,/,  &
+  ' 40',/,f15.5)
 
 
   710 format('999',/,A)
@@ -759,23 +759,23 @@ END SUBROUTINE DXFOut
 
 SUBROUTINE DXFOutLines(ColorScheme)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Linda K. Lawrie
-          !       DATE WRITTEN   August 2005
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Linda K. Lawrie
+  !       DATE WRITTEN   August 2005
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine produces a points file of lines in the surfaces.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine produces a points file of lines in the surfaces.
 
-          ! METHODOLOGY EMPLOYED:
-          ! Use the surface absolute coordinate information to produce
-          ! lines.
+  ! METHODOLOGY EMPLOYED:
+  ! Use the surface absolute coordinate information to produce
+  ! lines.
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataPrecisionGlobals
   USE DataHeatBalance, ONLY: BuildingName,Zone
   USE DataSurfaces
@@ -787,19 +787,19 @@ SUBROUTINE DXFOutLines(ColorScheme)
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   CHARACTER(len=*), INTENT(IN) :: ColorScheme
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   REAL(r64), dimension(4) :: StemX =(/-10.,-10.,-10.,-10./)
   REAL(r64), dimension(4) :: StemY =(/3.,3.,0.,0./)
   REAL(r64), dimension(4) :: StemZ =(/.1,0.,0.,.1/)
@@ -818,7 +818,7 @@ SUBROUTINE DXFOutLines(ColorScheme)
   REAL(r64), dimension(4) :: NSide3X =(/-9.5,-9.5,-9.5,-9.5/)
   REAL(r64), dimension(4) :: NSide3Y =(/4.5,4.5,3.5,3.5/)
   REAL(r64), dimension(4) :: NSide3Z =(/.1,0.,0.,.1/)
-!  integer, dimension(7) :: colorno=(/3,4,5,6,2,8,9/)
+  !  integer, dimension(7) :: colorno=(/3,4,5,6,2,8,9/)
   integer unit              ! Unit number on which to write file
   integer surf              ! Loop variable for surfaces
   integer vert              ! Loop counter
@@ -832,7 +832,7 @@ SUBROUTINE DXFOutLines(ColorScheme)
   character(len=MaxNameLength) TempZoneName
   integer pos
   character(len=25) ShadeType
-!unused  character(len=5) :: PolylineWidth=' 0.55'
+  !unused  character(len=5) :: PolylineWidth=' 0.55'
   character(len=25) cSurfNum
   integer surfcount
   integer sptr
@@ -848,7 +848,7 @@ SUBROUTINE DXFOutLines(ColorScheme)
   unit=getnewunitnumber()
   open(unit,file='eplusout.dxf', Action='write', iostat=write_stat)
   if (write_stat /= 0) then
-   CALL ShowFatalError('DXFOutLines: Could not open file "eplusout.dxf" for output (write).')
+    CALL ShowFatalError('DXFOutLines: Could not open file "eplusout.dxf" for output (write).')
   endif
 
   write(unit,702)   ! Start of Entities section
@@ -898,16 +898,16 @@ SUBROUTINE DXFOutLines(ColorScheme)
   write(unit,710) 'Text - True North'
   write(unit,800) DXFcolorno(colorno_Text),StemX(1)-1.,StemY(1),StemZ(1)
   800 format('  0',/,'TEXT',/,'  8',/,'1',/,'  6',/,'Continuous',/,  &
-    ' 62',/,I3,/,' 10',/,f15.5,/,' 20',/,f15.5,/,' 30',/,f15.5,/,  &
-    ' 40',/,' .25',/,'  1',/,'True North',/,' 41',/,' 0.0',/,'  7',/,'MONOTXT',/,  &
-    '210',/,'0.0',/,'220',/,'0.0',/,'230',/,'1.0')
+  ' 62',/,I3,/,' 10',/,f15.5,/,' 20',/,f15.5,/,' 30',/,f15.5,/,  &
+  ' 40',/,' .25',/,'  1',/,'True North',/,' 41',/,' 0.0',/,'  7',/,'MONOTXT',/,  &
+  '210',/,'0.0',/,'220',/,'0.0',/,'230',/,'1.0')
 
   write(unit,710) 'Text - Building Title'
   write(unit,801) DXFcolorno(colorno_Text),StemX(1)-4.,StemY(1)-4.,StemZ(1),'Building - '//TRIM(BuildingName)
   801 format('  0',/,'TEXT',/,'  8',/,'1',/,'  6',/,'Continuous',/,  &
-    ' 62',/,I3,/,' 10',/,f15.5,/,' 20',/,f15.5,/,' 30',/,f15.5,/,  &
-    ' 40',/,' .4',/,'  1',/,A,/,' 41',/,' 0.0',/,'  7',/,'MONOTXT',/,  &
-    '210',/,'0.0',/,'220',/,'0.0',/,'230',/,'1.0')
+  ' 62',/,I3,/,' 10',/,f15.5,/,' 20',/,f15.5,/,' 30',/,f15.5,/,  &
+  ' 40',/,' .4',/,'  1',/,A,/,' 41',/,' 0.0',/,'  7',/,'MONOTXT',/,  &
+  '210',/,'0.0',/,'220',/,'0.0',/,'230',/,'1.0')
 
   ! We want to point the north arrow to true north
   write(unit,710) 'North Arrow Stem'
@@ -924,10 +924,10 @@ SUBROUTINE DXFOutLines(ColorScheme)
   write(unit,703) DXFcolorno(colorno_Text),(NSide3X(vert),NSide3Y(vert),NSide3Z(vert),vert=1,4)
 
   703 format('  0',/,'3DFACE',/,'  8',/,'1',/,' 62',/,I3,/,  &
-    ' 10',/,f15.5,/,' 20',/,f15.5,/,' 30',/,f15.5,/,  &
-    ' 11',/,f15.5,/,' 21',/,f15.5,/,' 31',/,f15.5,/,  &
-    ' 12',/,f15.5,/,' 22',/,f15.5,/,' 32',/,f15.5,/,  &
-    ' 13',/,f15.5,/,' 23',/,f15.5,/,' 33',/,f15.5)
+  ' 10',/,f15.5,/,' 20',/,f15.5,/,' 30',/,f15.5,/,  &
+  ' 11',/,f15.5,/,' 21',/,f15.5,/,' 31',/,f15.5,/,  &
+  ' 12',/,f15.5,/,' 22',/,f15.5,/,' 32',/,f15.5,/,  &
+  ' 13',/,f15.5,/,' 23',/,f15.5,/,' 33',/,f15.5)
 
   write(unit,710) 'Zone Names'
   do zones=1,NumOfZones
@@ -971,7 +971,7 @@ SUBROUTINE DXFOutLines(ColorScheme)
       minz=MIN(minz,surface(surf)%vertex(vert)%z)
     enddo
     if (surface(surf)%sides <= 4) then
-!      write(unit,711) TRIM(ShadeType),colorno(colorindex) !,minz ,TRIM(PolylineWidth),TRIM(PolylineWidth)
+      !      write(unit,711) TRIM(ShadeType),colorno(colorindex) !,minz ,TRIM(PolylineWidth),TRIM(PolylineWidth)
       do vert=1,surface(surf)%sides
         if (vert /= surface(surf)%sides) then
           sptr=vert+1
@@ -980,7 +980,7 @@ SUBROUTINE DXFOutLines(ColorScheme)
         endif
         write(unit,711) TRIM(ShadeType),DXFcolorno(colorindex) !,minz ,TRIM(PolylineWidth),TRIM(PolylineWidth)
         write(unit,712) surface(surf)%vertex(vert)%x,surface(surf)%vertex(vert)%y,surface(surf)%vertex(vert)%z,  &
-                        surface(surf)%vertex(sptr)%x,surface(surf)%vertex(sptr)%y,surface(surf)%vertex(sptr)%z
+        surface(surf)%vertex(sptr)%x,surface(surf)%vertex(sptr)%y,surface(surf)%vertex(sptr)%z
       enddo
     else  ! polygon
       do vert=1,surface(surf)%sides
@@ -991,7 +991,7 @@ SUBROUTINE DXFOutLines(ColorScheme)
         endif
         write(unit,711) TRIM(ShadeType),DXFcolorno(colorindex) !,minz ,TRIM(PolylineWidth),TRIM(PolylineWidth)
         write(unit,712) surface(surf)%vertex(vert)%x,surface(surf)%vertex(vert)%y,surface(surf)%vertex(vert)%z,  &
-                        surface(surf)%vertex(sptr)%x,surface(surf)%vertex(sptr)%y,surface(surf)%vertex(sptr)%z
+        surface(surf)%vertex(sptr)%x,surface(surf)%vertex(sptr)%y,surface(surf)%vertex(sptr)%z
       enddo
     endif
   enddo
@@ -1044,7 +1044,7 @@ SUBROUTINE DXFOutLines(ColorScheme)
           endif
           write(unit,711) TRIM(TempZoneName),DXFcolorno(colorindex) !,minz,TRIM(PolylineWidth),TRIM(PolylineWidth)
           write(unit,712) surface(surf)%vertex(vert)%x,surface(surf)%vertex(vert)%y,surface(surf)%vertex(vert)%z,  &
-                        surface(surf)%vertex(sptr)%x,surface(surf)%vertex(sptr)%y,surface(surf)%vertex(sptr)%z
+          surface(surf)%vertex(sptr)%x,surface(surf)%vertex(sptr)%y,surface(surf)%vertex(sptr)%z
         enddo
       else  ! polygon
         do vert=1,surface(surf)%sides
@@ -1055,15 +1055,15 @@ SUBROUTINE DXFOutLines(ColorScheme)
           endif
           write(unit,711) TRIM(TempZoneName),DXFcolorno(colorindex) !,minz,TRIM(PolylineWidth),TRIM(PolylineWidth)
           write(unit,712) surface(surf)%vertex(vert)%x,surface(surf)%vertex(vert)%y,surface(surf)%vertex(vert)%z,  &
-                        surface(surf)%vertex(sptr)%x,surface(surf)%vertex(sptr)%y,surface(surf)%vertex(sptr)%z
+          surface(surf)%vertex(sptr)%x,surface(surf)%vertex(sptr)%y,surface(surf)%vertex(sptr)%z
         enddo
       endif
-! 715 format('  0',/,'POLYLINE',/,'  8',/,A,/,' 62',/,I3,/,' 66',/,'  1',/,  &
-!    ' 10',/,' 0.0',/,' 20',/,' 0.0',/,' 30',/,f15.5,/,  &
-!    ' 70',/,'   1',/,' 40',/,A,/,' 41',/,A)
-! 716 format('  0',/'VERTEX',/,'  8',/,A,/,  &
-!    ' 10',/,f15.5,/,' 20',/,f15.5,/,' 30',/,f15.5)
-! 717 format('  0',/'SEQEND',/,'  8',/,A)
+      ! 715 format('  0',/,'POLYLINE',/,'  8',/,A,/,' 62',/,I3,/,' 66',/,'  1',/,  &
+      !    ' 10',/,' 0.0',/,' 20',/,' 0.0',/,' 30',/,f15.5,/,  &
+      !    ' 70',/,'   1',/,' 40',/,A,/,' 41',/,A)
+      ! 716 format('  0',/'VERTEX',/,'  8',/,A,/,  &
+      !    ' 10',/,f15.5,/,' 20',/,f15.5,/,' 30',/,f15.5)
+      ! 717 format('  0',/'SEQEND',/,'  8',/,A)
 
     enddo
     ! still have to do shading surfaces for zone
@@ -1093,7 +1093,7 @@ SUBROUTINE DXFOutLines(ColorScheme)
           endif
           write(unit,711) TRIM(TempZoneName),DXFcolorno(colorindex) !,minz,TRIM(PolylineWidth),TRIM(PolylineWidth)
           write(unit,712) surface(surf)%vertex(vert)%x,surface(surf)%vertex(vert)%y,surface(surf)%vertex(vert)%z,  &
-                        surface(surf)%vertex(sptr)%x,surface(surf)%vertex(sptr)%y,surface(surf)%vertex(sptr)%z
+          surface(surf)%vertex(sptr)%x,surface(surf)%vertex(sptr)%y,surface(surf)%vertex(sptr)%z
         enddo
       else  ! polygon attached shading
         do vert=1,surface(surf)%sides
@@ -1104,22 +1104,22 @@ SUBROUTINE DXFOutLines(ColorScheme)
           endif
           write(unit,711) TRIM(TempZoneName),DXFcolorno(colorindex) !,minz,TRIM(PolylineWidth),TRIM(PolylineWidth)
           write(unit,712) surface(surf)%vertex(vert)%x,surface(surf)%vertex(vert)%y,surface(surf)%vertex(vert)%z,  &
-                        surface(surf)%vertex(sptr)%x,surface(surf)%vertex(sptr)%y,surface(surf)%vertex(sptr)%z
+          surface(surf)%vertex(sptr)%x,surface(surf)%vertex(sptr)%y,surface(surf)%vertex(sptr)%z
         enddo
       endif
     enddo
   enddo
 
   704 format('  0',/,'3DFACE',/,'  8',/,A,/,' 62',/,I3,/,  &
-    ' 10',/,f15.5,/,' 20',/,f15.5,/,' 30',/,f15.5,/,  &
-    ' 11',/,f15.5,/,' 21',/,f15.5,/,' 31',/,f15.5,/,  &
-    ' 12',/,f15.5,/,' 22',/,f15.5,/,' 32',/,f15.5)
+  ' 10',/,f15.5,/,' 20',/,f15.5,/,' 30',/,f15.5,/,  &
+  ' 11',/,f15.5,/,' 21',/,f15.5,/,' 31',/,f15.5,/,  &
+  ' 12',/,f15.5,/,' 22',/,f15.5,/,' 32',/,f15.5)
 
   705 format(' 13',/,f15.5,/,' 23',/,f15.5,/,' 33',/,f15.5)
 
   711 format('  0',/,'LINE',/,'  8',/,A,/,' 62',/,I3)
   712 format(' 10',/,f15.5,/,' 20',/,f15.5,/,' 30',/,f15.5,/,  &
-             ' 11',/,f15.5,/,' 21',/,f15.5,/,' 31',/,f15.5)
+  ' 11',/,f15.5,/,' 21',/,f15.5,/,' 31',/,f15.5)
 
 
 
@@ -1140,8 +1140,8 @@ SUBROUTINE DXFOutLines(ColorScheme)
     do refpt=1,zonedaylight(zones)%TotalDaylRefPoints
       write(unit,710) trim(zone(zones)%Name)//':DayRefPt:'//TRIM(TrimSigDigits(refpt))
       write(unit,709) trim(TempZoneName),DXFcolorno(curcolorno),zonedaylight(zones)%DaylRefPtAbsCoord(refpt,1),  &
-                      zonedaylight(zones)%DaylRefPtAbsCoord(refpt,2),             &
-                      zonedaylight(zones)%DaylRefPtAbsCoord(refpt,3),.2
+      zonedaylight(zones)%DaylRefPtAbsCoord(refpt,2),             &
+      zonedaylight(zones)%DaylRefPtAbsCoord(refpt,3),.2
       curcolorno=colorno_DaylSensor2  ! ref pts 2 and later are this color
     enddo
   enddo
@@ -1163,8 +1163,8 @@ SUBROUTINE DXFOutLines(ColorScheme)
     do refpt=1,zonedaylight(zones)%TotalDElightRefPts
       write(unit,710) trim(zone(zones)%Name)//':DEDayRefPt:'//TRIM(TrimSigDigits(refpt))
       write(unit,709) Trim(TempZoneName),DXFcolorno(curcolorno),zonedaylight(zones)%DaylRefPtAbsCoord(refpt,1),  &
-                      zonedaylight(zones)%DaylRefPtAbsCoord(refpt,2),             &
-                      zonedaylight(zones)%DaylRefPtAbsCoord(refpt,3),.2
+      zonedaylight(zones)%DaylRefPtAbsCoord(refpt,2),             &
+      zonedaylight(zones)%DaylRefPtAbsCoord(refpt,3),.2
       curcolorno=colorno_DaylSensor2  ! ref pts 2 and later are this color
     enddo
   enddo
@@ -1173,8 +1173,8 @@ SUBROUTINE DXFOutLines(ColorScheme)
   706 format('  0',/,'ENDSEC',/,'  0',/,'EOF')
 
   709 format('  0',/,'CIRCLE',/,'  8',/,A,/,' 62',/,I3,/,  &
-    ' 10',/,f15.5,/,' 20',/,f15.5,/,' 30',/,f15.5,/,  &
-    ' 40',/,f15.5)
+  ' 10',/,f15.5,/,' 20',/,f15.5,/,' 30',/,f15.5,/,  &
+  ' 40',/,f15.5)
 
 
   710 format('999',/,A)
@@ -1187,23 +1187,23 @@ END SUBROUTINE DXFOutLines
 
 SUBROUTINE DXFOutWireFrame(ColorScheme)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Linda K. Lawrie
-          !       DATE WRITTEN   August 2005
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Linda K. Lawrie
+  !       DATE WRITTEN   August 2005
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine produces a file of DXF objects for the surfaces (all lines -- wireframe).
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine produces a file of DXF objects for the surfaces (all lines -- wireframe).
 
-          ! METHODOLOGY EMPLOYED:
-          ! Use the surface absolute coordinate information to produce
-          ! lines.
+  ! METHODOLOGY EMPLOYED:
+  ! Use the surface absolute coordinate information to produce
+  ! lines.
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataPrecisionGlobals
   USE DataHeatBalance, ONLY: BuildingName,Zone
   USE DataSurfaces
@@ -1216,19 +1216,19 @@ SUBROUTINE DXFOutWireFrame(ColorScheme)
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   CHARACTER(len=*), INTENT(IN) :: ColorScheme
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   REAL(r64), dimension(4) :: StemX =(/-10.,-10.,-10.,-10./)
   REAL(r64), dimension(4) :: StemY =(/3.,3.,0.,0./)
   REAL(r64), dimension(4) :: StemZ =(/.1,0.,0.,.1/)
@@ -1247,7 +1247,7 @@ SUBROUTINE DXFOutWireFrame(ColorScheme)
   REAL(r64), dimension(4) :: NSide3X =(/-9.5,-9.5,-9.5,-9.5/)
   REAL(r64), dimension(4) :: NSide3Y =(/4.5,4.5,3.5,3.5/)
   REAL(r64), dimension(4) :: NSide3Z =(/.1,0.,0.,.1/)
-!  integer, dimension(7) :: colorno=(/3,4,5,6,2,8,9/)
+  !  integer, dimension(7) :: colorno=(/3,4,5,6,2,8,9/)
   integer unit              ! Unit number on which to write file
   integer surf              ! Loop variable for surfaces
   integer vert              ! Loop counter
@@ -1277,7 +1277,7 @@ SUBROUTINE DXFOutWireFrame(ColorScheme)
   unit=getnewunitnumber()
   open(unit,file='eplusout.dxf', Action='write', iostat=write_stat)
   if (write_stat /= 0) then
-   CALL ShowFatalError('DXFOutWireFrame: Could not open file "eplusout.dxf" for output (write).')
+    CALL ShowFatalError('DXFOutWireFrame: Could not open file "eplusout.dxf" for output (write).')
   endif
 
   write(unit,702)   ! Start of Entities section
@@ -1326,16 +1326,16 @@ SUBROUTINE DXFOutWireFrame(ColorScheme)
   write(unit,710) 'Text - True North'
   write(unit,800) DXFcolorno(colorno_Text),StemX(1)-1.,StemY(1),StemZ(1)
   800 format('  0',/,'TEXT',/,'  8',/,'1',/,'  6',/,'Continuous',/,  &
-    ' 62',/,I3,/,' 10',/,f15.5,/,' 20',/,f15.5,/,' 30',/,f15.5,/,  &
-    ' 40',/,' .25',/,'  1',/,'True North',/,' 41',/,' 0.0',/,'  7',/,'MONOTXT',/,  &
-    '210',/,'0.0',/,'220',/,'0.0',/,'230',/,'1.0')
+  ' 62',/,I3,/,' 10',/,f15.5,/,' 20',/,f15.5,/,' 30',/,f15.5,/,  &
+  ' 40',/,' .25',/,'  1',/,'True North',/,' 41',/,' 0.0',/,'  7',/,'MONOTXT',/,  &
+  '210',/,'0.0',/,'220',/,'0.0',/,'230',/,'1.0')
 
   write(unit,710) 'Text - Building Title'
   write(unit,801) DXFcolorno(colorno_Text),StemX(1)-4.,StemY(1)-4.,StemZ(1),'Building - '//TRIM(BuildingName)
   801 format('  0',/,'TEXT',/,'  8',/,'1',/,'  6',/,'Continuous',/,  &
-    ' 62',/,I3,/,' 10',/,f15.5,/,' 20',/,f15.5,/,' 30',/,f15.5,/,  &
-    ' 40',/,' .4',/,'  1',/,A,/,' 41',/,' 0.0',/,'  7',/,'MONOTXT',/,  &
-    '210',/,'0.0',/,'220',/,'0.0',/,'230',/,'1.0')
+  ' 62',/,I3,/,' 10',/,f15.5,/,' 20',/,f15.5,/,' 30',/,f15.5,/,  &
+  ' 40',/,' .4',/,'  1',/,A,/,' 41',/,' 0.0',/,'  7',/,'MONOTXT',/,  &
+  '210',/,'0.0',/,'220',/,'0.0',/,'230',/,'1.0')
 
   ! We want to point the north arrow to true north
   write(unit,710) 'North Arrow Stem'
@@ -1352,10 +1352,10 @@ SUBROUTINE DXFOutWireFrame(ColorScheme)
   write(unit,703) DXFcolorno(colorno_Text),(NSide3X(vert),NSide3Y(vert),NSide3Z(vert),vert=1,4)
 
   703 format('  0',/,'3DFACE',/,'  8',/,'1',/,' 62',/,I3,/,  &
-    ' 10',/,f15.5,/,' 20',/,f15.5,/,' 30',/,f15.5,/,  &
-    ' 11',/,f15.5,/,' 21',/,f15.5,/,' 31',/,f15.5,/,  &
-    ' 12',/,f15.5,/,' 22',/,f15.5,/,' 32',/,f15.5,/,  &
-    ' 13',/,f15.5,/,' 23',/,f15.5,/,' 33',/,f15.5)
+  ' 10',/,f15.5,/,' 20',/,f15.5,/,' 30',/,f15.5,/,  &
+  ' 11',/,f15.5,/,' 21',/,f15.5,/,' 31',/,f15.5,/,  &
+  ' 12',/,f15.5,/,' 22',/,f15.5,/,' 32',/,f15.5,/,  &
+  ' 13',/,f15.5,/,' 23',/,f15.5,/,' 33',/,f15.5)
 
   write(unit,710) 'Zone Names'
   do zones=1,NumOfZones
@@ -1402,14 +1402,14 @@ SUBROUTINE DXFOutWireFrame(ColorScheme)
       write(unit,715) TRIM(ShadeType),DXFcolorno(colorindex),minz,TRIM(PolylineWidth),TRIM(PolylineWidth)
       do vert=1,surface(surf)%sides
         write(unit,716) TRIM(ShadeType),  &
-                        surface(surf)%vertex(vert)%x,surface(surf)%vertex(vert)%y,surface(surf)%vertex(vert)%z
+        surface(surf)%vertex(vert)%x,surface(surf)%vertex(vert)%y,surface(surf)%vertex(vert)%z
       enddo
       write(unit,717) TRIM(ShadeType)
     else  ! polygon
       write(unit,715) TRIM(ShadeType),DXFcolorno(colorindex),minz,TRIM(PolylineWidth),TRIM(PolylineWidth)
       do vert=1,surface(surf)%sides
         write(unit,716) TRIM(ShadeType),  &
-                        surface(surf)%vertex(vert)%x,surface(surf)%vertex(vert)%y,surface(surf)%vertex(vert)%z
+        surface(surf)%vertex(vert)%x,surface(surf)%vertex(vert)%y,surface(surf)%vertex(vert)%z
       enddo
       write(unit,717) TRIM(ShadeType)
     endif
@@ -1457,23 +1457,23 @@ SUBROUTINE DXFOutWireFrame(ColorScheme)
         write(unit,715) TRIM(TempZoneName),DXFcolorno(colorindex),minz,TRIM(PolylineWidth),TRIM(PolylineWidth)
         do vert=1,surface(surf)%sides
           write(unit,716) TRIM(TempZoneName),  &
-                        surface(surf)%vertex(vert)%x,surface(surf)%vertex(vert)%y,surface(surf)%vertex(vert)%z
+          surface(surf)%vertex(vert)%x,surface(surf)%vertex(vert)%y,surface(surf)%vertex(vert)%z
         enddo
         write(unit,717) TRIM(TempZoneName)
       else  ! polygon
         write(unit,715) TRIM(TempZoneName),DXFcolorno(colorindex),minz,TRIM(PolylineWidth),TRIM(PolylineWidth)
         do vert=1,surface(surf)%sides
           write(unit,716) TRIM(TempZoneName),  &
-                        surface(surf)%vertex(vert)%x,surface(surf)%vertex(vert)%y,surface(surf)%vertex(vert)%z
+          surface(surf)%vertex(vert)%x,surface(surf)%vertex(vert)%y,surface(surf)%vertex(vert)%z
         enddo
         write(unit,717) TRIM(TempZoneName)
       endif
- 715 format('  0',/,'POLYLINE',/,'  8',/,A,/,' 62',/,I3,/,' 66',/,'  1',/,  &
-    ' 10',/,' 0.0',/,' 20',/,' 0.0',/,' 30',/,f15.5,/,  &
-    ' 70',/,'   9',/,' 40',/,A,/,' 41',/,A)
- 716 format('  0',/'VERTEX',/,'  8',/,A,/,  &
-    ' 10',/,f15.5,/,' 20',/,f15.5,/,' 30',/,f15.5)
- 717 format('  0',/'SEQEND',/,'  8',/,A)
+      715 format('  0',/,'POLYLINE',/,'  8',/,A,/,' 62',/,I3,/,' 66',/,'  1',/,  &
+      ' 10',/,' 0.0',/,' 20',/,' 0.0',/,' 30',/,f15.5,/,  &
+      ' 70',/,'   9',/,' 40',/,A,/,' 41',/,A)
+      716 format('  0',/'VERTEX',/,'  8',/,A,/,  &
+      ' 10',/,f15.5,/,' 20',/,f15.5,/,' 30',/,f15.5)
+      717 format('  0',/'SEQEND',/,'  8',/,A)
 
     enddo
     ! still have to do shading surfaces for zone
@@ -1498,14 +1498,14 @@ SUBROUTINE DXFOutWireFrame(ColorScheme)
         write(unit,715) TRIM(TempZoneName),DXFcolorno(colorindex),minz,TRIM(PolylineWidth),TRIM(PolylineWidth)
         do vert=1,surface(surf)%sides
           write(unit,716) TRIM(TempZoneName),  &
-                        surface(surf)%vertex(vert)%x,surface(surf)%vertex(vert)%y,surface(surf)%vertex(vert)%z
+          surface(surf)%vertex(vert)%x,surface(surf)%vertex(vert)%y,surface(surf)%vertex(vert)%z
         enddo
         write(unit,717) TRIM(TempZoneName)
       else  ! polygon attached shading
         write(unit,715) TRIM(TempZoneName),DXFcolorno(colorindex),minz,TRIM(PolylineWidth),TRIM(PolylineWidth)
         do vert=1,surface(surf)%sides
           write(unit,716) TRIM(TempZoneName),  &
-                        surface(surf)%vertex(vert)%x,surface(surf)%vertex(vert)%y,surface(surf)%vertex(vert)%z
+          surface(surf)%vertex(vert)%x,surface(surf)%vertex(vert)%y,surface(surf)%vertex(vert)%z
         enddo
         write(unit,717) TRIM(TempZoneName)
       endif
@@ -1513,15 +1513,15 @@ SUBROUTINE DXFOutWireFrame(ColorScheme)
   enddo
 
   704 format('  0',/,'3DFACE',/,'  8',/,A,/,' 62',/,I3,/,  &
-    ' 10',/,f15.5,/,' 20',/,f15.5,/,' 30',/,f15.5,/,  &
-    ' 11',/,f15.5,/,' 21',/,f15.5,/,' 31',/,f15.5,/,  &
-    ' 12',/,f15.5,/,' 22',/,f15.5,/,' 32',/,f15.5)
+  ' 10',/,f15.5,/,' 20',/,f15.5,/,' 30',/,f15.5,/,  &
+  ' 11',/,f15.5,/,' 21',/,f15.5,/,' 31',/,f15.5,/,  &
+  ' 12',/,f15.5,/,' 22',/,f15.5,/,' 32',/,f15.5)
 
   705 format(' 13',/,f15.5,/,' 23',/,f15.5,/,' 33',/,f15.5)
 
-!  711 format('  0',/,'LINE',/,'  8',/,A,/,' 62',/,I3)
-!  712 format(' 10',/,f15.5,/,' 20',/,f15.5,/,' 30',/,f15.5,/,  &
-!             ' 11',/,f15.5,/,' 21',/,f15.5,/,' 31',/,f15.5)
+  !  711 format('  0',/,'LINE',/,'  8',/,A,/,' 62',/,I3)
+  !  712 format(' 10',/,f15.5,/,' 20',/,f15.5,/,' 30',/,f15.5,/,  &
+  !             ' 11',/,f15.5,/,' 21',/,f15.5,/,' 31',/,f15.5)
 
 
 
@@ -1542,8 +1542,8 @@ SUBROUTINE DXFOutWireFrame(ColorScheme)
     do refpt=1,zonedaylight(zones)%TotalDaylRefPoints
       write(unit,710) trim(zone(zones)%Name)//':DayRefPt:'//TRIM(TrimSigDigits(refpt))
       write(unit,709) trim(TempZoneName),DXFcolorno(curcolorno),zonedaylight(zones)%DaylRefPtAbsCoord(refpt,1),  &
-                      zonedaylight(zones)%DaylRefPtAbsCoord(refpt,2),             &
-                      zonedaylight(zones)%DaylRefPtAbsCoord(refpt,3),.2
+      zonedaylight(zones)%DaylRefPtAbsCoord(refpt,2),             &
+      zonedaylight(zones)%DaylRefPtAbsCoord(refpt,3),.2
       curcolorno=colorno_DaylSensor2  ! ref pts 2 and later are this color
     enddo
   enddo
@@ -1565,8 +1565,8 @@ SUBROUTINE DXFOutWireFrame(ColorScheme)
     do refpt=1,zonedaylight(zones)%TotalDElightRefPts
       write(unit,710) trim(zone(zones)%Name)//':DEDayRefPt:'//TRIM(TrimSigDigits(refpt))
       write(unit,709) Trim(TempZoneName),DXFcolorno(curcolorno),zonedaylight(zones)%DaylRefPtAbsCoord(refpt,1),  &
-                      zonedaylight(zones)%DaylRefPtAbsCoord(refpt,2),             &
-                      zonedaylight(zones)%DaylRefPtAbsCoord(refpt,3),.2
+      zonedaylight(zones)%DaylRefPtAbsCoord(refpt,2),             &
+      zonedaylight(zones)%DaylRefPtAbsCoord(refpt,3),.2
       curcolorno=colorno_DaylSensor2  ! ref pts 2 and later are this color
     enddo
   enddo
@@ -1575,8 +1575,8 @@ SUBROUTINE DXFOutWireFrame(ColorScheme)
   706 format('  0',/,'ENDSEC',/,'  0',/,'EOF')
 
   709 format('  0',/,'CIRCLE',/,'  8',/,A,/,' 62',/,I3,/,  &
-    ' 10',/,f15.5,/,' 20',/,f15.5,/,' 30',/,f15.5,/,  &
-    ' 40',/,f15.5)
+  ' 10',/,f15.5,/,' 20',/,f15.5,/,' 30',/,f15.5,/,  &
+  ' 40',/,f15.5)
 
 
   710 format('999',/,A)
@@ -1589,23 +1589,23 @@ END SUBROUTINE DXFOutWireFrame
 
 SUBROUTINE DetailsForSurfaces(RptType)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Linda Lawrie
-          !       DATE WRITTEN   February 2002
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Linda Lawrie
+  !       DATE WRITTEN   February 2002
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine provides an optional detailed surface report
-          ! for each surface in the input file.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine provides an optional detailed surface report
+  ! for each surface in the input file.
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataPrecisionGlobals
   USE DataHeatBalance
   USE DataSurfaces
@@ -1616,27 +1616,27 @@ SUBROUTINE DetailsForSurfaces(RptType)
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   INTEGER, INTENT(IN) :: RptType ! (1=Vertices only, 10=Details only, 11=Details with vertices)
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! SUBROUTINE PARAMETER DEFINITIONS:
   CHARACTER(len=*), PARAMETER, DIMENSION(1:9) :: ConvCoeffCalcs=(/'ASHRAESimple               ',  &
-                                                                  'ASHRAETARP                 ', &
-                                                                  'CeilingDiffuser            ', &
-                                                                  'TrombeWall                 ', &
-                                                                  'TARP                       ', &
-                                                                  'MoWitt                     ', &
-                                                                  'DOE-2                      ', &
-                                                                  'BLAST                      ', &
-                                                                  'AdaptiveConvectionAlgorithm'/)
+  'ASHRAETARP                 ', &
+  'CeilingDiffuser            ', &
+  'TrombeWall                 ', &
+  'TARP                       ', &
+  'MoWitt                     ', &
+  'DOE-2                      ', &
+  'BLAST                      ', &
+  'AdaptiveConvectionAlgorithm'/)
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   integer unit              ! Unit number on which to write file
   integer surf              ! Loop variable for surfaces
   integer vert              ! Loop counter
@@ -1661,7 +1661,7 @@ SUBROUTINE DetailsForSurfaces(RptType)
 
   unit=OutputFileInits
 
-!!!!    Write Header lines for report
+  !!!!    Write Header lines for report
   if (RptType == 10) then  ! Details only
     write(unit,700)
     write(unit,701,advance='No')
@@ -1696,7 +1696,7 @@ SUBROUTINE DetailsForSurfaces(RptType)
     do surf=1,totsurfaces
       if (Surface(surf)%Zone /= 0) EXIT
       write(unit,704,advance='No') 'Shading',trim(Surface(surf)%Name),trim(cSurfaceClass(Surface(surf)%class)),  &
-                                                          trim(Surface(surf)%BaseSurfName)
+      trim(Surface(surf)%BaseSurfName)
       if (RptType == 10) then
         if (Surface(surf)%SchedShadowSurfIndex > 0) then
           scheduleName=GetScheduleName(Surface(surf)%SchedShadowSurfIndex)
@@ -1708,10 +1708,10 @@ SUBROUTINE DetailsForSurfaces(RptType)
           cSchedMax='0.0'
         endif
         write(unit,7044,advance='No') trim(scheduleName),trim(cSchedMin),trim(cSchedMax),' ',  &
-                                      trim(RoundSigDigits(Surface(surf)%Area,2)),trim(RoundSigDigits(Surface(surf)%GrossArea,2)),  &
-                                      trim(RoundSigDigits(Surface(surf)%NetAreaShadowCalc,2)),  &
-                                      trim(RoundSigDigits(Surface(surf)%Azimuth,2)),trim(RoundSigDigits(Surface(surf)%Tilt,2)),   &
-                                      trim(RoundSigDigits(Surface(surf)%Width,2)),trim(RoundSigDigits(Surface(surf)%Height,2))
+        trim(RoundSigDigits(Surface(surf)%Area,2)),trim(RoundSigDigits(Surface(surf)%GrossArea,2)),  &
+        trim(RoundSigDigits(Surface(surf)%NetAreaShadowCalc,2)),  &
+        trim(RoundSigDigits(Surface(surf)%Azimuth,2)),trim(RoundSigDigits(Surface(surf)%Tilt,2)),   &
+        trim(RoundSigDigits(Surface(surf)%Width,2)),trim(RoundSigDigits(Surface(surf)%Height,2))
         write(unit,7061) trim(TrimSigDigits(Surface(surf)%Sides))
       elseif (RptType == 1) then
         write(unit,7042,advance='No') trim(TrimSigDigits(Surface(surf)%Sides))
@@ -1726,22 +1726,22 @@ SUBROUTINE DetailsForSurfaces(RptType)
           cSchedMax='0.0'
         endif
         write(unit,7044,advance='No') trim(scheduleName),trim(cSchedMin),trim(cSchedMax),' ',  &
-                                      trim(RoundSigDigits(Surface(surf)%Area,2)),trim(RoundSigDigits(Surface(surf)%GrossArea,2)), &
-                                      trim(RoundSigDigits(Surface(surf)%NetAreaShadowCalc,2)),  &
-                                      trim(RoundSigDigits(Surface(surf)%Azimuth,2)),trim(RoundSigDigits(Surface(surf)%Tilt,2)),   &
-                                      trim(RoundSigDigits(Surface(surf)%Width,2)),trim(RoundSigDigits(Surface(surf)%Height,2))
+        trim(RoundSigDigits(Surface(surf)%Area,2)),trim(RoundSigDigits(Surface(surf)%GrossArea,2)), &
+        trim(RoundSigDigits(Surface(surf)%NetAreaShadowCalc,2)),  &
+        trim(RoundSigDigits(Surface(surf)%Azimuth,2)),trim(RoundSigDigits(Surface(surf)%Tilt,2)),   &
+        trim(RoundSigDigits(Surface(surf)%Width,2)),trim(RoundSigDigits(Surface(surf)%Height,2))
         write(unit,7061,advance='No') trim(TrimSigDigits(Surface(surf)%Sides))
       endif
       if (RptType == 10) CYCLE
       do vert=1,Surface(surf)%Sides
         if (vert /= Surface(Surf)%Sides) then
           write(unit,709,advance='No') trim(RoundSigDigits(Surface(surf)%vertex(vert)%x,2)),  &
-                                       trim(RoundSigDigits(Surface(surf)%vertex(vert)%y,2)),  &
-                                       trim(RoundSigDigits(Surface(surf)%vertex(vert)%z,2))
+          trim(RoundSigDigits(Surface(surf)%vertex(vert)%y,2)),  &
+          trim(RoundSigDigits(Surface(surf)%vertex(vert)%z,2))
         else
           write(unit,709)  trim(RoundSigDigits(Surface(surf)%vertex(vert)%x,2)),  &
-                           trim(RoundSigDigits(Surface(surf)%vertex(vert)%y,2)),  &
-                           trim(RoundSigDigits(Surface(surf)%vertex(vert)%z,2))
+          trim(RoundSigDigits(Surface(surf)%vertex(vert)%y,2)),  &
+          trim(RoundSigDigits(Surface(surf)%vertex(vert)%z,2))
         endif
       enddo
       !  This shouldn't happen with shading surface -- always have vertices
@@ -1764,43 +1764,43 @@ SUBROUTINE DetailsForSurfaces(RptType)
         IntConvCoeffCalc=ConvCoeffCalcs(Zone(zonenum)%InsideConvectionAlgo)
         ExtConvCoeffCalc=ConvCoeffCalcs(Zone(zonenum)%OutsideConvectionAlgo)
         write(unit,704,advance='No') 'HeatTransfer',trim(Surface(surf)%Name),trim(cSurfaceClass(Surface(surf)%class)),  &
-                                                                                                trim(BaseSurfName)
+        trim(BaseSurfName)
 
         ! Calculate Nominal U-value with convection/film coefficients for reporting by adding on
         ! prescribed R-values for interior and exterior convection coefficients as found in ASHRAE 90.1-2004, Appendix A
         if (Surface(surf)%Construction > 0 .and. Surface(surf)%Construction <= TotConstructs) THEN
           cNominalUwithConvCoeffs=' '
           SELECT CASE (Surface(surf)%class)
-            CASE (SurfaceClass_Wall)
-              ! Interior:  vertical, still air, Rcin = 0.68 ft2-F-hr/BTU
-              ! Exterior:  vertical, exterior wind exposure, Rcout = 0.17 ft2-F-hr/BTU
-              IF (NominalU(Surface(surf)%Construction) > 0.0) THEN
-                NominalUwithConvCoeffs = 1.0d0 / (0.1197548d0 + (1.0d0 / NominalU(Surface(surf)%Construction)) + 0.0299387d0)
-              ELSE
-                cNominalUwithConvCoeffs = '[invalid]'
-              ENDIF
-            CASE (SurfaceClass_Floor)
-              ! Interior:  horizontal, still air, heat flow downward, Rcin = 0.92 ft2-F-hr/BTU
-              ! Exterior:  horizontal, semi-exterior (crawlspace), Rcout = 0.46 ft2-F-hr/BTU
-              IF (NominalU(Surface(surf)%Construction) > 0.0) THEN
-                NominalUwithConvCoeffs = 1.0d0 / (0.1620212 + (1.0d0 / NominalU(Surface(surf)%Construction)) + 0.0810106d0)
-              ELSE
-                cNominalUwithConvCoeffs = '[invalid]'
-              ENDIF
-            CASE (SurfaceClass_Roof)
-              ! Interior:  horizontal, still air, heat flow upward, Rcin = 0.61 ft2-F-hr/BTU
-              ! Exterior:  horizontal, semi-exterior (attic), Rcout = 0.46 ft2-F-hr/BTU
-              IF (NominalU(Surface(surf)%Construction) > 0.0) THEN
-                NominalUwithConvCoeffs = 1.0d0 / (0.1074271d0 + (1.0d0 / NominalU(Surface(surf)%Construction)) + 0.0810106d0)
-              ELSE
-                cNominalUwithConvCoeffs = '[invalid]'
-              ENDIF
-            CASE DEFAULT
-              IF (NominalU(Surface(surf)%Construction) > 0.0) THEN
-                NominalUwithConvCoeffs = NominalU(Surface(surf)%Construction)
-              ELSE
-                cNominalUwithConvCoeffs = '[invalid]'
-              ENDIF
+          CASE (SurfaceClass_Wall)
+            ! Interior:  vertical, still air, Rcin = 0.68 ft2-F-hr/BTU
+            ! Exterior:  vertical, exterior wind exposure, Rcout = 0.17 ft2-F-hr/BTU
+            IF (NominalU(Surface(surf)%Construction) > 0.0) THEN
+              NominalUwithConvCoeffs = 1.0d0 / (0.1197548d0 + (1.0d0 / NominalU(Surface(surf)%Construction)) + 0.0299387d0)
+            ELSE
+              cNominalUwithConvCoeffs = '[invalid]'
+            ENDIF
+          CASE (SurfaceClass_Floor)
+            ! Interior:  horizontal, still air, heat flow downward, Rcin = 0.92 ft2-F-hr/BTU
+            ! Exterior:  horizontal, semi-exterior (crawlspace), Rcout = 0.46 ft2-F-hr/BTU
+            IF (NominalU(Surface(surf)%Construction) > 0.0) THEN
+              NominalUwithConvCoeffs = 1.0d0 / (0.1620212 + (1.0d0 / NominalU(Surface(surf)%Construction)) + 0.0810106d0)
+            ELSE
+              cNominalUwithConvCoeffs = '[invalid]'
+            ENDIF
+          CASE (SurfaceClass_Roof)
+            ! Interior:  horizontal, still air, heat flow upward, Rcin = 0.61 ft2-F-hr/BTU
+            ! Exterior:  horizontal, semi-exterior (attic), Rcout = 0.46 ft2-F-hr/BTU
+            IF (NominalU(Surface(surf)%Construction) > 0.0) THEN
+              NominalUwithConvCoeffs = 1.0d0 / (0.1074271d0 + (1.0d0 / NominalU(Surface(surf)%Construction)) + 0.0810106d0)
+            ELSE
+              cNominalUwithConvCoeffs = '[invalid]'
+            ENDIF
+          CASE DEFAULT
+            IF (NominalU(Surface(surf)%Construction) > 0.0) THEN
+              NominalUwithConvCoeffs = NominalU(Surface(surf)%Construction)
+            ELSE
+              cNominalUwithConvCoeffs = '[invalid]'
+            ENDIF
           END SELECT
           IF (cNominalUwithConvCoeffs == ' ') THEN
             cNominalUwithConvCoeffs=RoundSigDigits(NominalUwithConvCoeffs,3)
@@ -1827,23 +1827,23 @@ SUBROUTINE DetailsForSurfaces(RptType)
         else
           ConstructionName='**invalid**'
         endif
-!        ! save the U-value nominal for use later in tabular report
-!        Surface(surf)%UNomWOFilm = cNominalU
-!        Surface(surf)%UNomFilm = cNominalUwithConvCoeffs
-!        !populate the predefined report related to u-values with films
-!        !only exterior surfaces including underground
-!        IF ((Surface(surf)%ExtBoundCond .EQ. ExternalEnvironment) .OR. (Surface(surf)%ExtBoundCond .EQ. Ground)) THEN
-!          SELECT CASE (Surface(surf)%Class)
-!            CASE (SurfaceClass_Wall,SurfaceClass_Floor,SurfaceClass_Roof)
-!              CALL PreDefTableEntry(pdchOpUfactFilm,Surface(surf)%Name,surface(surf)%UNomFilm)
-!          END SELECT
-!        END IF
+        !        ! save the U-value nominal for use later in tabular report
+        !        Surface(surf)%UNomWOFilm = cNominalU
+        !        Surface(surf)%UNomFilm = cNominalUwithConvCoeffs
+        !        !populate the predefined report related to u-values with films
+        !        !only exterior surfaces including underground
+        !        IF ((Surface(surf)%ExtBoundCond .EQ. ExternalEnvironment) .OR. (Surface(surf)%ExtBoundCond .EQ. Ground)) THEN
+        !          SELECT CASE (Surface(surf)%Class)
+        !            CASE (SurfaceClass_Wall,SurfaceClass_Floor,SurfaceClass_Roof)
+        !              CALL PreDefTableEntry(pdchOpUfactFilm,Surface(surf)%Name,surface(surf)%UNomFilm)
+        !          END SELECT
+        !        END IF
         write(unit,7041,advance='No')trim(ConstructionName),trim(cNominalU),trim(cNominalUwithConvCoeffs),trim(SolarDiffusing),  &
-                            trim(RoundSigDigits(Surface(surf)%Area,2)),trim(RoundSigDigits(Surface(surf)%GrossArea,2)),   &
-                            trim(RoundSigDigits(Surface(surf)%NetAreaShadowCalc,2)),  &
-                            trim(RoundSigDigits(Surface(surf)%Azimuth,2)),trim(RoundSigDigits(Surface(surf)%Tilt,2)),    &
-                            trim(RoundSigDigits(Surface(surf)%Width,2)),trim(RoundSigDigits(Surface(surf)%Height,2)),    &
-                            trim(RoundSigDigits(Surface(surf)%Reveal,2))
+        trim(RoundSigDigits(Surface(surf)%Area,2)),trim(RoundSigDigits(Surface(surf)%GrossArea,2)),   &
+        trim(RoundSigDigits(Surface(surf)%NetAreaShadowCalc,2)),  &
+        trim(RoundSigDigits(Surface(surf)%Azimuth,2)),trim(RoundSigDigits(Surface(surf)%Tilt,2)),    &
+        trim(RoundSigDigits(Surface(surf)%Width,2)),trim(RoundSigDigits(Surface(surf)%Height,2)),    &
+        trim(RoundSigDigits(Surface(surf)%Reveal,2))
         if (Surface(surf)%IntConvCoeff > 0) THEN
           SELECT CASE (UserIntConvectionCoeffs(Surface(surf)%IntConvCoeff)%OverrideType)
           CASE ( ConvCoefValue)
@@ -1905,49 +1905,49 @@ SUBROUTINE DetailsForSurfaces(RptType)
         endif
         if (RptType == 10) then
           write(unit,706) trim(RoundSigDigits(Surface(surf)%ViewFactorGround,2)),    &
-                          trim(RoundSigDigits(Surface(surf)%ViewFactorSky,2)),       &
-                          trim(RoundSigDigits(Surface(surf)%ViewFactorGroundIR,2)),  &
-                          trim(RoundSigDigits(Surface(surf)%ViewFactorSkyIR,2)),     &
-                          trim(TrimSigDigits(Surface(surf)%Sides))
+          trim(RoundSigDigits(Surface(surf)%ViewFactorSky,2)),       &
+          trim(RoundSigDigits(Surface(surf)%ViewFactorGroundIR,2)),  &
+          trim(RoundSigDigits(Surface(surf)%ViewFactorSkyIR,2)),     &
+          trim(TrimSigDigits(Surface(surf)%Sides))
         else
           write(unit,706,advance='No')  trim(RoundSigDigits(Surface(surf)%ViewFactorGround,2)),    &
-                          trim(RoundSigDigits(Surface(surf)%ViewFactorSky,2)),       &
-                          trim(RoundSigDigits(Surface(surf)%ViewFactorGroundIR,2)),  &
-                          trim(RoundSigDigits(Surface(surf)%ViewFactorSkyIR,2)),     &
-                          trim(TrimSigDigits(Surface(surf)%Sides))
+          trim(RoundSigDigits(Surface(surf)%ViewFactorSky,2)),       &
+          trim(RoundSigDigits(Surface(surf)%ViewFactorGroundIR,2)),  &
+          trim(RoundSigDigits(Surface(surf)%ViewFactorSkyIR,2)),     &
+          trim(TrimSigDigits(Surface(surf)%Sides))
           do vert=1,Surface(surf)%Sides
             if (vert /= Surface(Surf)%Sides) then
               write(unit,709,advance='No') trim(RoundSigDigits(Surface(surf)%vertex(vert)%x,2)),  &
-                                       trim(RoundSigDigits(Surface(surf)%vertex(vert)%y,2)),  &
-                                       trim(RoundSigDigits(Surface(surf)%vertex(vert)%z,2))
+              trim(RoundSigDigits(Surface(surf)%vertex(vert)%y,2)),  &
+              trim(RoundSigDigits(Surface(surf)%vertex(vert)%z,2))
             else
               write(unit,709)  trim(RoundSigDigits(Surface(surf)%vertex(vert)%x,2)),  &
-                           trim(RoundSigDigits(Surface(surf)%vertex(vert)%y,2)),  &
-                           trim(RoundSigDigits(Surface(surf)%vertex(vert)%z,2))
+              trim(RoundSigDigits(Surface(surf)%vertex(vert)%y,2)),  &
+              trim(RoundSigDigits(Surface(surf)%vertex(vert)%z,2))
             endif
           enddo
           IF (Surface(surf)%Sides == 0) write(unit,711)
         endif
-! if window, report frame/divider as appropriate
+        ! if window, report frame/divider as appropriate
         if (Surface(surf)%FrameDivider > 0) then
           fd=Surface(surf)%FrameDivider
           if (FrameDivider(fd)%FrameWidth > 0.0) then
             write(unit,704,advance='No') 'Frame/Divider',trim(FrameDivider(fd)%Name),'Frame',trim(Surface(surf)%Name)
             write(unit,7045) trim(RoundSigDigits(SurfaceWindow(surf)%FrameArea,2)),  &
-               trim(RoundSigDigits(SurfaceWindow(surf)%FrameArea/Surface(surf)%Multiplier,2)),'*','N/A','N/A',  &
-                             trim(RoundSigDigits(FrameDivider(fd)%FrameWidth,2)),'N/A'
+            trim(RoundSigDigits(SurfaceWindow(surf)%FrameArea/Surface(surf)%Multiplier,2)),'*','N/A','N/A',  &
+            trim(RoundSigDigits(FrameDivider(fd)%FrameWidth,2)),'N/A'
           endif
           if (FrameDivider(fd)%DividerWidth > 0.0) then
             if (FrameDivider(fd)%DividerType == DividedLite) then
               write(unit,704,advance='No') 'Frame/Divider',trim(FrameDivider(fd)%Name),  &
-                                          'Divider:DividedLite',trim(Surface(surf)%Name)
+              'Divider:DividedLite',trim(Surface(surf)%Name)
             else
               write(unit,704,advance='No') 'Frame/Divider',trim(FrameDivider(fd)%Name),  &
-                                          'Divider:Suspended',trim(Surface(surf)%Name)
+              'Divider:Suspended',trim(Surface(surf)%Name)
             endif
             write(unit,7045) trim(RoundSigDigits(SurfaceWindow(surf)%DividerArea,2)),  &
-               trim(RoundSigDigits(SurfaceWindow(surf)%DividerArea/Surface(surf)%Multiplier,2)),'*','N/A','N/A',  &
-                             trim(RoundSigDigits(FrameDivider(fd)%DividerWidth,2)),'N/A'
+            trim(RoundSigDigits(SurfaceWindow(surf)%DividerArea/Surface(surf)%Multiplier,2)),'*','N/A','N/A',  &
+            trim(RoundSigDigits(FrameDivider(fd)%DividerWidth,2)),'N/A'
           endif
         endif
       else  ! RptType=1  Vertices only
@@ -1957,17 +1957,17 @@ SUBROUTINE DetailsForSurfaces(RptType)
           BaseSurfName=Surface(surf)%BaseSurfName
         endif
         write(unit,704,advance='No') 'HeatTransfer',trim(Surface(surf)%Name),trim(cSurfaceClass(Surface(surf)%class)),  &
-                                                                                            trim(BaseSurfName)
+        trim(BaseSurfName)
         write(unit,7042,advance='No') trim(TrimSigDigits(Surface(surf)%Sides))
         do vert=1,Surface(surf)%Sides
           if (vert /= Surface(Surf)%Sides) then
             write(unit,709,advance='No') trim(RoundSigDigits(Surface(surf)%vertex(vert)%x,2)),  &
-                                       trim(RoundSigDigits(Surface(surf)%vertex(vert)%y,2)),  &
-                                       trim(RoundSigDigits(Surface(surf)%vertex(vert)%z,2))
+            trim(RoundSigDigits(Surface(surf)%vertex(vert)%y,2)),  &
+            trim(RoundSigDigits(Surface(surf)%vertex(vert)%z,2))
           else
             write(unit,709)  trim(RoundSigDigits(Surface(surf)%vertex(vert)%x,2)),  &
-                           trim(RoundSigDigits(Surface(surf)%vertex(vert)%y,2)),  &
-                           trim(RoundSigDigits(Surface(surf)%vertex(vert)%z,2))
+            trim(RoundSigDigits(Surface(surf)%vertex(vert)%y,2)),  &
+            trim(RoundSigDigits(Surface(surf)%vertex(vert)%z,2))
           endif
         enddo
         IF (Surface(surf)%Sides == 0) write(unit,711)
@@ -1978,10 +1978,10 @@ SUBROUTINE DetailsForSurfaces(RptType)
   700 format('! <Zone/Shading Surfaces>,<Zone Name>/#Shading Surfaces,# Surfaces')
   701 format('! <HeatTransfer/Shading/Frame/Divider_Surface>,Surface Name,Surface Class,Base Surface')
   7011 format(',Construction/Transmittance Schedule,Nominal U (w/o film coefs)/Min Schedule Value,',  &
-             'Nominal U (with film coefs)/Max Schedule Value,Solar Diffusing,', &
-             'Area (Net),Area (Gross),Area (Sunlit Calc),Azimuth,Tilt,~Width,~Height,Reveal,', &
-             '<ExtBoundCondition>,<ExtConvCoeffCalc>,<IntConvCoeffCalc>,<SunExposure>,<WindExposure>,', &
-             'ViewFactorToGround,ViewFactorToSky,ViewFactorToGround-IR,ViewFactorToSky-IR,#Sides')
+  'Nominal U (with film coefs)/Max Schedule Value,Solar Diffusing,', &
+  'Area (Net),Area (Gross),Area (Sunlit Calc),Azimuth,Tilt,~Width,~Height,Reveal,', &
+  '<ExtBoundCondition>,<ExtConvCoeffCalc>,<IntConvCoeffCalc>,<SunExposure>,<WindExposure>,', &
+  'ViewFactorToGround,ViewFactorToSky,ViewFactorToGround-IR,ViewFactorToSky-IR,#Sides')
   7012 format(',#Sides')
   702 format('! <Units>,,,,')
   7021 format(',{W/m2-K}/{},{W/m2-K}/{},{},{m2},{m2},{m2},{deg},{deg},{m},{m},{m},,,,,,,,,,')
@@ -2009,45 +2009,45 @@ END SUBROUTINE DetailsForSurfaces
 
 SUBROUTINE CostInfoOut
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Brent Griffith
-          !       DATE WRITTEN   April 2003
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Brent Griffith
+  !       DATE WRITTEN   April 2003
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine produces a file with information about surfaces.
-          ! for the purpose of producing first cost estimates to include in objective value functions
-          ! for design optimization
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine produces a file with information about surfaces.
+  ! for the purpose of producing first cost estimates to include in objective value functions
+  ! for design optimization
 
-          ! METHODOLOGY EMPLOYED:
-          ! Access data in DataSurfaces and report
+  ! METHODOLOGY EMPLOYED:
+  ! Access data in DataSurfaces and report
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataPrecisionGlobals
   USE DataHeatBalance
   USE DataSurfaces
-!  USE DataGlobals_HPSimIntegrated, ONLY: ShowFatalError
+  !  USE DataGlobals_HPSimIntegrated, ONLY: ShowFatalError
 
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-          ! na
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   integer unit              ! Unit number on which to write file
   integer surf              ! Loop variable for surfaces
   integer, external :: getnewunitnumber  ! External function for a new unit number
@@ -2065,14 +2065,14 @@ SUBROUTINE CostInfoOut
 
   do surf=1, TotSurfaces
     If (surface(surf)%ExtBoundCond > 0) then
-        If (surface(surf)%ExtBoundCond < surf) then !already cycled through
-          uniqueSurf(surf) = .false.
+      If (surface(surf)%ExtBoundCond < surf) then !already cycled through
+        uniqueSurf(surf) = .false.
 
-        endif
+      endif
 
     endif
     If ( surface(surf)%Construction == 0) then  !throw out others for now
-         uniqueSurf(surf) = .false.
+      uniqueSurf(surf) = .false.
     endif
   enddo
 
@@ -2080,7 +2080,7 @@ SUBROUTINE CostInfoOut
   ! .sci = surface cost info
   open(unit,file='eplusout.sci', Action='write', iostat=write_stat)
   if (write_stat /= 0) then
-   CALL ShowFatalError('CostInfoOut: Could not open file "eplusout.sci" for output (write).')
+    CALL ShowFatalError('CostInfoOut: Could not open file "eplusout.sci" for output (write).')
   endif
   write(unit, *)  totsurfaces , count(uniqueSurf)
   write(unit, *) 'data for surfaces useful for cost information'
@@ -2092,7 +2092,7 @@ SUBROUTINE CostInfoOut
     ! why the heck are constructions == 0 ?
     If ( surface(surf)%Construction /= 0) then
       write(unit, 801) surf, trim(surface(surf)%name), trim(Construct(surface(surf)%Construction)%name), &
-            trim(cSurfaceClass(surface(surf)%class)), surface(surf)%Area, surface(surf)%GrossArea
+      trim(cSurfaceClass(surface(surf)%class)), surface(surf)%Area, surface(surf)%GrossArea
     endif
 
   enddo
@@ -2108,23 +2108,23 @@ END SUBROUTINE CostInfoOut
 
 SUBROUTINE VRMLOut(PolygonAction,ColorScheme)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Linda K. Lawrie
-          !       DATE WRITTEN   August 2006
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Linda K. Lawrie
+  !       DATE WRITTEN   August 2006
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine produces a file of VRML output for the surfaces.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine produces a file of VRML output for the surfaces.
 
-          ! METHODOLOGY EMPLOYED:
-          ! Use the surface absolute coordinate information to produce
-          ! lines.
+  ! METHODOLOGY EMPLOYED:
+  ! Use the surface absolute coordinate information to produce
+  ! lines.
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataPrecisionGlobals
   USE DataHeatBalance, ONLY: BuildingName,Zone
   USE DataSurfaces
@@ -2135,35 +2135,35 @@ SUBROUTINE VRMLOut(PolygonAction,ColorScheme)
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   CHARACTER(len=*) :: PolygonAction
   CHARACTER(len=*) :: ColorScheme
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! SUBROUTINE PARAMETER DEFINITIONS:
   character(len=*), parameter, dimension(7) :: colorstring=  &
-        (/'WALL      ',  &
-          'WINDOW    ',  &
-          'FIXEDSHADE',  &
-          'SUBSHADE  ',  &
-          'ROOF      ',  &
-          'FLOOR     ',  &
-          'BLDGSHADE '/)
+  (/'WALL      ',  &
+  'WINDOW    ',  &
+  'FIXEDSHADE',  &
+  'SUBSHADE  ',  &
+  'ROOF      ',  &
+  'FLOOR     ',  &
+  'BLDGSHADE '/)
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   integer unit              ! Unit number on which to write file
   integer surf              ! Loop variable for surfaces
   integer vert              ! Loop counter
   integer,external :: getnewunitnumber  ! External function for a new unit number
   integer colorindex        ! color index by surface type
-!  REAL(r64) minx                 ! minimum x in surface data
-!  REAL(r64) miny                 ! minimum y in surface data
-!  REAL(r64) minz                 ! minimum z in surface data (for polygon output)
+  !  REAL(r64) minx                 ! minimum x in surface data
+  !  REAL(r64) miny                 ! minimum y in surface data
+  !  REAL(r64) minz                 ! minimum z in surface data (for polygon output)
   integer zones             ! loop counter for zone loop
   character(len=25) zonenum
   character(len=MaxNameLength) TempZoneName
@@ -2204,7 +2204,7 @@ SUBROUTINE VRMLOut(PolygonAction,ColorScheme)
   unit=getnewunitnumber()
   open(unit,file='eplusout.wrl', Action='write', iostat=write_stat)
   if (write_stat /= 0) then
-   CALL ShowFatalError('VRMLOut: Could not open file "eplusout.wrl" for output (write).')
+    CALL ShowFatalError('VRMLOut: Could not open file "eplusout.wrl" for output (write).')
   endif
 
 
@@ -2217,9 +2217,9 @@ SUBROUTINE VRMLOut(PolygonAction,ColorScheme)
     write(unit,707) TRIM(BuildingName),TRIM(VerString),TRIM(ColorScheme)   ! World Info
   endif
   707 format('WorldInfo {',/,3X,'title "Building - ',A,'"',/,      &
-              3X,'info ["EnergyPlus Program Version ',A,'"]',/,    &
-              3X,'info ["Surface Color Scheme ',A,'"]',/,    &
-             '}')
+  3X,'info ["EnergyPlus Program Version ',A,'"]',/,    &
+  3X,'info ["Surface Color Scheme ',A,'"]',/,    &
+  '}')
 
   write(unit,710) '# Zone Names'
   do zones=1,NumOfZones
@@ -2241,7 +2241,7 @@ SUBROUTINE VRMLOut(PolygonAction,ColorScheme)
 
   ! Define the colors:
   800 Format ('Shape {',/,'appearance DEF ',A,' Appearance {',/,   &
-       'material Material { diffuseColor ',A,' }',/,'}',/,'}')
+  'material Material { diffuseColor ',A,' }',/,'}',/,'}')
 
   write(unit,800) 'FLOOR','0.502 0.502 0.502'
   write(unit,800) 'ROOF','1 1 0'
@@ -2255,10 +2255,10 @@ SUBROUTINE VRMLOut(PolygonAction,ColorScheme)
   write(unit,800) 'BACKCOLOR','0.502 0.502 0.784'
 
   801 Format('Shape {',/,'appearance USE ',A,/,       &
-    'geometry IndexedFaceSet {',/,                    &
-    'solid TRUE',/,                                   &
-    'coord DEF ',A,' Coordinate {',/,                 &
-    'point [')
+  'geometry IndexedFaceSet {',/,                    &
+  'solid TRUE',/,                                   &
+  'coord DEF ',A,' Coordinate {',/,                 &
+  'point [')
 
   802 Format(F15.5,1X,F15.5,1X,F15.5,',')
 
@@ -2287,7 +2287,7 @@ SUBROUTINE VRMLOut(PolygonAction,ColorScheme)
     csurfnumber=adjustl(csurfnumber)
     write(unit,801) trim(colorstring(colorindex)),'Surf'//TRIM(csurfnumber)
     write(unit,802) (surface(surf)%vertex(vert)%x,surface(surf)%vertex(vert)%y, &
-                    surface(surf)%vertex(vert)%z,vert=1,surface(surf)%sides)
+    surface(surf)%vertex(vert)%z,vert=1,surface(surf)%sides)
     write(unit,803)
     if (surface(surf)%sides <= 4 .or. .not. TriangulateFace) then
       do vert=1,surface(surf)%sides
@@ -2299,7 +2299,7 @@ SUBROUTINE VRMLOut(PolygonAction,ColorScheme)
       write(unit,805)
     else  ! will be >4 sided polygon with triangulate option
       ntri=triangulate(surface(surf)%sides,surface(surf)%vertex,mytriangles,surface(surf)%azimuth,  &
-                  surface(surf)%tilt,surface(surf)%name,surface(surf)%class)
+      surface(surf)%tilt,surface(surf)%name,surface(surf)%class)
       do svert=1,ntri
         vv0=mytriangles(svert)%vv0
         write(csidenumber,*) vv0-1
@@ -2319,8 +2319,8 @@ SUBROUTINE VRMLOut(PolygonAction,ColorScheme)
       deallocate(mytriangles)
     endif
   enddo
-!
-!  ! now do zone surfaces, by zone
+  !
+  !  ! now do zone surfaces, by zone
   do zones=1,NumOfZones
     TempZoneName=Zone(Zones)%Name
     pos=INDEX(TempZoneName(1:LEN_TRIM(TempZoneName)),' ')
@@ -2342,13 +2342,13 @@ SUBROUTINE VRMLOut(PolygonAction,ColorScheme)
       if (surface(surf)%class .eq. SurfaceClass_Floor) colorindex=6
       if (surface(surf)%class .eq. SurfaceClass_Window) colorindex=2
       if (surface(surf)%class .eq. SurfaceClass_Door) colorindex=2
-!
+      !
       write(csurfnumber,*) surf
       csurfnumber=adjustl(csurfnumber)
       write(unit,710) '# '//trim(surface(surf)%ZoneName)//':'//trim(surface(surf)%Name)
       write(unit,801) trim(colorstring(colorindex)),'Surf'//TRIM(csurfnumber)
       write(unit,802) (surface(surf)%vertex(vert)%x,surface(surf)%vertex(vert)%y, &
-                      surface(surf)%vertex(vert)%z,vert=1,surface(surf)%sides)
+      surface(surf)%vertex(vert)%z,vert=1,surface(surf)%sides)
       write(unit,803)
       if (surface(surf)%sides <= 4 .or. .not. TriangulateFace) then
         do vert=1,surface(surf)%sides
@@ -2360,7 +2360,7 @@ SUBROUTINE VRMLOut(PolygonAction,ColorScheme)
         write(unit,805)
       else  ! will be >4 sided polygon with triangulate option
         ntri=triangulate(surface(surf)%sides,surface(surf)%vertex,mytriangles,surface(surf)%azimuth,  &
-                    surface(surf)%tilt,surface(surf)%name,surface(surf)%class)
+        surface(surf)%tilt,surface(surf)%name,surface(surf)%class)
         do svert=1,ntri
           vv0=mytriangles(svert)%vv0
           write(csidenumber,*) vv0-1
@@ -2383,14 +2383,14 @@ SUBROUTINE VRMLOut(PolygonAction,ColorScheme)
     ! still have to do shading surfaces for zone
     colorindex=4
     do surf=1,totsurfaces
-!      !if (surface(surf)%heattranssurf) CYCLE ! Shading with a construction is allowed to be HT surf for daylighting shelves
+      !      !if (surface(surf)%heattranssurf) CYCLE ! Shading with a construction is allowed to be HT surf for daylighting shelves
       if (surface(surf)%class .ne. SurfaceClass_Shading) CYCLE
       if (surface(surf)%zonename /= zone(zones)%Name) CYCLE
       if (surface(surf)%sides == 0) CYCLE
       write(unit,710) '# '//trim(surface(surf)%ZoneName)//':'//trim(surface(surf)%Name)
       write(unit,801) trim(colorstring(colorindex)),'Surf'//TRIM(csurfnumber)
       write(unit,802) (surface(surf)%vertex(vert)%x,surface(surf)%vertex(vert)%y, &
-                      surface(surf)%vertex(vert)%z,vert=1,surface(surf)%sides)
+      surface(surf)%vertex(vert)%z,vert=1,surface(surf)%sides)
       write(unit,803)
       if (surface(surf)%sides <= 4 .or. .not. TriangulateFace) then
         do vert=1,surface(surf)%sides
@@ -2402,7 +2402,7 @@ SUBROUTINE VRMLOut(PolygonAction,ColorScheme)
         write(unit,805)
       else  ! will be >4 sided polygon with triangulate option
         ntri=triangulate(surface(surf)%sides,surface(surf)%vertex,mytriangles,surface(surf)%azimuth,  &
-                    surface(surf)%tilt,surface(surf)%name,surface(surf)%class)
+        surface(surf)%tilt,surface(surf)%name,surface(surf)%class)
         do svert=1,ntri
           vv0=mytriangles(svert)%vv0
           write(csidenumber,*) vv0-1
@@ -2424,7 +2424,7 @@ SUBROUTINE VRMLOut(PolygonAction,ColorScheme)
     enddo
   enddo
 
-! vrml does not have daylighting reference points included
+  ! vrml does not have daylighting reference points included
 
   710 format(A)
 
@@ -2437,7 +2437,7 @@ END SUBROUTINE VRMLOut
 
 !     NOTICE
 !
-!     Copyright © 1996-2012 The Board of Trustees of the University of Illinois
+!     Copyright ï¿½ 1996-2012 The Board of Trustees of the University of Illinois
 !     and The Regents of the University of California through Ernest Orlando Lawrence
 !     Berkeley National Laboratory.  All rights reserved.
 !
@@ -2458,4 +2458,3 @@ END SUBROUTINE VRMLOut
 !
 !     TRADEMARKS: EnergyPlus is a trademark of the US Department of Energy.
 !
-

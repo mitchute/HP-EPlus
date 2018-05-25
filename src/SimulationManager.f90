@@ -12,191 +12,191 @@
 
 MODULE SimulationManager        ! EnergyPlus Simulation Module
 
-          ! MODULE INFORMATION:
-          !       AUTHOR         Rick Strand
-          !       DATE WRITTEN   January 1997
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! MODULE INFORMATION:
+  !       AUTHOR         Rick Strand
+  !       DATE WRITTEN   January 1997
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS MODULE:
-          ! This module contains the main driver routine which manages the major
-          ! control loops of the EnergyPlus simulation.  This module is also
-          ! responsible for setting the global environment flags for these
-          ! loops.
+  ! PURPOSE OF THIS MODULE:
+  ! This module contains the main driver routine which manages the major
+  ! control loops of the EnergyPlus simulation.  This module is also
+  ! responsible for setting the global environment flags for these
+  ! loops.
 
-          ! METHODOLOGY EMPLOYED:
-          ! This module was constructed from the remnants of (I)BLAST routines
-          ! SIMBLD (Simulate Building), SIMZG (Simulate Zone Group), and SIMZGD
-          ! (Simulate Zone Group for a Day).
+  ! METHODOLOGY EMPLOYED:
+  ! This module was constructed from the remnants of (I)BLAST routines
+  ! SIMBLD (Simulate Building), SIMZG (Simulate Zone Group), and SIMZGD
+  ! (Simulate Zone Group for a Day).
 
-          ! REFERENCES:
-          ! (I)BLAST legacy code, internal Reverse Engineering documentation,
-          ! and internal Evolutionary Engineering documentation.
+  ! REFERENCES:
+  ! (I)BLAST legacy code, internal Reverse Engineering documentation,
+  ! and internal Evolutionary Engineering documentation.
 
-          ! USE STATEMENTS:
-USE DataPrecisionGlobals
-USE DataGlobals_HPSimIntegrated
-USE DataSizing
-USE DataReportingFlags
-USE DataInterfaces
-USE HeatBalanceManager
-USE WeatherManager
-USE ExternalInterface
+  ! USE STATEMENTS:
+  USE DataPrecisionGlobals
+  USE DataGlobals_HPSimIntegrated
+  USE DataSizing
+  USE DataReportingFlags
+  USE DataInterfaces
+  USE HeatBalanceManager
+  USE WeatherManager
+  USE ExternalInterface
 
-IMPLICIT NONE    ! Enforce explicit typing of all variables
+  IMPLICIT NONE    ! Enforce explicit typing of all variables
 
-PRIVATE
+  PRIVATE
 
-          ! MODULE PARAMETER DEFINITIONS:
-          ! na
+  ! MODULE PARAMETER DEFINITIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS:
+  ! na
 
-          ! MODULE VARIABLE DECLARATIONS:
-LOGICAL :: RunPeriodsInInput=.false.
-LOGICAL :: RunControlInInput=.false.
+  ! MODULE VARIABLE DECLARATIONS:
+  LOGICAL :: RunPeriodsInInput=.false.
+  LOGICAL :: RunControlInInput=.false.
 
-          ! SUBROUTINE SPECIFICATIONS FOR MODULE SimulationManager
+  ! SUBROUTINE SPECIFICATIONS FOR MODULE SimulationManager
 
-PUBLIC  ManageSimulation
-PRIVATE GetProjectData
-PRIVATE OpenOutputFiles
-PRIVATE CloseOutputFiles
-PRIVATE SetupSimulation
-PRIVATE CheckForMisMatchedEnvironmentSpecifications
-PRIVATE CheckForRequestedReporting
-PUBLIC  ReportLoopConnections
+  PUBLIC  ManageSimulation
+  PRIVATE GetProjectData
+  PRIVATE OpenOutputFiles
+  PRIVATE CloseOutputFiles
+  PRIVATE SetupSimulation
+  PRIVATE CheckForMisMatchedEnvironmentSpecifications
+  PRIVATE CheckForRequestedReporting
+  PUBLIC  ReportLoopConnections
 
 CONTAINS
 
-          ! MODULE SUBROUTINES:
+  ! MODULE SUBROUTINES:
 
-SUBROUTINE ManageSimulation     ! Main driver routine for this module
+  SUBROUTINE ManageSimulation     ! Main driver routine for this module
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Rick Strand
-          !       DATE WRITTEN   January 1997
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+    ! SUBROUTINE INFORMATION:
+    !       AUTHOR         Rick Strand
+    !       DATE WRITTEN   January 1997
+    !       MODIFIED       na
+    !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine is the main driver of the simulation manager module.
-          ! It contains the main environment-time loops for the building
-          ! simulation.  This includes the environment loop, a day loop, an
-          ! hour loop, and a time step loop.
+    ! PURPOSE OF THIS SUBROUTINE:
+    ! This subroutine is the main driver of the simulation manager module.
+    ! It contains the main environment-time loops for the building
+    ! simulation.  This includes the environment loop, a day loop, an
+    ! hour loop, and a time step loop.
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+    ! METHODOLOGY EMPLOYED:
+    ! na
 
-          ! REFERENCES:
-          ! na
+    ! REFERENCES:
+    ! na
 
-          ! USE STATEMENTS:
-  USE DataHVACGlobals,     ONLY: TimeStepSys
-  USE DataEnvironment,     ONLY: EnvironmentName,CurMnDy,CurrentOverallSimDay,TotalOverallSimDays,TotDesDays,  &
-                                 TotRunDesPersDays,EndMonthFlag
-  USE InputProcessor,      ONLY: GetNumRangeCheckErrorsFound,GetNumObjectsFound
-  USE SizingManager,       ONLY: ManageSizing
-  USE ExteriorEnergyUse,   ONLY: ManageExteriorEnergyUse
-  USE OutputReportTabular, ONLY: WriteTabularReports,OpenOutputTabularFile,CloseOutputTabularFile
-  USE DataErrorTracking,   ONLY: AskForConnectionsReport,ExitDuringSimulations
-  USE OutputProcessor,     ONLY: SetupTimePointers
-  USE CostEstimateManager, ONLY: SimCostEstimate
-  USE EconomicTariff,      ONLY: ComputeTariff,WriteTabularTariffReports  !added for computing annual utility costs
-  USE General,             ONLY: TrimSigDigits
-  USE OutputReportPredefined, ONLY: SetPredefinedTables
-  USE HVACControllers,     ONLY: DumpAirLoopStatistics
-  USE NodeInputManager,    ONLY: SetupNodeVarsForReporting, CheckMarkedNodes
-  USE BranchNodeConnections, ONLY: CheckNodeConnections,TestCompSetInletOutletNodes
-  Use PollutionModule,     ONLY: SetupPollutionMeterReporting, SetupPollutionCalculations, CheckPollutionMeterReporting
-  USE SystemReports,       ONLY: ReportAirLoopConnections, CreateEnergyReportStructure
-  USE BranchInputManager,  ONLY: ManageBranchInput,TestBranchIntegrity
-  USE ManageElectricPower, ONLY: VerifyCustomMetersElecPowerMgr
-  USE MixedAir,            ONLY: CheckControllerLists
-  USE EMSManager ,         ONLY: CheckIFAnyEMS, ManageEMS
-  USE EconomicLifeCycleCost, ONLY: GetInputForLifeCycleCost, ComputeLifeCycleCostAndReport
-  USE SQLiteProcedures,    ONLY: WriteOutputToSQLite, CreateSQLiteSimulationsRecord, &
-                                 CreateSQLiteEnvironmentPeriodRecord,CreateZoneExtendedOutput
-  USE DemandManager,       ONLY: InitDemandManagers
-  USE PlantManager,        ONLY: CheckIfAnyPlant
-  USE CurveManager,        ONLY: InitCurveReporting
-  USE DataTimings
-  USE DataSystemVariables, ONLY: DeveloperFlag, TimingFlag
-  USE SetPointManager,     ONLY: CheckIFAnyIdealCondEntSetPoint
+    ! USE STATEMENTS:
+    USE DataHVACGlobals,     ONLY: TimeStepSys
+    USE DataEnvironment,     ONLY: EnvironmentName,CurMnDy,CurrentOverallSimDay,TotalOverallSimDays,TotDesDays,  &
+    TotRunDesPersDays,EndMonthFlag
+    USE InputProcessor,      ONLY: GetNumRangeCheckErrorsFound,GetNumObjectsFound
+    USE SizingManager,       ONLY: ManageSizing
+    USE ExteriorEnergyUse,   ONLY: ManageExteriorEnergyUse
+    USE OutputReportTabular, ONLY: WriteTabularReports,OpenOutputTabularFile,CloseOutputTabularFile
+    USE DataErrorTracking,   ONLY: AskForConnectionsReport,ExitDuringSimulations
+    USE OutputProcessor,     ONLY: SetupTimePointers
+    USE CostEstimateManager, ONLY: SimCostEstimate
+    USE EconomicTariff,      ONLY: ComputeTariff,WriteTabularTariffReports  !added for computing annual utility costs
+    USE General,             ONLY: TrimSigDigits
+    USE OutputReportPredefined, ONLY: SetPredefinedTables
+    USE HVACControllers,     ONLY: DumpAirLoopStatistics
+    USE NodeInputManager,    ONLY: SetupNodeVarsForReporting, CheckMarkedNodes
+    USE BranchNodeConnections, ONLY: CheckNodeConnections,TestCompSetInletOutletNodes
+    Use PollutionModule,     ONLY: SetupPollutionMeterReporting, SetupPollutionCalculations, CheckPollutionMeterReporting
+    USE SystemReports,       ONLY: ReportAirLoopConnections, CreateEnergyReportStructure
+    USE BranchInputManager,  ONLY: ManageBranchInput,TestBranchIntegrity
+    USE ManageElectricPower, ONLY: VerifyCustomMetersElecPowerMgr
+    USE MixedAir,            ONLY: CheckControllerLists
+    USE EMSManager ,         ONLY: CheckIFAnyEMS, ManageEMS
+    USE EconomicLifeCycleCost, ONLY: GetInputForLifeCycleCost, ComputeLifeCycleCostAndReport
+    USE SQLiteProcedures,    ONLY: WriteOutputToSQLite, CreateSQLiteSimulationsRecord, &
+    CreateSQLiteEnvironmentPeriodRecord,CreateZoneExtendedOutput
+    USE DemandManager,       ONLY: InitDemandManagers
+    USE PlantManager,        ONLY: CheckIfAnyPlant
+    USE CurveManager,        ONLY: InitCurveReporting
+    USE DataTimings
+    USE DataSystemVariables, ONLY: DeveloperFlag, TimingFlag
+    USE SetPointManager,     ONLY: CheckIFAnyIdealCondEntSetPoint
 
-  IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
+    IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+    ! SUBROUTINE PARAMETER DEFINITIONS:
+    ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+    ! INTERFACE BLOCK SPECIFICATIONS:
+    ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+    ! DERIVED TYPE DEFINITIONS:
+    ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-  LOGICAL, SAVE :: Available ! an environment is available to process
-  LOGICAL, SAVE :: ErrorsFound=.false.
-  LOGICAL, SAVE :: TerminalError = .FALSE.
-  LOGICAL       :: SimsDone
-  LOGICAL       :: ErrFound
-!  real(r64) :: t0,t1,st0,st1
+    ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+    LOGICAL, SAVE :: Available ! an environment is available to process
+    LOGICAL, SAVE :: ErrorsFound=.false.
+    LOGICAL, SAVE :: TerminalError = .FALSE.
+    LOGICAL       :: SimsDone
+    LOGICAL       :: ErrFound
+    !  real(r64) :: t0,t1,st0,st1
 
-!  CHARACTER(len=70) :: tdstring
-!  CHARACTER(len=138) :: tdstringlong
+    !  CHARACTER(len=70) :: tdstring
+    !  CHARACTER(len=138) :: tdstringlong
 
-  INTEGER :: EnvCount
-  
-  !INTEGER :: LogFile       =153 !RS: Debugging file denotion, hopefully this works.
-    
-  !OPEN(unit=LogFile,file='logfile.txt')    !RS: Debugging
+    INTEGER :: EnvCount
 
-          ! FLOW:
-  CALL PostIPProcessing
+    !INTEGER :: LogFile       =153 !RS: Debugging file denotion, hopefully this works.
 
-  BeginSimFlag = .TRUE.
-  BeginFullSimFlag = .FALSE.
-  DoOutputReporting = .FALSE.
-  DisplayPerfSimulationFlag=.false.
-  DoWeatherInitReporting=.false.
-  RunPeriodsInInput=(GetNumObjectsFound('RunPeriod')>0 .or. GetNumObjectsFound('RunPeriod:CustomRange')>0)
-  AskForConnectionsReport=.false.    ! set to false until sizing is finished
+    !OPEN(unit=LogFile,file='logfile.txt')    !RS: Debugging
 
-  CALL OpenOutputFiles
-  CALL CheckThreading
-  CALL GetProjectData
-  CALL CheckForMisMatchedEnvironmentSpecifications
-  CALL CheckForRequestedReporting
-  CALL SetPredefinedTables
+    ! FLOW:
+    CALL PostIPProcessing
 
-  CALL SetupTimePointers('Zone',TimeStepZone)  ! Set up Time pointer for HB/Zone Simulation
-  Call SetupTimePointers('HVAC',TimeStepSys)
+    BeginSimFlag = .TRUE.
+    BeginFullSimFlag = .FALSE.
+    DoOutputReporting = .FALSE.
+    DisplayPerfSimulationFlag=.false.
+    DoWeatherInitReporting=.false.
+    RunPeriodsInInput=(GetNumObjectsFound('RunPeriod')>0 .or. GetNumObjectsFound('RunPeriod:CustomRange')>0)
+    AskForConnectionsReport=.false.    ! set to false until sizing is finished
 
-  CALL CheckIFAnyEMS
-  CALL CheckIFAnyPlant
+    CALL OpenOutputFiles
+    CALL CheckThreading
+    CALL GetProjectData
+    CALL CheckForMisMatchedEnvironmentSpecifications
+    CALL CheckForRequestedReporting
+    CALL SetPredefinedTables
 
-  CALL CheckIFAnyIdealCondEntSetPoint
+    CALL SetupTimePointers('Zone',TimeStepZone)  ! Set up Time pointer for HB/Zone Simulation
+    Call SetupTimePointers('HVAC',TimeStepSys)
 
-  CALL ManageBranchInput  ! just gets input and returns.
-  DoingSizing = .TRUE.
-  CALL ManageSizing
+    CALL CheckIFAnyEMS
+    CALL CheckIFAnyPlant
 
-  BeginFullSimFlag = .TRUE.
-  SimsDone=.false.
-  IF (DoDesDaySim .OR. DoWeathSim) THEN
-    DoOutputReporting = .TRUE.
-  END IF
-  DoingSizing = .FALSE.
+    CALL CheckIFAnyIdealCondEntSetPoint
 
-  IF ((DoZoneSizing .or. DoSystemSizing .or. DoPlantSizing) .and.   &
-      .not. (DoDesDaySim .or. (DoWeathSim .and. RunPeriodsInInput) ) ) THEN
+    CALL ManageBranchInput  ! just gets input and returns.
+    DoingSizing = .TRUE.
+    CALL ManageSizing
+
+    BeginFullSimFlag = .TRUE.
+    SimsDone=.false.
+    IF (DoDesDaySim .OR. DoWeathSim) THEN
+      DoOutputReporting = .TRUE.
+    END IF
+    DoingSizing = .FALSE.
+
+    IF ((DoZoneSizing .or. DoSystemSizing .or. DoPlantSizing) .and.   &
+    .not. (DoDesDaySim .or. (DoWeathSim .and. RunPeriodsInInput) ) ) THEN
     CALL ShowWarningError('Input file has requested Sizing Calculations but no Simulations are requested '//  &
-       '(in SimulationControl object). Succeeding warnings/errors may be confusing.')
+    '(in SimulationControl object). Succeeding warnings/errors may be confusing.')
   ENDIF
   Available=.true.
 
@@ -212,7 +212,7 @@ SUBROUTINE ManageSimulation     ! Main driver routine for this module
   WarmupFlag=.false.
   DoWeatherInitReporting=.true.
 
-!  Note:  All the inputs have been 'gotten' by the time we get here.
+  !  Note:  All the inputs have been 'gotten' by the time we get here.
   ErrFound=.false.
   IF (DoOutputReporting) THEN
     CALL DisplayString('Reporting Surfaces')
@@ -246,8 +246,8 @@ SUBROUTINE ManageSimulation     ! Main driver routine for this module
       CALL ReportAirLoopConnections
       CALL ReportNodeConnections
       ! Debug reports
-!      CALL ReportCompSetMeterVariables
-!      CALL ReportParentChildren
+      !      CALL ReportCompSetMeterVariables
+      !      CALL ReportParentChildren
     END IF
 
     CALL CreateEnergyReportStructure
@@ -318,7 +318,7 @@ SUBROUTINE ManageSimulation     ! Main driver routine for this module
         CALL DisplayString('Starting Simulation at '//TRIM(CurMnDy)//' for '//TRIM(EnvironmentName))
         !WRITE(LogFile,*) 'Starting Simulation at '//TRIM(CurMnDy)//' for '//TRIM(EnvironmentName)    !RS: Debugging: Wanting to keep track of what day we're on
         WRITE(OutputFileInits,700)   NumOfWarmupDays
- 700    FORMAT('Environment:WarmupDays,',I3)
+        700    FORMAT('Environment:WarmupDays,',I3)
       ELSEIF (DisplayPerfSimulationFlag) THEN
         CALL DisplayString('Continuing Simulation at '//TRIM(CurMnDy)//' for '//TRIM(EnvironmentName))
         DisplayPerfSimulationFlag=.false.
@@ -388,20 +388,20 @@ SUBROUTINE ManageSimulation     ! Main driver routine for this module
   IF (.not. SimsDone .and. DoDesDaySim) THEN
     IF ((TotDesDays+TotRunDesPersDays) == 0) THEN   ! if sum is 0, then there was no sizing done.
       CALL ShowWarningError('ManageSimulation: SizingPeriod:* were requested in SimulationControl  '//  &
-         'but no SizingPeriod:* objects in input.')
+      'but no SizingPeriod:* objects in input.')
     ENDIF
   ENDIF
 
   IF (.not. SimsDone .and. DoWeathSim) THEN
     IF (.not. RunPeriodsInInput) THEN   ! if no run period requested, and sims not done
       CALL ShowWarningError('ManageSimulation: Weather Simulation was requested in SimulationControl '//  &
-         'but no RunPeriods in input.')
+      'but no RunPeriods in input.')
     ENDIF
   ENDIF
 
-#ifdef EP_Detailed_Timings
-                             CALL epStartTime('Closeout Reporting=')
-#endif
+  #ifdef EP_Detailed_Timings
+  CALL epStartTime('Closeout Reporting=')
+  #endif
   CALL SimCostEstimate
 
   CALL ComputeTariff          !     Compute the utility bills
@@ -420,9 +420,9 @@ SUBROUTINE ManageSimulation     ! Main driver routine for this module
 
   CALL DumpAirLoopStatistics        ! Dump runtime statistics for air loop controller simulation to csv file
 
-#ifdef EP_Detailed_Timings
-                             CALL epStopTime('Closeout Reporting=')
-#endif
+  #ifdef EP_Detailed_Timings
+  CALL epStopTime('Closeout Reporting=')
+  #endif
   CALL CloseOutputFiles
 
   CALL CreateZoneExtendedOutput !RS: This subroutine is completely empty!
@@ -437,50 +437,50 @@ END SUBROUTINE ManageSimulation
 
 SUBROUTINE GetProjectData
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Linda K. Lawrie
-          !       DATE WRITTEN   November 1997
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Linda K. Lawrie
+  !       DATE WRITTEN   November 1997
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine gets global project data from the input file.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine gets global project data from the input file.
 
-          ! METHODOLOGY EMPLOYED:
-          ! Use GetObjectItem from the Input Processor
+  ! METHODOLOGY EMPLOYED:
+  ! Use GetObjectItem from the Input Processor
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE InputProcessor
   USE DataStringGlobals, ONLY: MatchVersion
   USE DataConvergParams
   USE DataSystemVariables
   USE DataHVACGlobals, ONLY: LimitNumSysSteps,deviationFromSetPtThresholdHtg,  &
-                             deviationFromSetPtThresholdClg
+  deviationFromSetPtThresholdClg
   USE General, ONLY: RoundSigDigits
   USE DataEnvironment, ONLY: DisplayWeatherMissingDataWarnings,IgnoreSolarRadiation,IgnoreBeamRadiation,  &
-     IgnoreDiffuseRadiation
+  IgnoreDiffuseRadiation
   USE DataIPShortCuts
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-          ! na
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! SUBROUTINE PARAMETER DEFINITIONS:
   INTEGER, PARAMETER, DIMENSION(12) :: Div60=(/1,2,3,4,5,6,10,12,15,20,30,60/)
   CHARACTER(len=*), PARAMETER :: Blank=' '
   CHARACTER(len=*), PARAMETER :: fmtA='(A)'
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   CHARACTER(len=MaxNameLength), DIMENSION(5) :: Alphas
   REAL(r64), DIMENSION(4) :: Number
   INTEGER NumAlpha, NumNumber, IOStat
@@ -495,9 +495,9 @@ SUBROUTINE GetProjectData
   CHARACTER(len=20) :: VersionID=' '
   CHARACTER(len=MaxNameLength) :: CurrentModuleObject
   LOGICAL :: CondFDAlgo
-  
+
   INTEGER :: DebugFile       =150 !RS: Debugging file denotion, hopefully this works.
-    
+
   OPEN(unit=DebugFile,file='Debug.txt')    !RS: Debugging
 
   ErrorsFound=.false.
@@ -506,8 +506,8 @@ SUBROUTINE GetProjectData
   Num=GetNumObjectsFound(TRIM(CurrentModuleObject))
   IF (Num == 1) THEN
     CALL GetObjectItem(CurrentModuleObject,1,Alphas,NumAlpha,Number,NumNumber,IOStat,  &
-                   AlphaBlank=lAlphaFieldBlanks,NumBlank=lNumericFieldBlanks,  &
-                   AlphaFieldnames=cAlphaFieldNames,NumericFieldNames=cNumericFieldNames)
+    AlphaBlank=lAlphaFieldBlanks,NumBlank=lNumericFieldBlanks,  &
+    AlphaFieldnames=cAlphaFieldNames,NumericFieldNames=cNumericFieldNames)
     Num1=LEN_TRIM(MatchVersion)
     IF (MatchVersion(Num1:Num1) == '0') THEN
       Which=INDEX(Alphas(1)(1:Num1-2),MatchVersion(1:Num1-2))
@@ -518,39 +518,39 @@ SUBROUTINE GetProjectData
       !CALL ShowWarningError(TRIM(CurrentModuleObject)//': in IDF="'//TRIM(Alphas(1))//  &
       !   '" not the same as expected="'//TRIM(MatchVersion)//'"')  !RS: Secret Search String
       WRITE(DebugFile,*) TRIM(CurrentModuleObject)//': in IDF="'//TRIM(Alphas(1))// &
-        '" not the same as expected="'//TRIM(MatchVersion)//'"'
+      '" not the same as expected="'//TRIM(MatchVersion)//'"'
     ENDIF
     VersionID=Alphas(1)
   ELSEIF (Num == 0) THEN
     CALL ShowWarningError(TRIM(CurrentModuleObject)//': missing in IDF, processing for EnergyPlus version="'//  &
-       TRIM(MatchVersion)//'"')
+    TRIM(MatchVersion)//'"')
   ELSE
     CALL ShowSevereError('Too many '//TRIM(CurrentModuleObject)//' Objects found.')
     ErrorsFound=.true.
   ENDIF
 
   ! Do Mini Get on HB Algorithm
-   CurrentModuleObject='HeatBalanceAlgorithm'
-   Num=GetNumObjectsFound(TRIM(CurrentModuleObject))
-   CondFDAlgo=.false.
-   IF (Num > 0) THEN
-     CALL GetObjectItem(TRIM(CurrentModuleObject),1,Alphas,NumAlpha,Number,NumNumber,IOStat,  &
-                   AlphaBlank=lAlphaFieldBlanks,NumBlank=lNumericFieldBlanks,  &
-                   AlphaFieldnames=cAlphaFieldNames,NumericFieldNames=cNumericFieldNames)
-     SELECT CASE (Alphas(1))
-       CASE ('CONDUCTIONFINITEDIFFERENCE','CONDFD','CONDUCTIONFINITEDIFFERENCEDETAILED','CONDUCTIONFINITEDIFFERENCESIMPLIFIED')
-         CondFDAlgo=.true.
+  CurrentModuleObject='HeatBalanceAlgorithm'
+  Num=GetNumObjectsFound(TRIM(CurrentModuleObject))
+  CondFDAlgo=.false.
+  IF (Num > 0) THEN
+    CALL GetObjectItem(TRIM(CurrentModuleObject),1,Alphas,NumAlpha,Number,NumNumber,IOStat,  &
+    AlphaBlank=lAlphaFieldBlanks,NumBlank=lNumericFieldBlanks,  &
+    AlphaFieldnames=cAlphaFieldNames,NumericFieldNames=cNumericFieldNames)
+    SELECT CASE (Alphas(1))
+    CASE ('CONDUCTIONFINITEDIFFERENCE','CONDFD','CONDUCTIONFINITEDIFFERENCEDETAILED','CONDUCTIONFINITEDIFFERENCESIMPLIFIED')
+      CondFDAlgo=.true.
 
-       CASE DEFAULT
-     END SELECT
-   ENDIF
+    CASE DEFAULT
+    END SELECT
+  ENDIF
 
   CurrentModuleObject='Timestep'
   Num=GetNumObjectsFound(TRIM(CurrentModuleObject))
   IF (Num == 1) THEN
     CALL GetObjectItem(TRIM(CurrentModuleObject),1,Alphas,NumAlpha,Number,NumNumber,IOStat,  &
-                   AlphaBlank=lAlphaFieldBlanks,NumBlank=lNumericFieldBlanks,  &
-                   AlphaFieldnames=cAlphaFieldNames,NumericFieldNames=cNumericFieldNames)
+    AlphaBlank=lAlphaFieldBlanks,NumBlank=lNumericFieldBlanks,  &
+    AlphaFieldnames=cAlphaFieldNames,NumericFieldNames=cNumericFieldNames)
     NumOfTimeStepInHour=Number(1)
     IF (NumOfTimeStepInHour <= 0 .or. NumOfTimeStepInHour > 60) THEN
       Alphas(1)=RoundSigDigits(NumOfTimeStepInHour)
@@ -564,12 +564,12 @@ SUBROUTINE GetProjectData
         Which=Num
       ENDDO
       CALL ShowWarningError(TRIM(CurrentModuleObject)//': Requested number ('//TRIM(RoundSigDigits(NumOfTimeStepInHour))//  &
-         ') not evenly divisible into 60, '//'defaulted to nearest ('//TRIM(RoundSigDigits(Div60(Which)))//').')
+      ') not evenly divisible into 60, '//'defaulted to nearest ('//TRIM(RoundSigDigits(Div60(Which)))//').')
       NumOfTimeStepInHour=Div60(Which)
     ENDIF
     IF (CondFDAlgo .and. NumOfTimeStepInHour < 20) THEN
       CALL ShowWarningError(TRIM(CurrentModuleObject)//': Requested number ('//TRIM(RoundSigDigits(NumOfTimeStepInHour))//  &
-         ') cannot be used when Conduction Finite Difference algorithm is selected.')
+      ') cannot be used when Conduction Finite Difference algorithm is selected.')
       CALL ShowContinueError('...'//trim(CurrentModuleObject)//' is set to 20.')
       NumOfTimeStepInHour=20
     ENDIF
@@ -579,9 +579,9 @@ SUBROUTINE GetProjectData
       !CALL ShowContinueError('Please see entry for '//TRIM(CurrentModuleObject)//  &
       !   ' in Input/Output Reference for discussion of considerations.')      !RS: Secret Search String
       WRITE(DebugFile,*) TRIM(CurrentModuleObject)//':Requested number ('//TRIM(RoundSigDigits(NumOfTimeStepInHour))// &
-        ') is less than the suggested minimum of 4.'
+      ') is less than the suggested minimum of 4.'
       WRITE(DebugFile,*) 'Please see entry for '//TRIM(CurrentModuleObject)// &
-        ' in Input/Output Reference for discussion of considerations.'
+      ' in Input/Output Reference for discussion of considerations.'
     ENDIF
   ELSEIF (Num == 0 .and. GetNumObjectsFound('Zone') > 0 .and. .not. CondFDAlgo) THEN
     CALL ShowWarningError('No '//TRIM(CurrentModuleObject)//' object found.  Number of TimeSteps in Hour defaulted to 4.')
@@ -606,15 +606,15 @@ SUBROUTINE GetProjectData
   Num=GetNumObjectsFound(TRIM(CurrentModuleObject))
   IF (Num == 1) THEN
     CALL GetObjectItem(TRIM(CurrentModuleObject),1,Alphas,NumAlpha,Number,NumNumber,IOStat,  &
-                   AlphaBlank=lAlphaFieldBlanks,NumBlank=lNumericFieldBlanks,  &
-                   AlphaFieldnames=cAlphaFieldNames,NumericFieldNames=cNumericFieldNames)
+    AlphaBlank=lAlphaFieldBlanks,NumBlank=lNumericFieldBlanks,  &
+    AlphaFieldnames=cAlphaFieldNames,NumericFieldNames=cNumericFieldNames)
     MinInt=INT(Number(1))
     IF (MinInt > MinutesPerTimeStep) THEN
       MinInt=MinutesPerTimeStep
     ENDIF
     IF (MinInt < 0 .or. MinInt > 60) THEN
       CALL ShowWarningError(TRIM(CurrentModuleObject)//': Requested '//TRIM(cNumericFieldNames(1))//  &
-         ' ('//TRIM(RoundSigDigits(MinInt))//') invalid. Set to 1 minute.')
+      ' ('//TRIM(RoundSigDigits(MinInt))//') invalid. Set to 1 minute.')
       MinTimeStepSys=1.d0/60.d0
     ELSEIF (MinInt == 0) THEN  ! Set to TimeStepZone
       MinTimeStepSys=TimeStepZone
@@ -703,17 +703,17 @@ SUBROUTINE GetProjectData
         ReportDetailedWarmupConvergence=.true.
       ELSEIF (SameString(Alphas(NumA),'CreateMinimalSurfaceVariables')) THEN
         CYCLE
-!        CreateMinimalSurfaceVariables=.true.
+        !        CreateMinimalSurfaceVariables=.true.
       ELSEIF (SameString(Alphas(NumA),'CreateNormalSurfaceVariables')) THEN
         CYCLE
-!        IF (CreateMinimalSurfaceVariables) THEN
-!          CALL ShowWarningError('GetProjectData: '//trim(CurrentModuleObject)//'=''//  &
-!             TRIM(Alphas(NumA))//'', prior set=true for this condition reverts to false.')
-!        ENDIF
-!        CreateMinimalSurfaceVariables=.false.
+        !        IF (CreateMinimalSurfaceVariables) THEN
+        !          CALL ShowWarningError('GetProjectData: '//trim(CurrentModuleObject)//'=''//  &
+        !             TRIM(Alphas(NumA))//'', prior set=true for this condition reverts to false.')
+        !        ENDIF
+        !        CreateMinimalSurfaceVariables=.false.
       ELSEIF (Alphas(NumA) /= Blank) THEN
         CALL ShowWarningError('GetProjectData: '//trim(CurrentModuleObject)//'="'//  &
-           TRIM(Alphas(NumA))//'", Invalid value for field, entered value ignored.')
+        TRIM(Alphas(NumA))//'", Invalid value for field, entered value ignored.')
       ENDIF
     ENDDO
   ENDDO
@@ -722,8 +722,8 @@ SUBROUTINE GetProjectData
   Num = GetNumObjectsFound(TRIM(CurrentModuleObject))
   IF (Num > 0) THEN
     CALL GetObjectItem(TRIM(CurrentModuleObject),1,Alphas,NumAlpha,Number,NumNumber,IOStat,  &
-                   AlphaBlank=lAlphaFieldBlanks,NumBlank=lNumericFieldBlanks,  &
-                   AlphaFieldnames=cAlphaFieldNames,NumericFieldNames=cNumericFieldNames)
+    AlphaBlank=lAlphaFieldBlanks,NumBlank=lNumericFieldBlanks,  &
+    AlphaFieldnames=cAlphaFieldNames,NumericFieldNames=cNumericFieldNames)
     IF (.not. lNumericFieldBlanks(1)) THEN
       deviationFromSetPtThresholdHtg=-Number(1)
     ELSE
@@ -746,8 +746,8 @@ SUBROUTINE GetProjectData
   IF (NumRunControl > 0) THEN
     RunControlInInput=.true.
     CALL GetObjectItem(TRIM(CurrentModuleObject),1,Alphas,NumAlpha,Number,NumNumber,IOStat,  &
-                   AlphaBlank=lAlphaFieldBlanks,NumBlank=lNumericFieldBlanks,  &
-                   AlphaFieldnames=cAlphaFieldNames,NumericFieldNames=cNumericFieldNames)
+    AlphaBlank=lAlphaFieldBlanks,NumBlank=lNumericFieldBlanks,  &
+    AlphaFieldnames=cAlphaFieldNames,NumericFieldNames=cNumericFieldNames)
     IF (Alphas(1).EQ.'YES')  DoZoneSizing = .TRUE.
     IF (Alphas(2).EQ.'YES')  DoSystemSizing = .TRUE.
     IF (Alphas(3).EQ.'YES')  DoPlantSizing = .TRUE.
@@ -769,18 +769,18 @@ SUBROUTINE GetProjectData
   Write(OutputFileInits,fmtA) '! <Version>, Version ID'
   Write(OutputFileInits,721) TRIM(VersionID)
 
-721 Format(' Version, ',A)
+  721 Format(' Version, ',A)
 
   Write(OutputFileInits,fmtA) '! <Timesteps per Hour>, #TimeSteps, Minutes per TimeStep {minutes}'
   Write(OutputFileInits,731) NumOfTimeStepInHour,INT(MinutesPerTimeStep)
-731 Format(' Timesteps per Hour, ',I2,', ',I2)
+  731 Format(' Timesteps per Hour, ',I2,', ',I2)
 
   Write(OutputFileInits,fmtA) '! <System Convergence Limits>, Minimum System TimeStep {minutes}, Max HVAC Iterations, '//  &
-      ' Minimum Plant Iterations, Maximum Plant Iterations'
+  ' Minimum Plant Iterations, Maximum Plant Iterations'
   MinInt=MinTimeStepSys*60.d0
   Write(OutputFileInits,733) trim(RoundSigDigits(MinInt)),trim(RoundSigDigits(MaxIter)),  &
-     trim(RoundSigDigits(MinPlantSubIterations)),trim(RoundSigDigits(MaxPlantSubIterations))
-733 Format(' System Convergence Limits',4(', ',A))
+  trim(RoundSigDigits(MinPlantSubIterations)),trim(RoundSigDigits(MaxPlantSubIterations))
+  733 Format(' System Convergence Limits',4(', ',A))
 
   IF (DoZoneSizing) THEN
     Alphas(1)='Yes'
@@ -810,32 +810,32 @@ SUBROUTINE GetProjectData
 
 
   Write(OutputFileInits,fmtA) '! <Simulation Control>, Do Zone Sizing, Do System Sizing, '//  &
-     'Do Plant Sizing, Do Design Days, Do Weather Simulation'
+  'Do Plant Sizing, Do Design Days, Do Weather Simulation'
   Write(OutputFileInits,741) (TRIM(Alphas(Num)),Num=1,5)
-741 Format(' Simulation Control',5(', ',A))
+  741 Format(' Simulation Control',5(', ',A))
 
   Write(OutputFileInits,fmtA) '! <Output Reporting Tolerances>, Tolerance for Time Heating Setpoint Not Met, '//  &
-   'Tolerance for Time Cooling Setpoint Not Met'
+  'Tolerance for Time Cooling Setpoint Not Met'
   Write(OutputFileInits,751) trim(RoundSigDigits(abs(deviationFromSetPtThresholdHtg),3)),  &
-                             trim(RoundSigDigits(deviationFromSetPtThresholdClg,3))
-751 Format(' Output Reporting Tolerances',5(', ',A))
+  trim(RoundSigDigits(deviationFromSetPtThresholdClg,3))
+  751 Format(' Output Reporting Tolerances',5(', ',A))
 
-!  IF (DisplayExtraWarnings) THEN
-!    Write(OutputFileInits,740)
-!    Write(OutputFileInits,741) (TRIM(Alphas(Num)),Num=1,5)
-!742 Format('! <Display Extra Warnings>, Display Advanced Report Variables, Do Not Mirror Detached Shading')
-!    IF (DisplayAdvancedReportVariables) THEN
-!      NumOut1='Yes'
-!    ELSE
-!      NumOut2='No'
-!    ENDIF
-!    IF (.not. MakeMirroredDetachedShading) THEN
-!      NumOut1='Yes'
-!    ELSE
-!      NumOut2='No'
-!    ENDIF
-!unused0909743 Format(' Display Extra Warnings',2(', ',A))
-!  ENDIF
+  !  IF (DisplayExtraWarnings) THEN
+  !    Write(OutputFileInits,740)
+  !    Write(OutputFileInits,741) (TRIM(Alphas(Num)),Num=1,5)
+  !742 Format('! <Display Extra Warnings>, Display Advanced Report Variables, Do Not Mirror Detached Shading')
+  !    IF (DisplayAdvancedReportVariables) THEN
+  !      NumOut1='Yes'
+  !    ELSE
+  !      NumOut2='No'
+  !    ENDIF
+  !    IF (.not. MakeMirroredDetachedShading) THEN
+  !      NumOut1='Yes'
+  !    ELSE
+  !      NumOut2='No'
+  !    ENDIF
+  !unused0909743 Format(' Display Extra Warnings',2(', ',A))
+  !  ENDIF
 
   RETURN
 
@@ -843,41 +843,41 @@ END SUBROUTINE GetProjectData
 
 SUBROUTINE CheckForMisMatchedEnvironmentSpecifications
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Linda Lawrie
-          !       DATE WRITTEN   August 2008
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Linda Lawrie
+  !       DATE WRITTEN   August 2008
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! In response to CR 7518, this routine will check to see if a proper combination of SimulationControl, RunPeriod,
-          ! SizingPeriod:*, etc are entered to proceed with a simulation.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! In response to CR 7518, this routine will check to see if a proper combination of SimulationControl, RunPeriod,
+  ! SizingPeriod:*, etc are entered to proceed with a simulation.
 
-          ! METHODOLOGY EMPLOYED:
-          ! For now (8/2008), the routine will query several objects in the input.  And try to produce warnings or
-          ! fatals as a result.
+  ! METHODOLOGY EMPLOYED:
+  ! For now (8/2008), the routine will query several objects in the input.  And try to produce warnings or
+  ! fatals as a result.
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE InputProcessor, ONLY: GetNumObjectsFound
 
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-          ! na
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER :: NumZoneSizing
   INTEGER :: NumSystemSizing
   INTEGER :: NumPlantSizing
@@ -888,7 +888,7 @@ SUBROUTINE CheckForMisMatchedEnvironmentSpecifications
   LOGICAL :: ErrorsFound
 
   INTEGER :: DebugFile       =150 !RS: Debugging file denotion, hopefully this works.
-    
+
   OPEN(unit=DebugFile,file='Debug.txt')    !RS: Debugging
 
   ErrorsFound=.false.
@@ -905,145 +905,145 @@ SUBROUTINE CheckForMisMatchedEnvironmentSpecifications
       IF (NumZoneSizing > 0 .and. NumSizingDays == 0) THEN
         ErrorsFound=.true.
         CALL ShowSevereError('CheckEnvironmentSpecifications: Sizing for Zones has been requested but there are no '//  &
-           'design environments specified.')
+        'design environments specified.')
         CALL ShowContinueError('...Add appropriate SizingPeriod:* objects for your simulation.')
       ENDIF
       IF (NumZoneSizing > 0 .and. NumRunPeriodDesign > 0 .and. .not. WeatherFileAttached) THEN
         ErrorsFound=.true.
         CALL ShowSevereError('CheckEnvironmentSpecifications: Sizing for Zones has been requested; Design period from '//  &
-           'the weather file requested; but no weather file specified.')
+        'the weather file requested; but no weather file specified.')
       ENDIF
     ENDIF
     IF (DoSystemSizing) THEN
       IF (NumSystemSizing > 0 .and. NumSizingDays == 0) THEN
         ErrorsFound=.true.
         CALL ShowSevereError('CheckEnvironmentSpecifications: Sizing for Systems has been requested but there are no '//  &
-           'design environments specified.')
+        'design environments specified.')
         CALL ShowContinueError('...Add appropriate SizingPeriod:* objects for your simulation.')
       ENDIF
       IF (NumSystemSizing > 0 .and. NumRunPeriodDesign > 0 .and. .not. WeatherFileAttached) THEN
         ErrorsFound=.true.
         CALL ShowSevereError('CheckEnvironmentSpecifications: Sizing for Systems has been requested; Design period from '//  &
-           'the weather file requested; but no weather file specified.')
+        'the weather file requested; but no weather file specified.')
       ENDIF
     ENDIF
     IF (DoPlantSizing) THEN
       IF (NumPlantSizing > 0 .and. NumSizingDays == 0) THEN
         ErrorsFound=.true.
         CALL ShowSevereError('CheckEnvironmentSpecifications: Sizing for Equipment/Plants has been requested but there are no '//  &
-           'design environments specified.')
+        'design environments specified.')
         CALL ShowContinueError('...Add appropriate SizingPeriod:* objects for your simulation.')
       ENDIF
       IF (NumPlantSizing > 0 .and. NumRunPeriodDesign > 0 .and. .not. WeatherFileAttached) THEN
         ErrorsFound=.true.
         CALL ShowSevereError('CheckEnvironmentSpecifications: Sizing for Equipment/Plants has been requested; '//   &
-            'Design period from the weather file requested; but no weather file specified.')
+        'Design period from the weather file requested; but no weather file specified.')
       ENDIF
     ENDIF
     IF (DoDesDaySim .and. NumSizingDays == 0) THEN
       CALL ShowWarningError('CheckEnvironmentSpecifications: SimulationControl specified doing design day simulations, but '//  &
-       'no design environments specified.')
+      'no design environments specified.')
       CALL ShowContinueError('...No design environment results produced. For these results, '//  &
-         'add appropriate SizingPeriod:* objects for your simulation.')
+      'add appropriate SizingPeriod:* objects for your simulation.')
     ENDIF
     IF (DoDesDaySim .and. NumRunPeriodDesign > 0 .and. .not. WeatherFileAttached) THEN
       ErrorsFound=.true.
       !CALL ShowSevereError('CheckEnvironmentSpecifications: SimulationControl specified doing design day simulations; weather '//  &
       ! 'file design environments specified; but no weather file specified.')   !RS: Secret Search String
       WRITE(DebugFile,*) 'CheckEnvironmentSpecifications: Simulation Control specified doing design day simulations; weather '// &
-        'file design environments specified; but no weather file specified.'
+      'file design environments specified; but no weather file specified.'
     ENDIF
     IF (DoWeathSim .and. .not. RunPeriodsInInput) THEN
       CALL ShowWarningError('CheckEnvironmentSpecifications: SimulationControl specified doing weather simulations, but '//  &
-       'no run periods for weather file specified.  No annual results produced.')
+      'no run periods for weather file specified.  No annual results produced.')
     ENDIF
     IF (DoWeathSim .and. RunPeriodsInInput .and. .not. WeatherFileAttached) THEN
       !CALL ShowWarningError('CheckEnvironmentSpecifications: SimulationControl specified doing weather simulations; '//  &
       ! 'run periods for weather file specified; but no weather file specified.')   !RS: Secret Search String
       WRITE(DebugFile,*) 'CheckEnvironmentSpecifications: SimulationControl specified doing weather simulations, but '// &
-        'run periods for weather file specified; but no weather file specified.'
+      'run periods for weather file specified; but no weather file specified.'
     ENDIF
   ENDIF
   IF (.not. DoDesDaySim .and. .not. DoWeathSim) THEN
     CALL ShowWarningError('"Do the design day simulations" and "Do the weather file simulation"'// &
-           ' are both set to "No".  No simulations will be performed, and most input will not be read.')
+    ' are both set to "No".  No simulations will be performed, and most input will not be read.')
   ENDIF
   IF (.not. DoZoneSizing .and. .not. DoSystemSizing .and. .not. DoPlantSizing .and.  &
-      .not. DoDesDaySim .and. .not. DoWeathSim) THEN
-    CALL ShowSevereError('All elements of SimulationControl are set to "No". No simulations can be done.  Program terminates.')
-    ErrorsFound=.true.
-  ENDIF
+  .not. DoDesDaySim .and. .not. DoWeathSim) THEN
+  CALL ShowSevereError('All elements of SimulationControl are set to "No". No simulations can be done.  Program terminates.')
+  ErrorsFound=.true.
+ENDIF
 
-  IF (ErrorsFound) THEN
-    !CALL ShowFatalError('Program terminates due to preceding conditions.') !RS: Secret Search String
-    WRITE(DebugFile,*) 'Program wants to terminate due to preceding conditions.'
-  ENDIF
+IF (ErrorsFound) THEN
+  !CALL ShowFatalError('Program terminates due to preceding conditions.') !RS: Secret Search String
+  WRITE(DebugFile,*) 'Program wants to terminate due to preceding conditions.'
+ENDIF
 
-  RETURN
+RETURN
 
 END SUBROUTINE CheckForMisMatchedEnvironmentSpecifications
 
 SUBROUTINE CheckForRequestedReporting
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Linda Lawrie
-          !       DATE WRITTEN   January 2009
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Linda Lawrie
+  !       DATE WRITTEN   January 2009
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! EnergyPlus does not automatically produce any results files.  Because of this, users may not request
-          ! reports and may get confused when nothing is produced.  This routine will provide a warning when
-          ! results should be produced (either sizing periods or weather files are run) but no reports are
-          ! requested.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! EnergyPlus does not automatically produce any results files.  Because of this, users may not request
+  ! reports and may get confused when nothing is produced.  This routine will provide a warning when
+  ! results should be produced (either sizing periods or weather files are run) but no reports are
+  ! requested.
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE InputProcessor, ONLY: GetNumObjectsFound
 
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-          ! na
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   LOGICAL :: SimPeriods
   LOGICAL :: ReportingRequested
 
   ReportingRequested=.false.
   SimPeriods = (GetNumObjectsFound('SizingPeriod:DesignDay') > 0 .or.   &
-                GetNumObjectsFound('SizingPeriod:WeatherFileDays') > 0 .or. &
-                GetNumObjectsFound('SizingPeriod:WeatherFileConditionType') > 0 .or.  &
-                GetNumObjectsFound('RunPeriod') > 0)
+  GetNumObjectsFound('SizingPeriod:WeatherFileDays') > 0 .or. &
+  GetNumObjectsFound('SizingPeriod:WeatherFileConditionType') > 0 .or.  &
+  GetNumObjectsFound('RunPeriod') > 0)
 
   IF ((DoDesDaySim .or. DoWeathSim) .and. SimPeriods) THEN
     ReportingRequested=(GetNumObjectsFound('Output:Table:SummaryReports') > 0 .or.   &
-                GetNumObjectsFound('Output:Table:TimeBins') > 0 .or. &
-                GetNumObjectsFound('Output:Table:Monthly') > 0 .or.  &
-                GetNumObjectsFound('Output:Variable') > 0 .or.  &
-                GetNumObjectsFound('Output:Meter') > 0 .or.  &
-                GetNumObjectsFound('Output:Meter:MeterFileOnly') > 0 .or.  &
-                GetNumObjectsFound('Output:Meter:Cumulative') > 0 .or.  &
-                GetNumObjectsFound('Output:Meter:Cumulative:MeterFileOnly') > 0)
+    GetNumObjectsFound('Output:Table:TimeBins') > 0 .or. &
+    GetNumObjectsFound('Output:Table:Monthly') > 0 .or.  &
+    GetNumObjectsFound('Output:Variable') > 0 .or.  &
+    GetNumObjectsFound('Output:Meter') > 0 .or.  &
+    GetNumObjectsFound('Output:Meter:MeterFileOnly') > 0 .or.  &
+    GetNumObjectsFound('Output:Meter:Cumulative') > 0 .or.  &
+    GetNumObjectsFound('Output:Meter:Cumulative:MeterFileOnly') > 0)
     ! Not testing for : Output:SQLite or Output:EnvironmentalImpactFactors
     IF (.not. ReportingRequested) THEN
       CALL ShowWarningError('No reporting elements have been requested. No simulation results produced.')
       CALL ShowContinueError('...Review requirements such as "Output:Table:SummaryReports", "Output:Table:Monthly", '//  &
-        '"Output:Variable", "Output:Meter" and others.')
+      '"Output:Variable", "Output:Meter" and others.')
     ENDIF
   ENDIF
 
@@ -1053,44 +1053,44 @@ END SUBROUTINE CheckForRequestedReporting
 
 SUBROUTINE OpenOutputFiles
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Rick Strand
-          !       DATE WRITTEN   June 1997
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Rick Strand
+  !       DATE WRITTEN   June 1997
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine opens all of the input and output files needed for
-          ! an EnergyPlus run.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine opens all of the input and output files needed for
+  ! an EnergyPlus run.
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataStringGlobals, ONLY: VerString
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-          ! na
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   integer,external :: GetNewUnitNumber  ! External function for a new unit number
   integer :: write_stat
 
-          ! FLOW:
+  ! FLOW:
   OutputFileStandard=GetNewUnitNumber()
   StdOutputRecordCount=0
   OPEN (UNIT=OutputFileStandard,FILE='eplusout.eso',STATUS='UNKNOWN',Action='write',iostat=write_stat)
@@ -1130,30 +1130,30 @@ END SUBROUTINE OpenOutputFiles
 
 SUBROUTINE CloseOutputFiles
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Rick Strand
-          !       DATE WRITTEN   June 1997
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Rick Strand
+  !       DATE WRITTEN   June 1997
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine closes all of the input and output files needed for
-          ! an EnergyPlus run.  It also prints the end of data marker for each
-          ! output file.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine closes all of the input and output files needed for
+  ! an EnergyPlus run.  It also prints the end of data marker for each
+  ! output file.
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataOutputs
   USE OutputProcessor, ONLY: MaxRVariable,NumOfRVariable_Setup,NumOfRVariable_Sum,NumOfRVariable_Meter,  &
-                             MaxIVariable,NumOfIVariable_Setup,NumOfIVariable_Sum,                       &
-                             NumOfRVariable,NumOfIVariable,                                              &
-                             NumEnergyMeters,NumVarMeterArrays,  &
-                             NumTotalRVariable,NumTotalIVariable
+  MaxIVariable,NumOfIVariable_Setup,NumOfIVariable_Sum,                       &
+  NumOfRVariable,NumOfIVariable,                                              &
+  NumEnergyMeters,NumVarMeterArrays,  &
+  NumTotalRVariable,NumTotalIVariable
   USE OutputReportTabular, ONLY: maxUniqueKeyCount,MonthlyFieldSetInputCount
   USE SolarShading, ONLY: maxNumberOfFigures
   USE DataRunTimeLanguage
@@ -1164,25 +1164,25 @@ SUBROUTINE CloseOutputFiles
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-          ! na
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! SUBROUTINE PARAMETER DEFINITIONS:
   CHARACTER(len=*), PARAMETER :: EndOfDataFormat = '("End of Data")'  ! Signifies the end of the data block in the output file
   CHARACTER(len=*), PARAMETER :: ThreadingHeader = '! <Program Control Information:Threads/Parallel Sims>, '//  &
-          'Threading Supported,Maximum Number of Threads, Env Set Threads (OMP_NUM_THREADS), '//  &
-          'EP Env Set Threads (EP_OMP_NUM_THREADS). IDF Set Threads, Number of Threads Used (Interior Radiant Exchange), '//  &
-          'Number NominalSurface, Number Parallel Sims'
+  'Threading Supported,Maximum Number of Threads, Env Set Threads (OMP_NUM_THREADS), '//  &
+  'EP Env Set Threads (EP_OMP_NUM_THREADS). IDF Set Threads, Number of Threads Used (Interior Radiant Exchange), '//  &
+  'Number NominalSurface, Number Parallel Sims'
   CHARACTER(len=*), PARAMETER :: fmtA='(A)'
 
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   CHARACTER(len=20) DebugPosition
   INTEGER EchoInputFile  ! found unit number for 'eplusout.audit'
   INTEGER, EXTERNAL :: FindUnitNumber
@@ -1227,47 +1227,47 @@ SUBROUTINE CloseOutputFiles
   ENDIF
 
   IF (SolutionAlgo == UseCondFD) THEN ! echo out relaxation factor, it may have been changed by the program
-     Write(OutputFileInits,'(A)') '! <ConductionFiniteDifference Numerical Parameters>, '//  &
-        'Starting Relaxation Factor, Final Relaxation Factor'
-     Write(OutputFileInits,'(A)') 'ConductionFiniteDifference Numerical Parameters, '// &
-                                      TRIM(RoundSigDigits(CondFDRelaxFactorInput,3)) // ', '// &
-                                      TRIM(RoundSigDigits(CondFDRelaxFactor,3))
+    Write(OutputFileInits,'(A)') '! <ConductionFiniteDifference Numerical Parameters>, '//  &
+    'Starting Relaxation Factor, Final Relaxation Factor'
+    Write(OutputFileInits,'(A)') 'ConductionFiniteDifference Numerical Parameters, '// &
+    TRIM(RoundSigDigits(CondFDRelaxFactorInput,3)) // ', '// &
+    TRIM(RoundSigDigits(CondFDRelaxFactor,3))
   ENDIF
   ! Report number of threads to eio file
   IF (Threading) THEN
     IF (lnumActiveSims) THEN
       Write(OutputFileInits,fmtA) ThreadingHeader
       Write(OutputFileInits,'(A)') 'Program Control:Threads/Parallel Sims, Yes,'// &
-                                        TRIM(RoundSigDigits(MaxNumberOfThreads)) // ', '// &
-                                        TRIM(RoundSigDigits(iEnvSetThreads)) // ', '// &
-                                        TRIM(RoundSigDigits(iepEnvSetThreads)) // ', '// &
-                                        TRIM(RoundSigDigits(iIDFSetThreads)) // ', '// &
-                                        TRIM(RoundSigDigits(NumberIntRadThreads)) // ', '// &
-                                        TRIM(RoundSigDigits(iNominalTotSurfaces)) // ', '// &
-                                        TRIM(RoundSigDigits(inumActiveSims))
+      TRIM(RoundSigDigits(MaxNumberOfThreads)) // ', '// &
+      TRIM(RoundSigDigits(iEnvSetThreads)) // ', '// &
+      TRIM(RoundSigDigits(iepEnvSetThreads)) // ', '// &
+      TRIM(RoundSigDigits(iIDFSetThreads)) // ', '// &
+      TRIM(RoundSigDigits(NumberIntRadThreads)) // ', '// &
+      TRIM(RoundSigDigits(iNominalTotSurfaces)) // ', '// &
+      TRIM(RoundSigDigits(inumActiveSims))
     ELSE
       Write(OutputFileInits,fmtA) ThreadingHeader
       Write(OutputFileInits,'(A)') 'Program Control:Threads/Parallel Sims, Yes,'// &
-                                        TRIM(RoundSigDigits(MaxNumberOfThreads)) // ', '// &
-                                        TRIM(RoundSigDigits(iEnvSetThreads)) // ', '// &
-                                        TRIM(RoundSigDigits(iepEnvSetThreads)) // ', '// &
-                                        TRIM(RoundSigDigits(iIDFSetThreads)) // ', '// &
-                                        TRIM(RoundSigDigits(iNominalTotSurfaces)) // ', '// &
-                                        TRIM(RoundSigDigits(NumberIntRadThreads)) // ', '// &
-                                        'N/A'
+      TRIM(RoundSigDigits(MaxNumberOfThreads)) // ', '// &
+      TRIM(RoundSigDigits(iEnvSetThreads)) // ', '// &
+      TRIM(RoundSigDigits(iepEnvSetThreads)) // ', '// &
+      TRIM(RoundSigDigits(iIDFSetThreads)) // ', '// &
+      TRIM(RoundSigDigits(iNominalTotSurfaces)) // ', '// &
+      TRIM(RoundSigDigits(NumberIntRadThreads)) // ', '// &
+      'N/A'
     ENDIF
   ELSE ! no threading
     IF (lnumActiveSims) THEN
       Write(OutputFileInits,fmtA) ThreadingHeader
       Write(OutputFileInits,'(A)') 'Program Control:Threads/Parallel Sims, No,'// &
-                                        TRIM(RoundSigDigits(MaxNumberOfThreads)) // ', '// &
-                                        'N/A, N/A, N/A, N/A, N/A, '// &
-                                        TRIM(RoundSigDigits(inumActiveSims))
+      TRIM(RoundSigDigits(MaxNumberOfThreads)) // ', '// &
+      'N/A, N/A, N/A, N/A, N/A, '// &
+      TRIM(RoundSigDigits(inumActiveSims))
     ELSE
       Write(OutputFileInits,fmtA) ThreadingHeader
       Write(OutputFileInits,'(A)') 'Program Control:Threads/Parallel Sims, No,'// &
-                                        TRIM(RoundSigDigits(MaxNumberOfThreads)) // ', '// &
-                                        'N/A, N/A, N/A, N/A, N/A, N/A'
+      TRIM(RoundSigDigits(MaxNumberOfThreads)) // ', '// &
+      'N/A, N/A, N/A, N/A, N/A, N/A'
     ENDIF
   ENDIF
 
@@ -1305,25 +1305,25 @@ END SUBROUTINE CloseOutputFiles
 
 SUBROUTINE SetupSimulation(ErrorsFound)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         B. Griffith/L. Lawrie
-          !       DATE WRITTEN   May 2008
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         B. Griffith/L. Lawrie
+  !       DATE WRITTEN   May 2008
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          !  execute a few time steps of a simulation to facilitate setting up model
-          !  developed to resolve reverse DD problems caused be the differences
-          !  that stem from setup and information gathering that occurs during the first pass.
+  ! PURPOSE OF THIS SUBROUTINE:
+  !  execute a few time steps of a simulation to facilitate setting up model
+  !  developed to resolve reverse DD problems caused be the differences
+  !  that stem from setup and information gathering that occurs during the first pass.
 
-          ! METHODOLOGY EMPLOYED:
-          ! Using global flag (kickoff simulation), only a few time steps are executed.
-          ! global flag is used in other parts of simulation to terminate quickly.
+  ! METHODOLOGY EMPLOYED:
+  ! Using global flag (kickoff simulation), only a few time steps are executed.
+  ! global flag is used in other parts of simulation to terminate quickly.
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE ExteriorEnergyUse,   ONLY: ManageExteriorEnergyUse
   USE DataEnvironment ,    ONLY: EndMonthFlag
   USE InputProcessor,      ONLY: GetNumRangeCheckErrorsFound
@@ -1333,24 +1333,24 @@ SUBROUTINE SetupSimulation(ErrorsFound)
 
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   LOGICAL, INTENT(INOUT) :: ErrorsFound
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   LOGICAL :: Available=.false. ! an environment is available to process
-!  integer :: env_iteration=0
-!  CHARACTER(len=32) :: cEnvChar
+  !  integer :: env_iteration=0
+  !  CHARACTER(len=32) :: cEnvChar
 
-!  return  ! remove comment to do 'old way'
+  !  return  ! remove comment to do 'old way'
 
   Available = .true.
 
@@ -1368,61 +1368,61 @@ SUBROUTINE SetupSimulation(ErrorsFound)
     DayOfSim       =  0
 
 
-      DayOfSim     = DayOfSim + 1
-      BeginDayFlag = .TRUE.
-      EndDayFlag   = .FALSE.
+    DayOfSim     = DayOfSim + 1
+    BeginDayFlag = .TRUE.
+    EndDayFlag   = .FALSE.
 
-      HourOfDay = 1
+    HourOfDay = 1
 
-        BeginHourFlag = .TRUE.
-        EndHourFlag   = .FALSE.
+    BeginHourFlag = .TRUE.
+    EndHourFlag   = .FALSE.
 
-        TimeStep = 1
+    TimeStep = 1
 
-        IF (DeveloperFlag) CALL DisplayString('Initializing Simulation - timestep 1')
+    IF (DeveloperFlag) CALL DisplayString('Initializing Simulation - timestep 1')
 
-          BeginTimeStepFlag = .TRUE.
+    BeginTimeStepFlag = .TRUE.
 
-          CALL ManageWeather
+    CALL ManageWeather
 
-          CALL ManageExteriorEnergyUse
+    CALL ManageExteriorEnergyUse
 
-          CALL ManageHeatBalance
+    CALL ManageHeatBalance
 
-          !  After the first iteration of HeatBalance, all the 'input' has been gotten
-          IF (BeginFullSimFlag) THEN
-            IF (GetNumRangeCheckErrorsFound() > 0) THEN
-              CALL ShowFatalError('Out of "range" values found in input')
-            ENDIF
-          ENDIF
+    !  After the first iteration of HeatBalance, all the 'input' has been gotten
+    IF (BeginFullSimFlag) THEN
+      IF (GetNumRangeCheckErrorsFound() > 0) THEN
+        CALL ShowFatalError('Out of "range" values found in input')
+      ENDIF
+    ENDIF
 
-          BeginHourFlag  = .FALSE.
-          BeginDayFlag   = .FALSE.
-          BeginEnvrnFlag = .FALSE.
-          BeginSimFlag   = .FALSE.
-          BeginFullSimFlag = .FALSE.
+    BeginHourFlag  = .FALSE.
+    BeginDayFlag   = .FALSE.
+    BeginEnvrnFlag = .FALSE.
+    BeginSimFlag   = .FALSE.
+    BeginFullSimFlag = .FALSE.
 
-!          ! do another timestep=1
-          IF (DeveloperFlag) CALL DisplayString('Initializing Simulation - 2nd timestep 1')
+    !          ! do another timestep=1
+    IF (DeveloperFlag) CALL DisplayString('Initializing Simulation - 2nd timestep 1')
 
-          CALL ManageWeather
+    CALL ManageWeather
 
-          CALL ManageExteriorEnergyUse
+    CALL ManageExteriorEnergyUse
 
-          CALL ManageHeatBalance
+    CALL ManageHeatBalance
 
-!         do an end of day, end of environment time step
+    !         do an end of day, end of environment time step
 
-          HourOfDay=24
-          TimeStep=NumOfTimeStepInHour
-          EndEnvrnFlag   = .True.
+    HourOfDay=24
+    TimeStep=NumOfTimeStepInHour
+    EndEnvrnFlag   = .True.
 
-          IF (DeveloperFlag) CALL DisplayString('Initializing Simulation - hour 24 timestep 1')
-          CALL ManageWeather
+    IF (DeveloperFlag) CALL DisplayString('Initializing Simulation - hour 24 timestep 1')
+    CALL ManageWeather
 
-          CALL ManageExteriorEnergyUse
+    CALL ManageExteriorEnergyUse
 
-          CALL ManageHeatBalance
+    CALL ManageHeatBalance
 
   END DO                        ! ... End environment loop.
 
@@ -1435,23 +1435,23 @@ END SUBROUTINE SetupSimulation
 
 SUBROUTINE ReportNodeConnections
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Linda Lawrie
-          !       DATE WRITTEN   February 2004
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Linda Lawrie
+  !       DATE WRITTEN   February 2004
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine 'reports' the NodeConnection data structure.  It groups the
-          ! report/dump by parent, non-parent objects.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine 'reports' the NodeConnection data structure.  It groups the
+  ! report/dump by parent, non-parent objects.
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE InputProcessor, ONLY: SameString, MakeUPPERCase
   USE DataBranchNodeConnections
   USE DataGlobals_HPSimIntegrated, ONLY: OutputFileBNDetails
@@ -1459,19 +1459,19 @@ SUBROUTINE ReportNodeConnections
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-          ! na
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER Loop
   INTEGER Loop1
   INTEGER NumParents
@@ -1506,107 +1506,107 @@ SUBROUTINE ReportNodeConnections
     WRITE(ChrOut,*) NodeConnections(Loop)%FluidStream
     ChrOut=ADJUSTL(ChrOut)
     WRITE(OutputFileBNDetails,701) ' Parent Node Connection,'//TRIM(NodeConnections(Loop)%NodeName)//','// &
-                      TRIM(NodeConnections(Loop)%ObjectType)//','//TRIM(NodeConnections(Loop)%ObjectName)//','//  &
-                      TRIM(NodeConnections(Loop)%ConnectionType)//','//TRIM(ChrOut)
+    TRIM(NodeConnections(Loop)%ObjectType)//','//TRIM(NodeConnections(Loop)%ObjectName)//','//  &
+    TRIM(NodeConnections(Loop)%ConnectionType)//','//TRIM(ChrOut)
     ! Build ParentNodeLists
     IF (SameString(NodeConnections(Loop)%ConnectionType,'Inlet') .or.   &
-        SameString(NodeConnections(Loop)%ConnectionType,'Outlet')) THEN
-      ParentComponentFound=.false.
-      DO Loop1=1,NumOfActualParents
-        IF (ParentNodeList(Loop1)%CType /= NodeConnections(Loop)%ObjectType .or.   &
-            ParentNodeList(Loop1)%CName /= NodeConnections(Loop)%ObjectName) CYCLE
-        ParentComponentFound=.true.
-        SELECT CASE (MakeUPPERCase(NodeConnections(Loop)%ConnectionType))
-          CASE('INLET')
-            ParentNodeList(Loop1)%InletNodeName=NodeConnections(Loop)%NodeName
-          CASE('OUTLET')
-            ParentNodeList(Loop1)%OutletNodeName=NodeConnections(Loop)%NodeName
-        END SELECT
-      ENDDO
-      IF (.not. ParentComponentFound) THEN
-        NumOfActualParents=NumOfActualParents+1
-        ParentNodeList(NumOfActualParents)%CType=NodeConnections(Loop)%ObjectType
-        ParentNodeList(NumOfActualParents)%CName=NodeConnections(Loop)%ObjectName
-        SELECT CASE (MakeUPPERCase(NodeConnections(Loop)%ConnectionType))
-          CASE('INLET')
-            ParentNodeList(NumOfActualParents)%InletNodeName=NodeConnections(Loop)%NodeName
-          CASE('OUTLET')
-            ParentNodeList(NumOfActualParents)%OutletNodeName=NodeConnections(Loop)%NodeName
-        END SELECT
-      ENDIF
-    ENDIF
-  ENDDO
-
-  !  Do non-Parent Objects
-  WRITE(OutputFileBNDetails,701) '! ==============================================================='
-  WRITE(OutputFileBNDetails,702) 'Non-Parent','Non-Parent'
-  WRITE(ChrOut,*) NumNonParents
-  WRITE(OutputFileBNDetails,701) ' #Non-Parent Node Connections,'//TRIM(ADJUSTL(ChrOut))
-  WRITE(OutputFileBNDetails,703) 'Non-Parent'
-
-  DO Loop=1,NumOfNodeConnections
-    IF (NodeConnections(Loop)%ObjectIsParent) CYCLE
-    NonConnectedNodes(NodeConnections(Loop)%NodeNumber)=.false.
-    WRITE(ChrOut,*) NodeConnections(Loop)%FluidStream
-    ChrOut=ADJUSTL(ChrOut)
-    WRITE(OutputFileBNDetails,701) ' Non-Parent Node Connection,'//TRIM(NodeConnections(Loop)%NodeName)//','// &
-                      TRIM(NodeConnections(Loop)%ObjectType)//','//TRIM(NodeConnections(Loop)%ObjectName)//','//  &
-                      TRIM(NodeConnections(Loop)%ConnectionType)//','//TRIM(ChrOut)
-  ENDDO
-
-  NumNonConnected=0
-  DO Loop=1,NumOfNodes
-    IF (NonConnectedNodes(Loop)) NumNonConnected=NumNonConnected+1
-  ENDDO
-
-  IF (NumNonConnected > 0) THEN
-    WRITE(OutputFileBNDetails,701) '! ==============================================================='
-    WRITE(ChrOut,*) NumNonConnected
-    WRITE(OutputFileBNDetails,705) TRIM(ADJUSTL(ChrOut))
-    WRITE(OutputFileBNDetails,706)
-    DO Loop=1,NumOfNodes
-      IF (.not. NonConnectedNodes(Loop)) CYCLE
-      WRITE(ChrOut,*) Loop
-      ChrOut=ADJUSTL(ChrOut)
-      WRITE(OutputFileBNDetails,701) ' NonConnected Node,'//TRIM(ChrOut)//','//TRIM(NodeID(Loop))
+    SameString(NodeConnections(Loop)%ConnectionType,'Outlet')) THEN
+    ParentComponentFound=.false.
+    DO Loop1=1,NumOfActualParents
+      IF (ParentNodeList(Loop1)%CType /= NodeConnections(Loop)%ObjectType .or.   &
+      ParentNodeList(Loop1)%CName /= NodeConnections(Loop)%ObjectName) CYCLE
+      ParentComponentFound=.true.
+      SELECT CASE (MakeUPPERCase(NodeConnections(Loop)%ConnectionType))
+      CASE('INLET')
+        ParentNodeList(Loop1)%InletNodeName=NodeConnections(Loop)%NodeName
+      CASE('OUTLET')
+        ParentNodeList(Loop1)%OutletNodeName=NodeConnections(Loop)%NodeName
+      END SELECT
     ENDDO
+    IF (.not. ParentComponentFound) THEN
+      NumOfActualParents=NumOfActualParents+1
+      ParentNodeList(NumOfActualParents)%CType=NodeConnections(Loop)%ObjectType
+      ParentNodeList(NumOfActualParents)%CName=NodeConnections(Loop)%ObjectName
+      SELECT CASE (MakeUPPERCase(NodeConnections(Loop)%ConnectionType))
+      CASE('INLET')
+        ParentNodeList(NumOfActualParents)%InletNodeName=NodeConnections(Loop)%NodeName
+      CASE('OUTLET')
+        ParentNodeList(NumOfActualParents)%OutletNodeName=NodeConnections(Loop)%NodeName
+      END SELECT
+    ENDIF
   ENDIF
+ENDDO
 
-  DEALLOCATE(NonConnectedNodes)
+!  Do non-Parent Objects
+WRITE(OutputFileBNDetails,701) '! ==============================================================='
+WRITE(OutputFileBNDetails,702) 'Non-Parent','Non-Parent'
+WRITE(ChrOut,*) NumNonParents
+WRITE(OutputFileBNDetails,701) ' #Non-Parent Node Connections,'//TRIM(ADJUSTL(ChrOut))
+WRITE(OutputFileBNDetails,703) 'Non-Parent'
 
- 701 FORMAT(A)
- 702 FORMAT('! <#',A,' Node Connections>,<Number of ',A,' Node Connections>')
- 703 FORMAT('! <',A,' Node Connection>,<Node Name>,<Node ObjectType>,<Node ObjectName>,',  &
-            '<Node ConnectionType>,<Node FluidStream>')
+DO Loop=1,NumOfNodeConnections
+  IF (NodeConnections(Loop)%ObjectIsParent) CYCLE
+  NonConnectedNodes(NodeConnections(Loop)%NodeNumber)=.false.
+  WRITE(ChrOut,*) NodeConnections(Loop)%FluidStream
+  ChrOut=ADJUSTL(ChrOut)
+  WRITE(OutputFileBNDetails,701) ' Non-Parent Node Connection,'//TRIM(NodeConnections(Loop)%NodeName)//','// &
+  TRIM(NodeConnections(Loop)%ObjectType)//','//TRIM(NodeConnections(Loop)%ObjectName)//','//  &
+  TRIM(NodeConnections(Loop)%ConnectionType)//','//TRIM(ChrOut)
+ENDDO
 
- 705 FORMAT('! <#NonConnected Nodes>,<Number of NonConnected Nodes>',/,' #NonConnected Nodes,',A)
- 706 FORMAT('! <NonConnected Node>,<NonConnected Node Number>,<NonConnected Node Name>')
+NumNonConnected=0
+DO Loop=1,NumOfNodes
+  IF (NonConnectedNodes(Loop)) NumNonConnected=NumNonConnected+1
+ENDDO
 
-  RETURN
+IF (NumNonConnected > 0) THEN
+  WRITE(OutputFileBNDetails,701) '! ==============================================================='
+  WRITE(ChrOut,*) NumNonConnected
+  WRITE(OutputFileBNDetails,705) TRIM(ADJUSTL(ChrOut))
+  WRITE(OutputFileBNDetails,706)
+  DO Loop=1,NumOfNodes
+    IF (.not. NonConnectedNodes(Loop)) CYCLE
+    WRITE(ChrOut,*) Loop
+    ChrOut=ADJUSTL(ChrOut)
+    WRITE(OutputFileBNDetails,701) ' NonConnected Node,'//TRIM(ChrOut)//','//TRIM(NodeID(Loop))
+  ENDDO
+ENDIF
+
+DEALLOCATE(NonConnectedNodes)
+
+701 FORMAT(A)
+702 FORMAT('! <#',A,' Node Connections>,<Number of ',A,' Node Connections>')
+703 FORMAT('! <',A,' Node Connection>,<Node Name>,<Node ObjectType>,<Node ObjectName>,',  &
+'<Node ConnectionType>,<Node FluidStream>')
+
+705 FORMAT('! <#NonConnected Nodes>,<Number of NonConnected Nodes>',/,' #NonConnected Nodes,',A)
+706 FORMAT('! <NonConnected Node>,<NonConnected Node Number>,<NonConnected Node Name>')
+
+RETURN
 
 END SUBROUTINE ReportNodeConnections
 
 SUBROUTINE ReportLoopConnections
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Linda Lawrie
-          !       DATE WRITTEN   December 2001
-          !       MODIFIED       March 2003; added other reporting
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Linda Lawrie
+  !       DATE WRITTEN   December 2001
+  !       MODIFIED       March 2003; added other reporting
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine reports on the node connections in various parts of the
-          ! HVAC syste: Component Sets, Air Loop, Plant and Condenser Loop, Supply and
-          ! return air paths, controlled zones.
-          ! This information should be useful in diagnosing node connection input errors.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine reports on the node connections in various parts of the
+  ! HVAC syste: Component Sets, Air Loop, Plant and Condenser Loop, Supply and
+  ! return air paths, controlled zones.
+  ! This information should be useful in diagnosing node connection input errors.
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE InputProcessor, ONLY: SameString
   USE DataAirLoop
   USE DataBranchNodeConnections
@@ -1622,20 +1622,20 @@ SUBROUTINE ReportLoopConnections
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-          ! na
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! SUBROUTINE PARAMETER DEFINITIONS:
   CHARACTER(len=*), PARAMETER :: errstring='**error**'
   CHARACTER(len=*), PARAMETER :: Blank=' '
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   CHARACTER(len=20) ChrOut
   CHARACTER(len=20) ChrOut2
   CHARACTER(len=20) ChrOut3
@@ -1647,12 +1647,12 @@ SUBROUTINE ReportLoopConnections
   INTEGER Num
   LOGICAL :: WarningOut=.true.
   INTEGER :: NumOfControlledZones
-  
+
   INTEGER :: DebugFile       =150 !RS: Debugging file denotion, hopefully this works.
-    
+
   OPEN(unit=DebugFile,file='Debug.txt')    !RS: Debugging
 
-          ! Report outside air node names on the Branch-Node Details file
+  ! Report outside air node names on the Branch-Node Details file
   WRITE(OutputFileBNDetails,701) '! ==============================================================='
   WRITE(OutputFileBNDetails,701) '! #Outdoor Air Nodes,<Number of Outdoor Air Nodes>'
   WRITE(ChrOut,*) NumOutsideAirNodes
@@ -1665,493 +1665,493 @@ SUBROUTINE ReportLoopConnections
     ChrOut=ADJUSTL(ChrOut)
     WRITE(OutputFileBNDetails,701) ' Outdoor Air Node,'//TRIM(ChrOut)//','//TRIM(NodeID(OutsideAirNodeList(Count)))
   ENDDO
-          ! Component Sets
+  ! Component Sets
   WRITE(OutputFileBNDetails,701) '! ==============================================================='
   WRITE(OutputFileBNDetails,700)
   WRITE(ChrOut,*) NumCompSets
   WRITE(OutputFileBNDetails,701) ' #Component Sets,'//TRIM(ADJUSTL(ChrOut))
   WRITE(OutputFileBNDetails,702)
 
- 700 FORMAT('! <#Component Sets>,<Number of Component Sets>')
- 701 FORMAT(A)
- 702 FORMAT('! <Component Set>,<Component Set Count>,<Parent Object Type>,<Parent Object Name>,',  &
-            '<Component Type>,<Component Name>,<Inlet Node ID>,<Outlet Node ID>,<Description>')
- 707 FORMAT(1X,A)
- 713 FORMAT(A)
+  700 FORMAT('! <#Component Sets>,<Number of Component Sets>')
+  701 FORMAT(A)
+  702 FORMAT('! <Component Set>,<Component Set Count>,<Parent Object Type>,<Parent Object Name>,',  &
+  '<Component Type>,<Component Name>,<Inlet Node ID>,<Outlet Node ID>,<Description>')
+  707 FORMAT(1X,A)
+  713 FORMAT(A)
 
 
   DO Count=1,NumCompSets
     WRITE(ChrOut,*) Count
     ChrOut=ADJUSTL(ChrOut)
     WRITE(OutputFileBNDetails,701) ' Component Set,'//TRIM(ChrOut)//','//  &
-                                    TRIM(CompSets(Count)%ParentCType)//','//TRIM(CompSets(Count)%ParentCName)//','//  &
-                                    TRIM(CompSets(Count)%CType)//','//TRIM(CompSets(Count)%CName)//','//  &
-                                    TRIM(CompSets(Count)%InletNodeName)//','//TRIM(CompSets(Count)%OutletNodeName)//','// &
-                                    TRIM(CompSets(Count)%Description)
+    TRIM(CompSets(Count)%ParentCType)//','//TRIM(CompSets(Count)%ParentCName)//','//  &
+    TRIM(CompSets(Count)%CType)//','//TRIM(CompSets(Count)%CName)//','//  &
+    TRIM(CompSets(Count)%InletNodeName)//','//TRIM(CompSets(Count)%OutletNodeName)//','// &
+    TRIM(CompSets(Count)%Description)
 
     IF (CompSets(Count)%ParentCType == 'UNDEFINED' .or. &
-        CompSets(Count)%InletNodeName == 'UNDEFINED' .or. &
-        CompSets(Count)%OutletNodeName == 'UNDEFINED') THEN
-      IF (AbortProcessing .and. WarningOut) THEN
-        CALL ShowWarningError('Node Connection errors shown during "fatal error" processing may be false '// &
-                              'because not all inputs may have been retrieved.')
-        WarningOut=.false.
-      ENDIF
-      !CALL ShowWarningError ('Node Connection Error for object '//TRIM(CompSets(Count)%CType)// &
-      !                       ', name='//TRIM(CompSets(Count)%CName))
-      !CALL ShowContinueError('  '//TRIM(CompSets(Count)%Description)//' not on any Branch or Parent Object')
-      !CALL ShowContinueError('  Inlet Node : '//TRIM(CompSets(Count)%InletNodeName))
-      !CALL ShowContinueError('  Outlet Node: '//TRIM(CompSets(Count)%OutletNodeName))  !RS: Secret Search String
-      WRITE(DebugFile,*) 'Node Connection Error for object '//TRIM(CompSets(Count)%CType)//', name='//TRIM(CompSets(Count)%CName)
-      WRITE(DebugFile,*) ' '//TRIM(CompSets(Count)%Description)//' not on any Branch or Parent Object'
-      WRITE(DebugFile,*) ' Inlet Node: '//TRIM(CompSets(Count)%InletNodeName)
-      WRITE(DebugFile,*) ' Outlet Node: '//TRIM(CompSets(Count)%OutletNodeName)
-      NumNodeConnectionErrors=NumNodeConnectionErrors+1
-      IF (SameString(TRIM(CompSets(Count)%CType), 'SolarCollector:UnglazedTranspired') ) Then
-       CALL ShowContinueError('This report does not necessarily indicate a problem for a MultiSystem Transpired Collector')
-      ENDIF
+    CompSets(Count)%InletNodeName == 'UNDEFINED' .or. &
+    CompSets(Count)%OutletNodeName == 'UNDEFINED') THEN
+    IF (AbortProcessing .and. WarningOut) THEN
+      CALL ShowWarningError('Node Connection errors shown during "fatal error" processing may be false '// &
+      'because not all inputs may have been retrieved.')
+      WarningOut=.false.
     ENDIF
-    IF (CompSets(Count)%Description == 'UNDEFINED') THEN
-      IF (AbortProcessing .and. WarningOut) THEN
-        CALL ShowWarningError('Node Connection errors shown during "fatal error" processing may be false '// &
-                              'because not all inputs may have been retrieved.')
-        WarningOut=.false.
-      ENDIF
-      !CALL ShowWarningError ('Potential Node Connection Error for object '//TRIM(CompSets(Count)%CType)// &
-      !                       ', name='//TRIM(CompSets(Count)%CName))
-      !CALL ShowContinueError('  Node Types are still UNDEFINED -- See Branch/Node Details file for further information')
-      !CALL ShowContinueError('  Inlet Node : '//TRIM(CompSets(Count)%InletNodeName))
-      !CALL ShowContinueError('  Outlet Node: '//TRIM(CompSets(Count)%OutletNodeName))  !RS: Secret Search String
-      WRITE(DebugFile,*) 'Potential Node Connection Error for object '//TRIM(CompSets(Count)%CType)// &
-        ', name='//TRIM(CompSets(Count)%CName)
-      WRITE(DebugFile,*) ' Node Types are still UNDEFINED -- See Branch/Node Details file for further information'
-      WRITE(DebugFile,*) ' Inlet Node: '//TRIM(CompSets(Count)%InletNodeName)
-      WRITE(DebugFile,*) ' Outlet Node: '//TRIM(CompSets(Count)%OutletNodeName)
-      NumNodeConnectionErrors=NumNodeConnectionErrors+1
-
-
+    !CALL ShowWarningError ('Node Connection Error for object '//TRIM(CompSets(Count)%CType)// &
+    !                       ', name='//TRIM(CompSets(Count)%CName))
+    !CALL ShowContinueError('  '//TRIM(CompSets(Count)%Description)//' not on any Branch or Parent Object')
+    !CALL ShowContinueError('  Inlet Node : '//TRIM(CompSets(Count)%InletNodeName))
+    !CALL ShowContinueError('  Outlet Node: '//TRIM(CompSets(Count)%OutletNodeName))  !RS: Secret Search String
+    WRITE(DebugFile,*) 'Node Connection Error for object '//TRIM(CompSets(Count)%CType)//', name='//TRIM(CompSets(Count)%CName)
+    WRITE(DebugFile,*) ' '//TRIM(CompSets(Count)%Description)//' not on any Branch or Parent Object'
+    WRITE(DebugFile,*) ' Inlet Node: '//TRIM(CompSets(Count)%InletNodeName)
+    WRITE(DebugFile,*) ' Outlet Node: '//TRIM(CompSets(Count)%OutletNodeName)
+    NumNodeConnectionErrors=NumNodeConnectionErrors+1
+    IF (SameString(TRIM(CompSets(Count)%CType), 'SolarCollector:UnglazedTranspired') ) Then
+      CALL ShowContinueError('This report does not necessarily indicate a problem for a MultiSystem Transpired Collector')
     ENDIF
-  ENDDO
+  ENDIF
+  IF (CompSets(Count)%Description == 'UNDEFINED') THEN
+    IF (AbortProcessing .and. WarningOut) THEN
+      CALL ShowWarningError('Node Connection errors shown during "fatal error" processing may be false '// &
+      'because not all inputs may have been retrieved.')
+      WarningOut=.false.
+    ENDIF
+    !CALL ShowWarningError ('Potential Node Connection Error for object '//TRIM(CompSets(Count)%CType)// &
+    !                       ', name='//TRIM(CompSets(Count)%CName))
+    !CALL ShowContinueError('  Node Types are still UNDEFINED -- See Branch/Node Details file for further information')
+    !CALL ShowContinueError('  Inlet Node : '//TRIM(CompSets(Count)%InletNodeName))
+    !CALL ShowContinueError('  Outlet Node: '//TRIM(CompSets(Count)%OutletNodeName))  !RS: Secret Search String
+    WRITE(DebugFile,*) 'Potential Node Connection Error for object '//TRIM(CompSets(Count)%CType)// &
+    ', name='//TRIM(CompSets(Count)%CName)
+    WRITE(DebugFile,*) ' Node Types are still UNDEFINED -- See Branch/Node Details file for further information'
+    WRITE(DebugFile,*) ' Inlet Node: '//TRIM(CompSets(Count)%InletNodeName)
+    WRITE(DebugFile,*) ' Outlet Node: '//TRIM(CompSets(Count)%OutletNodeName)
+    NumNodeConnectionErrors=NumNodeConnectionErrors+1
 
-  DO Count=1,NumCompSets
-    DO Count1=Count+1,NumCompSets
-      IF (CompSets(Count)%CType /= CompSets(Count1)%CType) CYCLE
-      IF (CompSets(Count)%CName /= CompSets(Count1)%CName) CYCLE
-      IF (CompSets(Count)%InletNodeName /= CompSets(Count1)%InletNodeName) CYCLE
-      IF (CompSets(Count)%OutletNodeName /= CompSets(Count1)%OutletNodeName) CYCLE
-      IF (AbortProcessing .and. WarningOut) THEN
-        CALL ShowWarningError('Node Connection errors shown during "fatal error" processing may be false '// &
-                              'because not all inputs may have been retrieved.')
-        WarningOut=.false.
-      ENDIF
-      CALL ShowWarningError  ('Component plus inlet/outlet node pair used more than once:')
-      CALL ShowContinueError ('  Component  : '//TRIM(CompSets(Count)%CType)//', name='//TRIM(CompSets(Count)%CName))
-      CALL ShowContinueError ('  Inlet Node : '//TRIM(CompSets(Count)%InletNodeName))
-      CALL ShowContinueError ('  Outlet Node: '//TRIM(CompSets(Count)%OutletNodeName))
-      CALL ShowContinueError ('  Used by    : '//TRIM(CompSets(Count)%ParentCType)//' '//TRIM(CompSets(Count)%ParentCName))
-      CALL ShowContinueError ('  and  by    : '//TRIM(CompSets(Count1)%ParentCType)//' '//TRIM(CompSets(Count1)%ParentCName))
-      NumNodeConnectionErrors=NumNodeConnectionErrors+1
-    ENDDO
+
+  ENDIF
+ENDDO
+
+DO Count=1,NumCompSets
+  DO Count1=Count+1,NumCompSets
+    IF (CompSets(Count)%CType /= CompSets(Count1)%CType) CYCLE
+    IF (CompSets(Count)%CName /= CompSets(Count1)%CName) CYCLE
+    IF (CompSets(Count)%InletNodeName /= CompSets(Count1)%InletNodeName) CYCLE
+    IF (CompSets(Count)%OutletNodeName /= CompSets(Count1)%OutletNodeName) CYCLE
+    IF (AbortProcessing .and. WarningOut) THEN
+      CALL ShowWarningError('Node Connection errors shown during "fatal error" processing may be false '// &
+      'because not all inputs may have been retrieved.')
+      WarningOut=.false.
+    ENDIF
+    CALL ShowWarningError  ('Component plus inlet/outlet node pair used more than once:')
+    CALL ShowContinueError ('  Component  : '//TRIM(CompSets(Count)%CType)//', name='//TRIM(CompSets(Count)%CName))
+    CALL ShowContinueError ('  Inlet Node : '//TRIM(CompSets(Count)%InletNodeName))
+    CALL ShowContinueError ('  Outlet Node: '//TRIM(CompSets(Count)%OutletNodeName))
+    CALL ShowContinueError ('  Used by    : '//TRIM(CompSets(Count)%ParentCType)//' '//TRIM(CompSets(Count)%ParentCName))
+    CALL ShowContinueError ('  and  by    : '//TRIM(CompSets(Count1)%ParentCType)//' '//TRIM(CompSets(Count1)%ParentCName))
+    NumNodeConnectionErrors=NumNodeConnectionErrors+1
   ENDDO
-          !  Plant Loops
-  WRITE(OutputFileBNDetails,701) '! ==============================================================='
-  WRITE(ChrOut,*) NumPlantLoops
-  ChrOut=ADJUSTL(ChrOut)
-  WRITE(OutputFileBNDetails,713) '! <# Plant Loops>,<Number of Plant Loops>'
-  WRITE(OutputFileBNDetails,707) '#Plant Loops,'//TRIM(ChrOut)
-  WRITE(OutputFileBNDetails,713) '! <Plant Loop>,<Plant Loop Name>,<Loop Type>,<Inlet Node Name>,'//  &
-                                 '<Outlet Node Name>,<Branch List>,<Connector List>'
-  WRITE(OutputFileBNDetails,713) '! <Plant Loop Connector>,<Connector Type>,<Connector Name>,'// &
-                                 '<Loop Name>,<Loop Type>,<Number of Inlets/Outlets>'
-  WRITE(OutputFileBNDetails,713) '! <Plant Loop Connector Branches>,<Connector Node Count>,<Connector Type>,'// &
-                                 '<Connector Name>,<Inlet Branch>,<Outlet Branch>,'// &
-                                 '<Loop Name>,<Loop Type>'
-  WRITE(OutputFileBNDetails,713) '! <Plant Loop Connector Nodes>,<Connector Node Count>,<Connector Type>,'// &
-                                 '<Connector Name>,<Inlet Node>,<Outlet Node>,'// &
-                                 '<Loop Name>,<Loop Type>'
-  WRITE(OutputFileBNDetails,713) '! <Plant Loop Supply Connection>,<Plant Loop Name>,<Supply Side Outlet Node Name>,'//  &
-                                 '<Demand Side Inlet Node Name>'
-  WRITE(OutputFileBNDetails,713) '! <Plant Loop Return Connection>,<Plant Loop Name>,<Demand Side Outlet Node Name>,'//  &
-                                 '<Supply Side Inlet Node Name>'
- DO Count=1,NumPlantLoops
+ENDDO
+!  Plant Loops
+WRITE(OutputFileBNDetails,701) '! ==============================================================='
+WRITE(ChrOut,*) NumPlantLoops
+ChrOut=ADJUSTL(ChrOut)
+WRITE(OutputFileBNDetails,713) '! <# Plant Loops>,<Number of Plant Loops>'
+WRITE(OutputFileBNDetails,707) '#Plant Loops,'//TRIM(ChrOut)
+WRITE(OutputFileBNDetails,713) '! <Plant Loop>,<Plant Loop Name>,<Loop Type>,<Inlet Node Name>,'//  &
+'<Outlet Node Name>,<Branch List>,<Connector List>'
+WRITE(OutputFileBNDetails,713) '! <Plant Loop Connector>,<Connector Type>,<Connector Name>,'// &
+'<Loop Name>,<Loop Type>,<Number of Inlets/Outlets>'
+WRITE(OutputFileBNDetails,713) '! <Plant Loop Connector Branches>,<Connector Node Count>,<Connector Type>,'// &
+'<Connector Name>,<Inlet Branch>,<Outlet Branch>,'// &
+'<Loop Name>,<Loop Type>'
+WRITE(OutputFileBNDetails,713) '! <Plant Loop Connector Nodes>,<Connector Node Count>,<Connector Type>,'// &
+'<Connector Name>,<Inlet Node>,<Outlet Node>,'// &
+'<Loop Name>,<Loop Type>'
+WRITE(OutputFileBNDetails,713) '! <Plant Loop Supply Connection>,<Plant Loop Name>,<Supply Side Outlet Node Name>,'//  &
+'<Demand Side Inlet Node Name>'
+WRITE(OutputFileBNDetails,713) '! <Plant Loop Return Connection>,<Plant Loop Name>,<Demand Side Outlet Node Name>,'//  &
+'<Supply Side Inlet Node Name>'
+DO Count=1,NumPlantLoops
   DO LoopSideNum = DemandSide, SupplySide
-          !  Plant Supply Side Loop
+    !  Plant Supply Side Loop
     ! Demandside and supplyside is parametrized in DataPlant
     IF (LoopSideNum == DemandSide) THEN
-     LoopString = 'Demand'
+      LoopString = 'Demand'
     ELSE IF(LoopSideNum == SupplySide) THEN
-     LoopString = 'Supply'
+      LoopString = 'Supply'
     END IF
 
     WRITE(OutputFileBNDetails,713) ' Plant Loop,'//TRIM(PlantLoop(Count)%Name)//','//LoopString//','//  &
-          TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%NodeNameIn)//','//   &
-          TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%NodeNameOut)//','//  &
-          TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%BranchList)//','//      &
-          TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%ConnectList)
-          !  Plant Supply Side Splitter
-   DO Num = 1,PlantLoop(Count)%LoopSide(LoopSideNum)%NumSplitters
-    IF (PlantLoop(Count)%LoopSide(LoopSideNum)%Splitter(Num)%Exists) THEN
-      WRITE(ChrOut,*) PlantLoop(Count)%LoopSide(LoopSideNum)%Splitter(Num)%TotalOutletNodes
-      WRITE(OutputFileBNDetails,713) '   Plant Loop Connector,Splitter,'// &
-            TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Splitter(Num)%Name)//','//  &
-            TRIM(PlantLoop(Count)%Name)//','//LoopString//','//  &
-            TRIM(ADJUSTL(ChrOut))
-      DO Count1=1,PlantLoop(Count)%LoopSide(LoopSideNum)%Splitter(Num)%TotalOutletNodes
-        WRITE(ChrOut,*) Count1
-        ChrOut2=Blank
-        ChrOut3=Blank
-        IF (PlantLoop(Count)%LoopSide(LoopSideNum)%Splitter(Num)%BranchNumIn <= 0) THEN
-          ChrOut2=errstring
-        ENDIF
-        IF (PlantLoop(Count)%LoopSide(LoopSideNum)%Splitter(Num)%BranchNumOut(Count1) <= 0) THEN
-          ChrOut3=errstring
-        ENDIF
-        WRITE(OutputFileBNDetails,713,advance='No') '     Plant Loop Connector Branches,'//TRIM(ADJUSTL(ChrOut))//',Splitter,'// &
-              TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Splitter(Num)%Name)//','
-        IF (ChrOut2 /= errstring) THEN
-          WRITE(OutputFileBNDetails,713,advance='No')   &
-             TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Branch(PlantLoop(Count)%  &
-                                     LoopSide(LoopSideNum)%Splitter(Num)%BranchNumIn)%Name)//','
-        ELSE
-          WRITE(OutputFileBNDetails,713,advance='No') TRIM(ChrOut2)//','
-        ENDIF
-        IF (ChrOut3 /= errstring) THEN
-          WRITE(OutputFileBNDetails,713)   &
-              TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Branch(PlantLoop(Count)%  &
-                                     LoopSide(LoopSideNum)%Splitter(Num)%BranchNumOut(Count1))%Name)//','// &
-              TRIM(PlantLoop(Count)%Name)//','//LoopString
-        ELSE
-          WRITE(OutputFileBNDetails,713)   &
-              TRIM(ChrOut3)//','// &
-              TRIM(PlantLoop(Count)%Name)//','//LoopString
-        ENDIF
-        WRITE(OutputFileBNDetails,713) '     Plant Loop Connector Nodes,   '//TRIM(ADJUSTL(ChrOut))//',Splitter,'// &
-              TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Splitter(Num)%Name)//','//  &
-              TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Splitter(Num)%NodeNameIn)//','//  &
-              TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Splitter(Num)%NodeNameOut(Count1))//','//  &
-              TRIM(PlantLoop(Count)%Name)//','//LoopString
-      ENDDO
-    ENDIF
-   END DO
-          !  Plant Supply Side Mixer
-   DO Num = 1, PlantLoop(Count)%LoopSide(LoopSideNum)%NumMixers
-    IF (PlantLoop(Count)%LoopSide(LoopSideNum)%Mixer(Num)%Exists) THEN
-      WRITE(ChrOut,*) PlantLoop(Count)%LoopSide(LoopSideNum)%Mixer(Num)%TotalInletNodes
-      WRITE(OutputFileBNDetails,713) '   Plant Loop Connector,Mixer,'// &
-            TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Mixer(Num)%Name)//','//  &
-            TRIM(PlantLoop(Count)%Name)//','//LoopString//','//     &    !',Supply,'//  &
-            TRIM(ADJUSTL(ChrOut))
-      DO Count1=1,PlantLoop(Count)%LoopSide(LoopSideNum)%Mixer(Num)%TotalInletNodes
-        WRITE(ChrOut,*) Count1
-        ChrOut2=Blank
-        ChrOut3=Blank
-        IF (PlantLoop(Count)%LoopSide(LoopSideNum)%Mixer(Num)%BranchNumIn(Count1) <= 0) THEN
-          ChrOut2=errstring
-        ENDIF
-        IF (PlantLoop(Count)%LoopSide(LoopSideNum)%Mixer(Num)%BranchNumOut <= 0) THEN
-          ChrOut3=errstring
-        ENDIF
-        WRITE(OutputFileBNDetails,713,advance='No') '     Plant Loop Connector Branches,'//TRIM(ADJUSTL(ChrOut))//',Mixer,'// &
-              TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Mixer(Num)%Name)//','
-        IF (ChrOut2 /= errstring) THEN
-          WRITE(OutputFileBNDetails,713,advance='No')  &
-              TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Branch(PlantLoop(Count)%  &
-                                     LoopSide(LoopSideNum)%Mixer(Num)%BranchNumIn(Count1))%Name)//','
-        ELSE
-          WRITE(OutputFileBNDetails,713,advance='No') TRIM(ChrOut2)//','
-        ENDIF
-        IF (ChrOut3 /= errstring) THEN
-          WRITE(OutputFileBNDetails,713)  &
-              TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Branch(PlantLoop(Count)%  &
-                                      LoopSide(LoopSideNum)%Mixer(Num)%BranchNumOut)%Name)//','//  &
-              TRIM(PlantLoop(Count)%Name)//','//LoopString
-        ELSE
-          WRITE(OutputFileBNDetails,713)   &
-              TRIM(ChrOut3)//','// &
-              TRIM(PlantLoop(Count)%Name)//',Supply'
-        ENDIF
-        WRITE(OutputFileBNDetails,713) '     Plant Loop Connector Nodes,   '//TRIM(ADJUSTL(ChrOut))//',Mixer,'// &
-              TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Mixer(Num)%Name)//','//  &
-              TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Mixer(Num)%NodeNameIn(Count1))//','//  &
-              TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Mixer(Num)%NodeNameOut)//','//  &
-              TRIM(PlantLoop(Count)%Name)//','//LoopString
-      ENDDO
-    ENDIF
-   END DO
+    TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%NodeNameIn)//','//   &
+    TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%NodeNameOut)//','//  &
+    TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%BranchList)//','//      &
+    TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%ConnectList)
+    !  Plant Supply Side Splitter
+    DO Num = 1,PlantLoop(Count)%LoopSide(LoopSideNum)%NumSplitters
+      IF (PlantLoop(Count)%LoopSide(LoopSideNum)%Splitter(Num)%Exists) THEN
+        WRITE(ChrOut,*) PlantLoop(Count)%LoopSide(LoopSideNum)%Splitter(Num)%TotalOutletNodes
+        WRITE(OutputFileBNDetails,713) '   Plant Loop Connector,Splitter,'// &
+        TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Splitter(Num)%Name)//','//  &
+        TRIM(PlantLoop(Count)%Name)//','//LoopString//','//  &
+        TRIM(ADJUSTL(ChrOut))
+        DO Count1=1,PlantLoop(Count)%LoopSide(LoopSideNum)%Splitter(Num)%TotalOutletNodes
+          WRITE(ChrOut,*) Count1
+          ChrOut2=Blank
+          ChrOut3=Blank
+          IF (PlantLoop(Count)%LoopSide(LoopSideNum)%Splitter(Num)%BranchNumIn <= 0) THEN
+            ChrOut2=errstring
+          ENDIF
+          IF (PlantLoop(Count)%LoopSide(LoopSideNum)%Splitter(Num)%BranchNumOut(Count1) <= 0) THEN
+            ChrOut3=errstring
+          ENDIF
+          WRITE(OutputFileBNDetails,713,advance='No') '     Plant Loop Connector Branches,'//TRIM(ADJUSTL(ChrOut))//',Splitter,'// &
+          TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Splitter(Num)%Name)//','
+          IF (ChrOut2 /= errstring) THEN
+            WRITE(OutputFileBNDetails,713,advance='No')   &
+            TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Branch(PlantLoop(Count)%  &
+            LoopSide(LoopSideNum)%Splitter(Num)%BranchNumIn)%Name)//','
+          ELSE
+            WRITE(OutputFileBNDetails,713,advance='No') TRIM(ChrOut2)//','
+          ENDIF
+          IF (ChrOut3 /= errstring) THEN
+            WRITE(OutputFileBNDetails,713)   &
+            TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Branch(PlantLoop(Count)%  &
+            LoopSide(LoopSideNum)%Splitter(Num)%BranchNumOut(Count1))%Name)//','// &
+            TRIM(PlantLoop(Count)%Name)//','//LoopString
+          ELSE
+            WRITE(OutputFileBNDetails,713)   &
+            TRIM(ChrOut3)//','// &
+            TRIM(PlantLoop(Count)%Name)//','//LoopString
+          ENDIF
+          WRITE(OutputFileBNDetails,713) '     Plant Loop Connector Nodes,   '//TRIM(ADJUSTL(ChrOut))//',Splitter,'// &
+          TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Splitter(Num)%Name)//','//  &
+          TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Splitter(Num)%NodeNameIn)//','//  &
+          TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Splitter(Num)%NodeNameOut(Count1))//','//  &
+          TRIM(PlantLoop(Count)%Name)//','//LoopString
+        ENDDO
+      ENDIF
+    END DO
+    !  Plant Supply Side Mixer
+    DO Num = 1, PlantLoop(Count)%LoopSide(LoopSideNum)%NumMixers
+      IF (PlantLoop(Count)%LoopSide(LoopSideNum)%Mixer(Num)%Exists) THEN
+        WRITE(ChrOut,*) PlantLoop(Count)%LoopSide(LoopSideNum)%Mixer(Num)%TotalInletNodes
+        WRITE(OutputFileBNDetails,713) '   Plant Loop Connector,Mixer,'// &
+        TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Mixer(Num)%Name)//','//  &
+        TRIM(PlantLoop(Count)%Name)//','//LoopString//','//     &    !',Supply,'//  &
+        TRIM(ADJUSTL(ChrOut))
+        DO Count1=1,PlantLoop(Count)%LoopSide(LoopSideNum)%Mixer(Num)%TotalInletNodes
+          WRITE(ChrOut,*) Count1
+          ChrOut2=Blank
+          ChrOut3=Blank
+          IF (PlantLoop(Count)%LoopSide(LoopSideNum)%Mixer(Num)%BranchNumIn(Count1) <= 0) THEN
+            ChrOut2=errstring
+          ENDIF
+          IF (PlantLoop(Count)%LoopSide(LoopSideNum)%Mixer(Num)%BranchNumOut <= 0) THEN
+            ChrOut3=errstring
+          ENDIF
+          WRITE(OutputFileBNDetails,713,advance='No') '     Plant Loop Connector Branches,'//TRIM(ADJUSTL(ChrOut))//',Mixer,'// &
+          TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Mixer(Num)%Name)//','
+          IF (ChrOut2 /= errstring) THEN
+            WRITE(OutputFileBNDetails,713,advance='No')  &
+            TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Branch(PlantLoop(Count)%  &
+            LoopSide(LoopSideNum)%Mixer(Num)%BranchNumIn(Count1))%Name)//','
+          ELSE
+            WRITE(OutputFileBNDetails,713,advance='No') TRIM(ChrOut2)//','
+          ENDIF
+          IF (ChrOut3 /= errstring) THEN
+            WRITE(OutputFileBNDetails,713)  &
+            TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Branch(PlantLoop(Count)%  &
+            LoopSide(LoopSideNum)%Mixer(Num)%BranchNumOut)%Name)//','//  &
+            TRIM(PlantLoop(Count)%Name)//','//LoopString
+          ELSE
+            WRITE(OutputFileBNDetails,713)   &
+            TRIM(ChrOut3)//','// &
+            TRIM(PlantLoop(Count)%Name)//',Supply'
+          ENDIF
+          WRITE(OutputFileBNDetails,713) '     Plant Loop Connector Nodes,   '//TRIM(ADJUSTL(ChrOut))//',Mixer,'// &
+          TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Mixer(Num)%Name)//','//  &
+          TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Mixer(Num)%NodeNameIn(Count1))//','//  &
+          TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Mixer(Num)%NodeNameOut)//','//  &
+          TRIM(PlantLoop(Count)%Name)//','//LoopString
+        ENDDO
+      ENDIF
+    END DO
   END DO
-    WRITE(OutputFileBNDetails,713) ' Plant Loop Supply Connection,'//TRIM(PlantLoop(Count)%Name)//','//  &
-          TRIM(PlantLoop(Count)%LoopSide(SupplySide)%NodeNameOut)//','//  &
-          TRIM(PlantLoop(Count)%LoopSide(DemandSide)%NodeNameIn)
-    WRITE(OutputFileBNDetails,713) ' Plant Loop Return Connection,'//TRIM(PlantLoop(Count)%Name)//','//  &
-          TRIM(PlantLoop(Count)%LoopSide(DemandSide)%NodeNameOut)//','//  &
-          TRIM(PlantLoop(Count)%LoopSide(SupplySide)%NodeNameIn)
+  WRITE(OutputFileBNDetails,713) ' Plant Loop Supply Connection,'//TRIM(PlantLoop(Count)%Name)//','//  &
+  TRIM(PlantLoop(Count)%LoopSide(SupplySide)%NodeNameOut)//','//  &
+  TRIM(PlantLoop(Count)%LoopSide(DemandSide)%NodeNameIn)
+  WRITE(OutputFileBNDetails,713) ' Plant Loop Return Connection,'//TRIM(PlantLoop(Count)%Name)//','//  &
+  TRIM(PlantLoop(Count)%LoopSide(DemandSide)%NodeNameOut)//','//  &
+  TRIM(PlantLoop(Count)%LoopSide(SupplySide)%NodeNameIn)
 
- END DO         !  Plant Demand Side Loop
+END DO         !  Plant Demand Side Loop
 
-          !  Condenser Loops
-  WRITE(OutputFileBNDetails,701) '! ==============================================================='
-  WRITE(ChrOut,*) NumCondLoops
-  ChrOut=ADJUSTL(ChrOut)
-  WRITE(OutputFileBNDetails,713) '! <# Condenser Loops>,<Number of Condenser Loops>'
-  WRITE(OutputFileBNDetails,707) '#Condenser Loops,'//TRIM(ChrOut)
-  WRITE(OutputFileBNDetails,713) '! <Condenser Loop>,<Condenser Loop Name>,<Loop Type>,<Inlet Node Name>,'//  &
-                                 '<Outlet Node Name>,<Branch List>,<Connector List>'
-  WRITE(OutputFileBNDetails,713) '! <Condenser Loop Connector>,<Connector Type>,<Connector Name>,'// &
-                                 '<Loop Name>,<Loop Type>,<Number of Inlets/Outlets>'
-  WRITE(OutputFileBNDetails,713) '! <Condenser Loop Connector Branches>,<Connector Node Count>,<Connector Type>,'// &
-                                 '<Connector Name>,<Inlet Branch>,<Outlet Branch>,'// &
-                                 '<Loop Name>,<Loop Type>'
-  WRITE(OutputFileBNDetails,713) '! <Condenser Loop Connector Nodes>,<Connector Node Count>,<Connector Type>,'// &
-                                 '<Connector Name>,<Inlet Node>,<Outlet Node>,'// &
-                                 '<Loop Name>,<Loop Type>'
-  WRITE(OutputFileBNDetails,713) '! <Condenser Loop Supply Connection>,<Condenser Loop Name>,<Supply Side Outlet Node Name>,'//  &
-                                 '<Demand Side Inlet Node Name>'
-  WRITE(OutputFileBNDetails,713) '! <Condenser Loop Return Connection>,<Condenser Loop Name>,<Demand Side Outlet Node Name>,'//  &
-                                 '<Supply Side Inlet Node Name>'
+!  Condenser Loops
+WRITE(OutputFileBNDetails,701) '! ==============================================================='
+WRITE(ChrOut,*) NumCondLoops
+ChrOut=ADJUSTL(ChrOut)
+WRITE(OutputFileBNDetails,713) '! <# Condenser Loops>,<Number of Condenser Loops>'
+WRITE(OutputFileBNDetails,707) '#Condenser Loops,'//TRIM(ChrOut)
+WRITE(OutputFileBNDetails,713) '! <Condenser Loop>,<Condenser Loop Name>,<Loop Type>,<Inlet Node Name>,'//  &
+'<Outlet Node Name>,<Branch List>,<Connector List>'
+WRITE(OutputFileBNDetails,713) '! <Condenser Loop Connector>,<Connector Type>,<Connector Name>,'// &
+'<Loop Name>,<Loop Type>,<Number of Inlets/Outlets>'
+WRITE(OutputFileBNDetails,713) '! <Condenser Loop Connector Branches>,<Connector Node Count>,<Connector Type>,'// &
+'<Connector Name>,<Inlet Branch>,<Outlet Branch>,'// &
+'<Loop Name>,<Loop Type>'
+WRITE(OutputFileBNDetails,713) '! <Condenser Loop Connector Nodes>,<Connector Node Count>,<Connector Type>,'// &
+'<Connector Name>,<Inlet Node>,<Outlet Node>,'// &
+'<Loop Name>,<Loop Type>'
+WRITE(OutputFileBNDetails,713) '! <Condenser Loop Supply Connection>,<Condenser Loop Name>,<Supply Side Outlet Node Name>,'//  &
+'<Demand Side Inlet Node Name>'
+WRITE(OutputFileBNDetails,713) '! <Condenser Loop Return Connection>,<Condenser Loop Name>,<Demand Side Outlet Node Name>,'//  &
+'<Supply Side Inlet Node Name>'
 
- DO Count=NumPlantLoops+1,TotNumLoops
+DO Count=NumPlantLoops+1,TotNumLoops
   DO LoopSideNum = DemandSide, SupplySide
-          !  Plant Supply Side Loop
+    !  Plant Supply Side Loop
     ! Demandside and supplyside is parametrized in DataPlant
     IF (LoopSideNum == DemandSide) THEN
-     LoopString = 'Demand'
+      LoopString = 'Demand'
     ELSE IF(LoopSideNum == SupplySide) THEN
-     LoopString = 'Supply'
+      LoopString = 'Supply'
     END IF
 
     WRITE(OutputFileBNDetails,713) ' Plant Loop,'//TRIM(PlantLoop(Count)%Name)//','//LoopString//','//  &
-          TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%NodeNameIn)//','//   &
-          TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%NodeNameOut)//','//  &
-          TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%BranchList)//','//      &
-          TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%ConnectList)
-          !  Plant Supply Side Splitter
-   DO Num = 1,PlantLoop(Count)%LoopSide(LoopSideNum)%NumSplitters
-    IF (PlantLoop(Count)%LoopSide(LoopSideNum)%Splitter(Num)%Exists) THEN
-      WRITE(ChrOut,*) PlantLoop(Count)%LoopSide(LoopSideNum)%Splitter(Num)%TotalOutletNodes
-      WRITE(OutputFileBNDetails,713) '   Plant Loop Connector,Splitter,'// &
-            TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Splitter(Num)%Name)//','//  &
-            TRIM(PlantLoop(Count)%Name)//','//LoopString//','//  &
-            TRIM(ADJUSTL(ChrOut))
-      DO Count1=1,PlantLoop(Count)%LoopSide(LoopSideNum)%Splitter(Num)%TotalOutletNodes
-        WRITE(ChrOut,*) Count1
-        ChrOut2=Blank
-        ChrOut3=Blank
-        IF (PlantLoop(Count)%LoopSide(LoopSideNum)%Splitter(Num)%BranchNumIn <= 0) THEN
-          ChrOut2=errstring
-        ENDIF
-        IF (PlantLoop(Count)%LoopSide(LoopSideNum)%Splitter(Num)%BranchNumOut(Count1) <= 0) THEN
-          ChrOut3=errstring
-        ENDIF
-        WRITE(OutputFileBNDetails,713,advance='No') '     Plant Loop Connector Branches,'//TRIM(ADJUSTL(ChrOut))//',Splitter,'// &
-              TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Splitter(Num)%Name)//','
-        IF (ChrOut2 /= errstring) THEN
-          WRITE(OutputFileBNDetails,713,advance='No')   &
-             TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Branch(PlantLoop(Count)%  &
-                                     LoopSide(LoopSideNum)%Splitter(Num)%BranchNumIn)%Name)//','
-        ELSE
-          WRITE(OutputFileBNDetails,713,advance='No') TRIM(ChrOut2)//','
-        ENDIF
-        IF (ChrOut3 /= errstring) THEN
-          WRITE(OutputFileBNDetails,713)   &
-              TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Branch(PlantLoop(Count)%  &
-                                     LoopSide(LoopSideNum)%Splitter(Num)%BranchNumOut(Count1))%Name)//','// &
-              TRIM(PlantLoop(Count)%Name)//','//LoopString
-        ELSE
-          WRITE(OutputFileBNDetails,713)   &
-              TRIM(ChrOut3)//','// &
-              TRIM(PlantLoop(Count)%Name)//','//LoopString
-        ENDIF
-        WRITE(OutputFileBNDetails,713) '     Plant Loop Connector Nodes,   '//TRIM(ADJUSTL(ChrOut))//',Splitter,'// &
-              TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Splitter(Num)%Name)//','//  &
-              TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Splitter(Num)%NodeNameIn)//','//  &
-              TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Splitter(Num)%NodeNameOut(Count1))//','//  &
-              TRIM(PlantLoop(Count)%Name)//','//LoopString
-      ENDDO
-    ENDIF
-   END DO
-          !  Plant Supply Side Mixer
-   DO Num = 1, PlantLoop(Count)%LoopSide(LoopSideNum)%NumMixers
-    IF (PlantLoop(Count)%LoopSide(LoopSideNum)%Mixer(Num)%Exists) THEN
-      WRITE(ChrOut,*) PlantLoop(Count)%LoopSide(LoopSideNum)%Mixer(Num)%TotalInletNodes
-      WRITE(OutputFileBNDetails,713) '   Plant Loop Connector,Mixer,'// &
-            TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Mixer(Num)%Name)//','//  &
-            TRIM(PlantLoop(Count)%Name)//','//LoopString//','//     &    !',Supply,'//  &
-            TRIM(ADJUSTL(ChrOut))
-      DO Count1=1,PlantLoop(Count)%LoopSide(LoopSideNum)%Mixer(Num)%TotalInletNodes
-        WRITE(ChrOut,*) Count1
-        ChrOut2=Blank
-        ChrOut3=Blank
-        IF (PlantLoop(Count)%LoopSide(LoopSideNum)%Mixer(Num)%BranchNumIn(Count1) <= 0) THEN
-          ChrOut2=errstring
-        ENDIF
-        IF (PlantLoop(Count)%LoopSide(LoopSideNum)%Mixer(Num)%BranchNumOut <= 0) THEN
-          ChrOut3=errstring
-        ENDIF
-        WRITE(OutputFileBNDetails,713,advance='No') '     Plant Loop Connector Branches,'//TRIM(ADJUSTL(ChrOut))//',Mixer,'// &
-              TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Mixer(Num)%Name)//','
-        IF (ChrOut2 /= errstring) THEN
-          WRITE(OutputFileBNDetails,713,advance='No')  &
-              TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Branch(PlantLoop(Count)%  &
-                                     LoopSide(LoopSideNum)%Mixer(Num)%BranchNumIn(Count1))%Name)//','
-        ELSE
-          WRITE(OutputFileBNDetails,713,advance='No') TRIM(ChrOut2)//','
-        ENDIF
-        IF (ChrOut3 /= errstring) THEN
-          WRITE(OutputFileBNDetails,713)  &
-              TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Branch(PlantLoop(Count)%  &
-                                      LoopSide(LoopSideNum)%Mixer(Num)%BranchNumOut)%Name)//','//  &
-              TRIM(PlantLoop(Count)%Name)//','//LoopString
-        ELSE
-          WRITE(OutputFileBNDetails,713)   &
-              TRIM(ChrOut3)//','// &
-              TRIM(PlantLoop(Count)%Name)//',Supply'
-        ENDIF
-        WRITE(OutputFileBNDetails,713) '     Plant Loop Connector Nodes,   '//TRIM(ADJUSTL(ChrOut))//',Mixer,'// &
-              TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Mixer(Num)%Name)//','//  &
-              TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Mixer(Num)%NodeNameIn(Count1))//','//  &
-              TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Mixer(Num)%NodeNameOut)//','//  &
-              TRIM(PlantLoop(Count)%Name)//','//LoopString
-      ENDDO
-    ENDIF
-   END DO
+    TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%NodeNameIn)//','//   &
+    TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%NodeNameOut)//','//  &
+    TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%BranchList)//','//      &
+    TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%ConnectList)
+    !  Plant Supply Side Splitter
+    DO Num = 1,PlantLoop(Count)%LoopSide(LoopSideNum)%NumSplitters
+      IF (PlantLoop(Count)%LoopSide(LoopSideNum)%Splitter(Num)%Exists) THEN
+        WRITE(ChrOut,*) PlantLoop(Count)%LoopSide(LoopSideNum)%Splitter(Num)%TotalOutletNodes
+        WRITE(OutputFileBNDetails,713) '   Plant Loop Connector,Splitter,'// &
+        TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Splitter(Num)%Name)//','//  &
+        TRIM(PlantLoop(Count)%Name)//','//LoopString//','//  &
+        TRIM(ADJUSTL(ChrOut))
+        DO Count1=1,PlantLoop(Count)%LoopSide(LoopSideNum)%Splitter(Num)%TotalOutletNodes
+          WRITE(ChrOut,*) Count1
+          ChrOut2=Blank
+          ChrOut3=Blank
+          IF (PlantLoop(Count)%LoopSide(LoopSideNum)%Splitter(Num)%BranchNumIn <= 0) THEN
+            ChrOut2=errstring
+          ENDIF
+          IF (PlantLoop(Count)%LoopSide(LoopSideNum)%Splitter(Num)%BranchNumOut(Count1) <= 0) THEN
+            ChrOut3=errstring
+          ENDIF
+          WRITE(OutputFileBNDetails,713,advance='No') '     Plant Loop Connector Branches,'//TRIM(ADJUSTL(ChrOut))//',Splitter,'// &
+          TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Splitter(Num)%Name)//','
+          IF (ChrOut2 /= errstring) THEN
+            WRITE(OutputFileBNDetails,713,advance='No')   &
+            TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Branch(PlantLoop(Count)%  &
+            LoopSide(LoopSideNum)%Splitter(Num)%BranchNumIn)%Name)//','
+          ELSE
+            WRITE(OutputFileBNDetails,713,advance='No') TRIM(ChrOut2)//','
+          ENDIF
+          IF (ChrOut3 /= errstring) THEN
+            WRITE(OutputFileBNDetails,713)   &
+            TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Branch(PlantLoop(Count)%  &
+            LoopSide(LoopSideNum)%Splitter(Num)%BranchNumOut(Count1))%Name)//','// &
+            TRIM(PlantLoop(Count)%Name)//','//LoopString
+          ELSE
+            WRITE(OutputFileBNDetails,713)   &
+            TRIM(ChrOut3)//','// &
+            TRIM(PlantLoop(Count)%Name)//','//LoopString
+          ENDIF
+          WRITE(OutputFileBNDetails,713) '     Plant Loop Connector Nodes,   '//TRIM(ADJUSTL(ChrOut))//',Splitter,'// &
+          TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Splitter(Num)%Name)//','//  &
+          TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Splitter(Num)%NodeNameIn)//','//  &
+          TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Splitter(Num)%NodeNameOut(Count1))//','//  &
+          TRIM(PlantLoop(Count)%Name)//','//LoopString
+        ENDDO
+      ENDIF
+    END DO
+    !  Plant Supply Side Mixer
+    DO Num = 1, PlantLoop(Count)%LoopSide(LoopSideNum)%NumMixers
+      IF (PlantLoop(Count)%LoopSide(LoopSideNum)%Mixer(Num)%Exists) THEN
+        WRITE(ChrOut,*) PlantLoop(Count)%LoopSide(LoopSideNum)%Mixer(Num)%TotalInletNodes
+        WRITE(OutputFileBNDetails,713) '   Plant Loop Connector,Mixer,'// &
+        TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Mixer(Num)%Name)//','//  &
+        TRIM(PlantLoop(Count)%Name)//','//LoopString//','//     &    !',Supply,'//  &
+        TRIM(ADJUSTL(ChrOut))
+        DO Count1=1,PlantLoop(Count)%LoopSide(LoopSideNum)%Mixer(Num)%TotalInletNodes
+          WRITE(ChrOut,*) Count1
+          ChrOut2=Blank
+          ChrOut3=Blank
+          IF (PlantLoop(Count)%LoopSide(LoopSideNum)%Mixer(Num)%BranchNumIn(Count1) <= 0) THEN
+            ChrOut2=errstring
+          ENDIF
+          IF (PlantLoop(Count)%LoopSide(LoopSideNum)%Mixer(Num)%BranchNumOut <= 0) THEN
+            ChrOut3=errstring
+          ENDIF
+          WRITE(OutputFileBNDetails,713,advance='No') '     Plant Loop Connector Branches,'//TRIM(ADJUSTL(ChrOut))//',Mixer,'// &
+          TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Mixer(Num)%Name)//','
+          IF (ChrOut2 /= errstring) THEN
+            WRITE(OutputFileBNDetails,713,advance='No')  &
+            TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Branch(PlantLoop(Count)%  &
+            LoopSide(LoopSideNum)%Mixer(Num)%BranchNumIn(Count1))%Name)//','
+          ELSE
+            WRITE(OutputFileBNDetails,713,advance='No') TRIM(ChrOut2)//','
+          ENDIF
+          IF (ChrOut3 /= errstring) THEN
+            WRITE(OutputFileBNDetails,713)  &
+            TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Branch(PlantLoop(Count)%  &
+            LoopSide(LoopSideNum)%Mixer(Num)%BranchNumOut)%Name)//','//  &
+            TRIM(PlantLoop(Count)%Name)//','//LoopString
+          ELSE
+            WRITE(OutputFileBNDetails,713)   &
+            TRIM(ChrOut3)//','// &
+            TRIM(PlantLoop(Count)%Name)//',Supply'
+          ENDIF
+          WRITE(OutputFileBNDetails,713) '     Plant Loop Connector Nodes,   '//TRIM(ADJUSTL(ChrOut))//',Mixer,'// &
+          TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Mixer(Num)%Name)//','//  &
+          TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Mixer(Num)%NodeNameIn(Count1))//','//  &
+          TRIM(PlantLoop(Count)%LoopSide(LoopSideNum)%Mixer(Num)%NodeNameOut)//','//  &
+          TRIM(PlantLoop(Count)%Name)//','//LoopString
+        ENDDO
+      ENDIF
+    END DO
   END DO
-    WRITE(OutputFileBNDetails,713) ' Plant Loop Supply Connection,'//TRIM(PlantLoop(Count)%Name)//','//  &
-          TRIM(PlantLoop(Count)%LoopSide(SupplySide)%NodeNameOut)//','//  &
-          TRIM(PlantLoop(Count)%LoopSide(DemandSide)%NodeNameIn)
-    WRITE(OutputFileBNDetails,713) ' Plant Loop Return Connection,'//TRIM(PlantLoop(Count)%Name)//','//  &
-          TRIM(PlantLoop(Count)%LoopSide(DemandSide)%NodeNameOut)//','//  &
-          TRIM(PlantLoop(Count)%LoopSide(SupplySide)%NodeNameIn)
+  WRITE(OutputFileBNDetails,713) ' Plant Loop Supply Connection,'//TRIM(PlantLoop(Count)%Name)//','//  &
+  TRIM(PlantLoop(Count)%LoopSide(SupplySide)%NodeNameOut)//','//  &
+  TRIM(PlantLoop(Count)%LoopSide(DemandSide)%NodeNameIn)
+  WRITE(OutputFileBNDetails,713) ' Plant Loop Return Connection,'//TRIM(PlantLoop(Count)%Name)//','//  &
+  TRIM(PlantLoop(Count)%LoopSide(DemandSide)%NodeNameOut)//','//  &
+  TRIM(PlantLoop(Count)%LoopSide(SupplySide)%NodeNameIn)
 
- END DO         !  Plant Demand Side Loop
+END DO         !  Plant Demand Side Loop
 
-  WRITE(OutputFileBNDetails,701) '! ==============================================================='
-  NumOfControlledZones=0
+WRITE(OutputFileBNDetails,701) '! ==============================================================='
+NumOfControlledZones=0
+DO Count=1,NumOfZones
+  IF (.not. ALLOCATED(ZoneEquipConfig)) CYCLE
+  IF (ZoneEquipConfig(Count)%IsControlled) NumOfControlledZones=NumOfControlledZones+1
+ENDDO
+WRITE(ChrOut,*) NumOfControlledZones
+ChrOut=ADJUSTL(ChrOut)
+IF (NumOfControlledZones > 0) THEN
+  WRITE(OutputFileBNDetails,713) '! <# Controlled Zones>,<Number of Controlled Zones>'
+  WRITE(OutputFileBNDetails,707) '#Controlled Zones,'//TRIM(ChrOut)
+  WRITE(OutputFileBNDetails,713) '! <Controlled Zone>,<Controlled Zone Name>,<Equip List Name>,<Control List Name>,'//  &
+  '<Zone Node Name>,<Return Air Node Name>,<# Inlet Nodes>,<# Exhaust Nodes>'
+  WRITE(OutputFileBNDetails,713) '! <Controlled Zone Inlet>,<Inlet Node Count>,<Controlled Zone Name>,'//  &
+  '<Supply Air Inlet Node Name>,<SD Sys:Cooling/Heating [DD:Cooling] Inlet Node Name>,'// &
+  '<DD Sys:Heating Inlet Node Name>'
+  WRITE(OutputFileBNDetails,713) '! <Controlled Zone Exhaust>,<Exhaust Node Count>,<Controlled Zone Name>,'// &
+  '<Exhaust Air Node Name>'
   DO Count=1,NumOfZones
-    IF (.not. ALLOCATED(ZoneEquipConfig)) CYCLE
-    IF (ZoneEquipConfig(Count)%IsControlled) NumOfControlledZones=NumOfControlledZones+1
-  ENDDO
-  WRITE(ChrOut,*) NumOfControlledZones
-  ChrOut=ADJUSTL(ChrOut)
-  IF (NumOfControlledZones > 0) THEN
-    WRITE(OutputFileBNDetails,713) '! <# Controlled Zones>,<Number of Controlled Zones>'
-    WRITE(OutputFileBNDetails,707) '#Controlled Zones,'//TRIM(ChrOut)
-    WRITE(OutputFileBNDetails,713) '! <Controlled Zone>,<Controlled Zone Name>,<Equip List Name>,<Control List Name>,'//  &
-                                   '<Zone Node Name>,<Return Air Node Name>,<# Inlet Nodes>,<# Exhaust Nodes>'
-    WRITE(OutputFileBNDetails,713) '! <Controlled Zone Inlet>,<Inlet Node Count>,<Controlled Zone Name>,'//  &
-                                   '<Supply Air Inlet Node Name>,<SD Sys:Cooling/Heating [DD:Cooling] Inlet Node Name>,'// &
-                                   '<DD Sys:Heating Inlet Node Name>'
-    WRITE(OutputFileBNDetails,713) '! <Controlled Zone Exhaust>,<Exhaust Node Count>,<Controlled Zone Name>,'// &
-                                   '<Exhaust Air Node Name>'
-    DO Count=1,NumOfZones
-      IF (.not. ZoneEquipConfig(Count)%IsControlled) CYCLE
-      WRITE(ChrOut,*) ZoneEquipConfig(Count)%NumInletNodes
-      WRITE(ChrOut2,*) ZoneEquipConfig(Count)%NumExhaustNodes
-      ChrOut=ADJUSTL(ChrOut)
-      ChrOut2=ADJUSTL(ChrOut2)
-      WRITE(OutputFileBNDetails,713) ' Controlled Zone,'//TRIM(ZoneEquipConfig(Count)%ZoneName)//','//  &
-                             TRIM(ZoneEquipConfig(Count)%EquipListName)//','//TRIM(ZoneEquipConfig(Count)%ControlListName)//','//  &
-                             TRIM(NodeID(ZoneEquipConfig(Count)%ZoneNode))//','//  &
-                             TRIM(NodeID(ZoneEquipConfig(Count)%ReturnAirNode))//','//TRIM(ChrOut)//','//TRIM(ChrOut2)
-      DO Count1=1,ZoneEquipConfig(Count)%NumInletNodes
-        WRITE(ChrOut,*) Count1
-        ChrOut=ADJUSTL(ChrOut)
-        ChrName=NodeID(ZoneEquipConfig(Count)%AirDistUnitHeat(Count1)%InNode)
-        IF (ChrName == 'Undefined') ChrName='N/A'
-        WRITE(OutputFileBNDetails,713) '   Controlled Zone Inlet,'//TRIM(ChrOut)//','//  &
-                             TRIM(ZoneEquipConfig(Count)%ZoneName)//','//  &
-                             TRIM(NodeID(ZoneEquipConfig(Count)%InletNode(Count1)))//','//  &
-                             TRIM(NodeID(ZoneEquipConfig(Count)%AirDistUnitCool(Count1)%InNode))//','//  &
-                             TRIM(ChrName)
-      ENDDO
-      DO Count1=1,ZoneEquipConfig(Count)%NumExhaustNodes
-        WRITE(ChrOut,*) Count1
-        ChrOut=ADJUSTL(ChrOut)
-        WRITE(OutputFileBNDetails,713) '   Controlled Zone Exhaust,'//TRIM(ChrOut)//','//  &
-                             TRIM(ZoneEquipConfig(Count)%ZoneName)//','//  &
-                             TRIM(NodeID(ZoneEquipConfig(Count)%ExhaustNode(Count1)))
-      ENDDO
-    ENDDO
-
-            !Report Zone Equipment Lists to BND File
-    WRITE(OutputFileBNDetails,721) '! ==============================================================='
-    WRITE(OutputFileBNDetails,720)
-    WRITE(ChrOut,*) NumOfControlledZones
-    WRITE(OutputFileBNDetails,721) ' #Zone Equipment Lists,'//TRIM(ADJUSTL(ChrOut))
-    WRITE(OutputFileBNDetails,722)
-    WRITE(OutputFileBNDetails,723)
-   720 FORMAT('! <#Zone Equipment Lists>,<Number of Zone Equipment Lists>')
-   721 FORMAT(A)
-   722 FORMAT('! <Zone Equipment List>,<Zone Equipment List Count>,<Zone Equipment List Name>,<Zone Name>,<Number of Components>')
-   723 FORMAT('! <Zone Equipment Component>,<Component Count>,<Component Type>,<Component Name>,', &
-                 '<Zone Name>,<Heating Priority>,<Cooling Priority>')
-
-    DO Count=1,NumOfZones
-            ! Zone equipment list array parallels controlled zone equipment array, so
-            ! same index finds corresponding data from both arrays
-      IF (.not. ZoneEquipConfig(Count)%IsControlled) CYCLE
-      WRITE(ChrOut,*) Count
-      WRITE(ChrOut2,*) ZoneEquipList(Count)%NumOfEquipTypes
-      WRITE(OutputFileBNDetails,721) ' Zone Equipment List,'//TRIM(ADJUSTL(ChrOut))//','// &
-            TRIM(ZoneEquipList(Count)%Name)//','//  &
-            TRIM(ZoneEquipConfig(Count)%ZoneName)//','// &
-            TRIM(ADJUSTL(ChrOut2))
-
-      DO Count1=1,ZoneEquipList(Count)%NumOfEquipTypes
-        WRITE(ChrOut,*) Count1
-        WRITE(ChrOut2,*) ZoneEquipList(Count)%CoolingPriority(Count1)
-        WRITE(ChrOut3,*) ZoneEquipList(Count)%HeatingPriority(Count1)
-        WRITE(OutputFileBNDetails,721) '   Zone Equipment Component,'//TRIM(ADJUSTL(ChrOut))//','// &
-              TRIM(ZoneEquipList(Count)%EquipType(Count1))//','//  &
-              TRIM(ZoneEquipList(Count)%EquipName(Count1))//','//  &
-              TRIM(ZoneEquipConfig(Count)%ZoneName)//','// &
-              TRIM(ADJUSTL(ChrOut2))//','//  &
-              TRIM(ADJUSTL(ChrOut3))
-      ENDDO
-    ENDDO
-  ENDIF
-
-          !Report Dual Duct Dampers to BND File
-  CALL ReportDualDuctConnections
-
-  IF (NumNodeConnectionErrors == 0) THEN
-    !CALL ShowMessage('No node connection errors were found.')   !RS: Debugging: Messages causing errors currently, so call removed
-  ELSE
-    WRITE(ChrOut,*) NumNodeConnectionErrors
+    IF (.not. ZoneEquipConfig(Count)%IsControlled) CYCLE
+    WRITE(ChrOut,*) ZoneEquipConfig(Count)%NumInletNodes
+    WRITE(ChrOut2,*) ZoneEquipConfig(Count)%NumExhaustNodes
     ChrOut=ADJUSTL(ChrOut)
-    IF (NumNodeConnectionErrors > 1) THEN
-      !CALL ShowMessage('There were '//TRIM(ChrOut)//' node connection errors noted.')  !RS: Secret Search String
-      WRITE(DebugFile,*) 'There were '//TRIM(ChrOut)//' node connection errors noted.'
-    ELSE
-      !CALL ShowMessage('There was '//TRIM(ChrOut)//' node connection error noted.')    !RS: Secret Search String
-      WRITE(DebugFile,*) 'There was '//TRIM(ChrOut)//' node connection error noted.'
-    ENDIF
+    ChrOut2=ADJUSTL(ChrOut2)
+    WRITE(OutputFileBNDetails,713) ' Controlled Zone,'//TRIM(ZoneEquipConfig(Count)%ZoneName)//','//  &
+    TRIM(ZoneEquipConfig(Count)%EquipListName)//','//TRIM(ZoneEquipConfig(Count)%ControlListName)//','//  &
+    TRIM(NodeID(ZoneEquipConfig(Count)%ZoneNode))//','//  &
+    TRIM(NodeID(ZoneEquipConfig(Count)%ReturnAirNode))//','//TRIM(ChrOut)//','//TRIM(ChrOut2)
+    DO Count1=1,ZoneEquipConfig(Count)%NumInletNodes
+      WRITE(ChrOut,*) Count1
+      ChrOut=ADJUSTL(ChrOut)
+      ChrName=NodeID(ZoneEquipConfig(Count)%AirDistUnitHeat(Count1)%InNode)
+      IF (ChrName == 'Undefined') ChrName='N/A'
+      WRITE(OutputFileBNDetails,713) '   Controlled Zone Inlet,'//TRIM(ChrOut)//','//  &
+      TRIM(ZoneEquipConfig(Count)%ZoneName)//','//  &
+      TRIM(NodeID(ZoneEquipConfig(Count)%InletNode(Count1)))//','//  &
+      TRIM(NodeID(ZoneEquipConfig(Count)%AirDistUnitCool(Count1)%InNode))//','//  &
+      TRIM(ChrName)
+    ENDDO
+    DO Count1=1,ZoneEquipConfig(Count)%NumExhaustNodes
+      WRITE(ChrOut,*) Count1
+      ChrOut=ADJUSTL(ChrOut)
+      WRITE(OutputFileBNDetails,713) '   Controlled Zone Exhaust,'//TRIM(ChrOut)//','//  &
+      TRIM(ZoneEquipConfig(Count)%ZoneName)//','//  &
+      TRIM(NodeID(ZoneEquipConfig(Count)%ExhaustNode(Count1)))
+    ENDDO
+  ENDDO
+
+  !Report Zone Equipment Lists to BND File
+  WRITE(OutputFileBNDetails,721) '! ==============================================================='
+  WRITE(OutputFileBNDetails,720)
+  WRITE(ChrOut,*) NumOfControlledZones
+  WRITE(OutputFileBNDetails,721) ' #Zone Equipment Lists,'//TRIM(ADJUSTL(ChrOut))
+  WRITE(OutputFileBNDetails,722)
+  WRITE(OutputFileBNDetails,723)
+  720 FORMAT('! <#Zone Equipment Lists>,<Number of Zone Equipment Lists>')
+  721 FORMAT(A)
+  722 FORMAT('! <Zone Equipment List>,<Zone Equipment List Count>,<Zone Equipment List Name>,<Zone Name>,<Number of Components>')
+  723 FORMAT('! <Zone Equipment Component>,<Component Count>,<Component Type>,<Component Name>,', &
+  '<Zone Name>,<Heating Priority>,<Cooling Priority>')
+
+  DO Count=1,NumOfZones
+    ! Zone equipment list array parallels controlled zone equipment array, so
+    ! same index finds corresponding data from both arrays
+    IF (.not. ZoneEquipConfig(Count)%IsControlled) CYCLE
+    WRITE(ChrOut,*) Count
+    WRITE(ChrOut2,*) ZoneEquipList(Count)%NumOfEquipTypes
+    WRITE(OutputFileBNDetails,721) ' Zone Equipment List,'//TRIM(ADJUSTL(ChrOut))//','// &
+    TRIM(ZoneEquipList(Count)%Name)//','//  &
+    TRIM(ZoneEquipConfig(Count)%ZoneName)//','// &
+    TRIM(ADJUSTL(ChrOut2))
+
+    DO Count1=1,ZoneEquipList(Count)%NumOfEquipTypes
+      WRITE(ChrOut,*) Count1
+      WRITE(ChrOut2,*) ZoneEquipList(Count)%CoolingPriority(Count1)
+      WRITE(ChrOut3,*) ZoneEquipList(Count)%HeatingPriority(Count1)
+      WRITE(OutputFileBNDetails,721) '   Zone Equipment Component,'//TRIM(ADJUSTL(ChrOut))//','// &
+      TRIM(ZoneEquipList(Count)%EquipType(Count1))//','//  &
+      TRIM(ZoneEquipList(Count)%EquipName(Count1))//','//  &
+      TRIM(ZoneEquipConfig(Count)%ZoneName)//','// &
+      TRIM(ADJUSTL(ChrOut2))//','//  &
+      TRIM(ADJUSTL(ChrOut3))
+    ENDDO
+  ENDDO
+ENDIF
+
+!Report Dual Duct Dampers to BND File
+CALL ReportDualDuctConnections
+
+IF (NumNodeConnectionErrors == 0) THEN
+  !CALL ShowMessage('No node connection errors were found.')   !RS: Debugging: Messages causing errors currently, so call removed
+ELSE
+  WRITE(ChrOut,*) NumNodeConnectionErrors
+  ChrOut=ADJUSTL(ChrOut)
+  IF (NumNodeConnectionErrors > 1) THEN
+    !CALL ShowMessage('There were '//TRIM(ChrOut)//' node connection errors noted.')  !RS: Secret Search String
+    WRITE(DebugFile,*) 'There were '//TRIM(ChrOut)//' node connection errors noted.'
+  ELSE
+    !CALL ShowMessage('There was '//TRIM(ChrOut)//' node connection error noted.')    !RS: Secret Search String
+    WRITE(DebugFile,*) 'There was '//TRIM(ChrOut)//' node connection error noted.'
   ENDIF
+ENDIF
 
-  AskForConnectionsReport=.false.
+AskForConnectionsReport=.false.
 
-  RETURN
+RETURN
 
 END SUBROUTINE ReportLoopConnections
 
 SUBROUTINE ReportParentChildren
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Linda Lawrie
-          !       DATE WRITTEN   May 2005
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Linda Lawrie
+  !       DATE WRITTEN   May 2005
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Reports parent compsets with ensuing children data.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! Reports parent compsets with ensuing children data.
 
-          ! METHODOLOGY EMPLOYED:
-          ! Uses IsParentObject,GetNumChildren,GetChildrenData
+  ! METHODOLOGY EMPLOYED:
+  ! Uses IsParentObject,GetNumChildren,GetChildrenData
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
   USE DataGlobals_HPSimIntegrated, ONLY: OutputFileDebug
   USE General, ONLY: TrimSigDigits
   USE DataBranchNodeConnections
@@ -2159,19 +2159,19 @@ SUBROUTINE ReportParentChildren
 
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   CHARACTER(len=*), PARAMETER :: Blank=' '
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER Loop
   INTEGER Loop1
   CHARACTER(len=MaxNameLength), ALLOCATABLE, DIMENSION(:) :: ChildCType
@@ -2201,15 +2201,15 @@ SUBROUTINE ReportParentChildren
       ChildInNodeNum=0
       ChildOutNodeNum=0
       CALL GetChildrenData(ParentNodeList(Loop)%CType,ParentNodeList(Loop)%CName,NumChildren,               &
-        ChildCType,ChildCName,ChildInNodeName,ChildInNodeNum,ChildOutNodeName,ChildOutNodeNum,  &
-        ErrorsFound)
+      ChildCType,ChildCName,ChildInNodeName,ChildInNodeNum,ChildOutNodeName,ChildOutNodeNum,  &
+      ErrorsFound)
       if (Loop > 1) WRITE(outputfiledebug,'(1X,60("="))')
       WRITE(outputfiledebug,'(A)') ' Parent Node,'//TRIM(ParentNodeList(Loop)%CType)//':'//  &
-                              TRIM(ParentNodeList(Loop)%CName)//','//  &
-                              TRIM(ParentNodeList(Loop)%InletNodeName)//','//TRIM(ParentNodeList(Loop)%OutletNodeName)
+      TRIM(ParentNodeList(Loop)%CName)//','//  &
+      TRIM(ParentNodeList(Loop)%InletNodeName)//','//TRIM(ParentNodeList(Loop)%OutletNodeName)
       DO Loop1=1,NumChildren
         WRITE(outputfiledebug,'(A)') '..ChildNode,'//TRIM(ChildCType(Loop1))//':'//TRIM(ChildCName(Loop1))//','//  &
-                        TRIM(ChildInNodeName(Loop1))//','//TRIM(ChildOutNodeName(Loop1))
+        TRIM(ChildInNodeName(Loop1))//','//TRIM(ChildOutNodeName(Loop1))
       ENDDO
       DEALLOCATE(ChildCType)
       DEALLOCATE(ChildCName)
@@ -2220,8 +2220,8 @@ SUBROUTINE ReportParentChildren
     ELSE
       if (Loop > 1) WRITE(outputfiledebug,'(1X,60("="))')
       WRITE(outputfiledebug,'(A)') ' Parent Node (no children),'//TRIM(ParentNodeList(Loop)%CType)//':'//  &
-                              TRIM(ParentNodeList(Loop)%CName)//','//  &
-                              TRIM(ParentNodeList(Loop)%InletNodeName)//','//TRIM(ParentNodeList(Loop)%OutletNodeName)
+      TRIM(ParentNodeList(Loop)%CName)//','//  &
+      TRIM(ParentNodeList(Loop)%InletNodeName)//','//TRIM(ParentNodeList(Loop)%OutletNodeName)
     ENDIF
   ENDDO
 
@@ -2231,22 +2231,22 @@ END SUBROUTINE ReportParentChildren
 
 SUBROUTINE ReportCompSetMeterVariables
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Linda Lawrie
-          !       DATE WRITTEN   May 2005
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Linda Lawrie
+  !       DATE WRITTEN   May 2005
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Reports comp set meter variables.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! Reports comp set meter variables.
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   use DataGlobals_HPSimIntegrated, only: outputfiledebug
   USE DataBranchNodeConnections
   USE BranchNodeConnections
@@ -2254,13 +2254,13 @@ SUBROUTINE ReportCompSetMeterVariables
 
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-          ! na
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
+  ! INTERFACE BLOCK SPECIFICATIONS:
   INTERFACE GetNumMeteredVariables
     FUNCTION GetNumMeteredVariables(ComponentType,ComponentName) RESULT(NumVariables)
       CHARACTER(len=*), INTENT(IN) :: ComponentType  ! Given Component Type
@@ -2271,7 +2271,7 @@ SUBROUTINE ReportCompSetMeterVariables
 
   INTERFACE GetMeteredVariables
     SUBROUTINE GetMeteredVariables(ComponentType,ComponentName,VarIndexes,VarTypes,IndexTypes,  &
-                                   UnitsStrings,ResourceTypes,EndUses,Groups,Names,NumFound,VarIDs)
+      UnitsStrings,ResourceTypes,EndUses,Groups,Names,NumFound,VarIDs)
       CHARACTER(len=*),      INTENT(IN)            :: ComponentType  ! Given Component Type
       CHARACTER(len=*),      INTENT(IN)            :: ComponentName  ! Given Component Name (user defined)
       INTEGER, DIMENSION(:), INTENT(OUT)           :: VarIndexes     ! Variable Numbers
@@ -2280,20 +2280,20 @@ SUBROUTINE ReportCompSetMeterVariables
       CHARACTER(len=*), DIMENSION(:), INTENT(OUT)  :: UnitsStrings   ! UnitsStrings for each variable
       INTEGER, DIMENSION(:), INTENT(OUT)  :: ResourceTypes  ! ResourceTypes for each variable
       CHARACTER(len=*), DIMENSION(:),   &
-                            OPTIONAL, INTENT(OUT)  :: EndUses        ! EndUses for each variable
+      OPTIONAL, INTENT(OUT)  :: EndUses        ! EndUses for each variable
       CHARACTER(len=*), DIMENSION(:),   &
-                            OPTIONAL, INTENT(OUT)  :: Groups         ! Groups for each variable
+      OPTIONAL, INTENT(OUT)  :: Groups         ! Groups for each variable
       CHARACTER(len=*), DIMENSION(:),   &
-                            OPTIONAL, INTENT(OUT)  :: Names          ! Variable Names for each variable
+      OPTIONAL, INTENT(OUT)  :: Names          ! Variable Names for each variable
       INTEGER, OPTIONAL, INTENT(OUT)               :: NumFound       ! Number Found
       INTEGER, DIMENSION(:), OPTIONAL, INTENT(OUT) :: VarIDs         ! Variable Report Numbers
     END SUBROUTINE
   END INTERFACE
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER :: Loop
   INTEGER :: Loop1
   INTEGER :: NumVariables
@@ -2333,13 +2333,13 @@ SUBROUTINE ReportCompSetMeterVariables
     ALLOCATE(Groups(NumVariables))
     Groups=' '
     CALL GetMeteredVariables(CompSets(Loop)%CType,CompSets(Loop)%CName,VarIndexes,VarTypes,IndexTypes,  &
-                               UnitsStrings,Names=VarNames,ResourceTypes=ResourceTypes,EndUses=EndUses, &
-                               Groups=Groups,VarIDs=VarIDs)
+    UnitsStrings,Names=VarNames,ResourceTypes=ResourceTypes,EndUses=EndUses, &
+    Groups=Groups,VarIDs=VarIDs)
     DO Loop1=1,NumVariables
       write(outputfiledebug,'(1X,"RepVar,",I5,",",I5,",",A,",[",A,"],",A,",",A,",",A,",",I5)')   &
-                 VarIndexes(Loop1),VarIDs(Loop1),TRIM(VarNames(Loop1)),  &
-                         TRIM(UnitsStrings(Loop1)),TRIM(GetResourceTypeChar(ResourceTypes(Loop1))),TRIM(EndUses(Loop1)),  &
-                         TRIM(Groups(Loop1)),IndexTypes(Loop1)
+      VarIndexes(Loop1),VarIDs(Loop1),TRIM(VarNames(Loop1)),  &
+      TRIM(UnitsStrings(Loop1)),TRIM(GetResourceTypeChar(ResourceTypes(Loop1))),TRIM(EndUses(Loop1)),  &
+      TRIM(Groups(Loop1)),IndexTypes(Loop1)
     ENDDO
     DEALLOCATE(VarIndexes)
     DEALLOCATE(IndexTypes)
@@ -2358,111 +2358,111 @@ END SUBROUTINE ReportCompSetMeterVariables
 
 SUBROUTINE PostIPProcessing
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Linda Lawrie
-          !       DATE WRITTEN   August 2010
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Linda Lawrie
+  !       DATE WRITTEN   August 2010
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This provides post processing (for errors, etc) directly after the InputProcessor
-          ! finishes.  Code originally in the Input Processor.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This provides post processing (for errors, etc) directly after the InputProcessor
+  ! finishes.  Code originally in the Input Processor.
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE SQLiteProcedures,    ONLY: CreateSQLiteDatabase
   USE InputProcessor,      ONLY: PreProcessorCheck, OverallErrorFlag, CompactObjectsCheck,  &
-                                 ParametricObjectsCheck, GetNumSectionsFound, PreScanReportingVariables, &
-                                 NumOutOfRangeErrorsFound,NumBlankReqFieldFound,NumMiscErrorsFound
+  ParametricObjectsCheck, GetNumSectionsFound, PreScanReportingVariables, &
+  NumOutOfRangeErrorsFound,NumBlankReqFieldFound,NumMiscErrorsFound
   USE FluidProperties,     ONLY: FluidIndex_Water,FluidIndex_EthyleneGlycol,FluidIndex_PropoleneGlycol,FindGlycol
 
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-          ! na
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-   LOGICAL :: PreP_Fatal=.false.  ! True if a preprocessor flags a fatal error
-   
-    INTEGER :: DebugFile       =150 !RS: Debugging file denotion, hopefully this works.
-    
-    OPEN(unit=DebugFile,file='Debug.txt')    !RS: Debugging
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  LOGICAL :: PreP_Fatal=.false.  ! True if a preprocessor flags a fatal error
 
-   DoingInputProcessing=.false.
+  INTEGER :: DebugFile       =150 !RS: Debugging file denotion, hopefully this works.
 
-   Call CreateSQLiteDataBase
+  OPEN(unit=DebugFile,file='Debug.txt')    !RS: Debugging
 
-   Call PreProcessorCheck(PreP_Fatal)  ! Check Preprocessor objects for warning, severe, etc errors.
+  DoingInputProcessing=.false.
 
-   Call CheckCachedIPErrors
+  Call CreateSQLiteDataBase
 
-   IF (PreP_Fatal) THEN
-     !CALL ShowFatalError('Preprocessor condition(s) cause termination.')   !RS: Secret Search String
-     WRITE(DebugFile, *) PreP_Fatal
-   ENDIF
+  Call PreProcessorCheck(PreP_Fatal)  ! Check Preprocessor objects for warning, severe, etc errors.
 
-   IF (OverallErrorFlag) THEN
-     CALL ShowFatalError('IP: Errors occurred on processing IDF file. Preceding condition(s) cause termination.')
-   ENDIF
+  Call CheckCachedIPErrors
 
-   Call CompactObjectsCheck  ! Check to see if Compact Objects (CompactHVAC, etc) are in input file.
-                             ! If so, ExpandObjects didn't get called...
-   Call ParametricObjectsCheck ! check to see if any parametric objects are in the input file
-                               ! parametric preprocessor was not run
+  IF (PreP_Fatal) THEN
+    !CALL ShowFatalError('Preprocessor condition(s) cause termination.')   !RS: Secret Search String
+    WRITE(DebugFile, *) PreP_Fatal
+  ENDIF
 
-   IF (NumOutOfRangeErrorsFound+NumBlankReqFieldFound+NumMiscErrorsFound > 0) THEN
-     !CALL ShowSevereError('IP: Out of "range" values and/or blank required fields found in input')
-     !CALL ShowFatalError('IP: Errors occurred on processing IDF file. Preceding condition(s) cause termination.')
-     WRITE(DebugFile,*) NumOutofRangeErrorsFound, ' ', NumBlankReqFieldFound, ' ', NumMiscErrorsFound
-   ENDIF
+  IF (OverallErrorFlag) THEN
+    CALL ShowFatalError('IP: Errors occurred on processing IDF file. Preceding condition(s) cause termination.')
+  ENDIF
 
-   IF (GetNumSectionsFound('DISPLAYALLWARNINGS') > 0) THEN
-     DisplayAllWarnings=.true.
-     DisplayExtraWarnings=.true.
-     DisplayUnusedSchedules=.true.
-     DisplayUnusedObjects=.true.
-   ENDIF
+  Call CompactObjectsCheck  ! Check to see if Compact Objects (CompactHVAC, etc) are in input file.
+  ! If so, ExpandObjects didn't get called...
+  Call ParametricObjectsCheck ! check to see if any parametric objects are in the input file
+  ! parametric preprocessor was not run
 
-   IF (GetNumSectionsFound('DISPLAYEXTRAWARNINGS') > 0) THEN
-     DisplayExtraWarnings=.true.
-   ENDIF
+  IF (NumOutOfRangeErrorsFound+NumBlankReqFieldFound+NumMiscErrorsFound > 0) THEN
+    !CALL ShowSevereError('IP: Out of "range" values and/or blank required fields found in input')
+    !CALL ShowFatalError('IP: Errors occurred on processing IDF file. Preceding condition(s) cause termination.')
+    WRITE(DebugFile,*) NumOutofRangeErrorsFound, ' ', NumBlankReqFieldFound, ' ', NumMiscErrorsFound
+  ENDIF
 
-   IF (GetNumSectionsFound('DISPLAYUNUSEDOBJECTS') > 0) THEN
-     DisplayUnusedObjects=.true.
-   ENDIF
+  IF (GetNumSectionsFound('DISPLAYALLWARNINGS') > 0) THEN
+    DisplayAllWarnings=.true.
+    DisplayExtraWarnings=.true.
+    DisplayUnusedSchedules=.true.
+    DisplayUnusedObjects=.true.
+  ENDIF
 
-   IF (GetNumSectionsFound('DISPLAYUNUSEDSCHEDULES') > 0) THEN
-     DisplayUnusedSchedules=.true.
-   ENDIF
+  IF (GetNumSectionsFound('DISPLAYEXTRAWARNINGS') > 0) THEN
+    DisplayExtraWarnings=.true.
+  ENDIF
 
-   IF (GetNumSectionsFound('DisplayZoneAirHeatBalanceOffBalance') > 0) THEN
-     DisplayZoneAirHeatBalanceOffBalance=.true.
-   ENDIF
+  IF (GetNumSectionsFound('DISPLAYUNUSEDOBJECTS') > 0) THEN
+    DisplayUnusedObjects=.true.
+  ENDIF
 
-   IF (GetNumSectionsFound('DISPLAYADVANCEDREPORTVARIABLES') > 0) THEN
-     DisplayAdvancedReportVariables=.true.
-   ENDIF
+  IF (GetNumSectionsFound('DISPLAYUNUSEDSCHEDULES') > 0) THEN
+    DisplayUnusedSchedules=.true.
+  ENDIF
 
-   !Set up more globals - process fluid input.
-   FluidIndex_Water=FindGlycol('Water')
-   FluidIndex_EthyleneGlycol=FindGlycol('EthyleneGlycol')
-   FluidIndex_PropoleneGlycol=FindGlycol('PropoleneGlycol')
+  IF (GetNumSectionsFound('DisplayZoneAirHeatBalanceOffBalance') > 0) THEN
+    DisplayZoneAirHeatBalanceOffBalance=.true.
+  ENDIF
 
-   CALL PreScanReportingVariables
+  IF (GetNumSectionsFound('DISPLAYADVANCEDREPORTVARIABLES') > 0) THEN
+    DisplayAdvancedReportVariables=.true.
+  ENDIF
+
+  !Set up more globals - process fluid input.
+  FluidIndex_Water=FindGlycol('Water')
+  FluidIndex_EthyleneGlycol=FindGlycol('EthyleneGlycol')
+  FluidIndex_PropoleneGlycol=FindGlycol('PropoleneGlycol')
+
+  CALL PreScanReportingVariables
 
   RETURN
 
@@ -2470,40 +2470,40 @@ END SUBROUTINE PostIPProcessing
 
 SUBROUTINE CheckCachedIPErrors
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Linda Lawrie
-          !       DATE WRITTEN   August 2010
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Linda Lawrie
+  !       DATE WRITTEN   August 2010
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This routine displays the cached error messages after the preprocessor
-          ! errors have been checked and produced.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This routine displays the cached error messages after the preprocessor
+  ! errors have been checked and produced.
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE SQLiteProcedures,    ONLY: WriteOutputToSQLite,CreateSQLiteErrorRecord,UpdateSQLiteErrorRecord
 
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-          ! na
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! SUBROUTINE PARAMETER DEFINITIONS:
   CHARACTER(len=*), PARAMETER :: fmta='(A)'
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER :: iostatus
   CHARACTER(len=500) ErrorMessage
 
@@ -2536,50 +2536,50 @@ END SUBROUTINE CheckCachedIPErrors
 
 SUBROUTINE CheckThreading
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Linda Lawrie
-          !       DATE WRITTEN   April 2012
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Linda Lawrie
+  !       DATE WRITTEN   April 2012
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Check number of threads available versus number of surfaces, etc.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! Check number of threads available versus number of surfaces, etc.
 
-          ! METHODOLOGY EMPLOYED:
-          ! Check Max Threads (OMP_NUM_THREADS) = MaxNumberOfThreads, iEnvSetThreads
-          ! Check EP Max Threads (EP_OMP_NUM_THREADS) = iepEnvSetThreads
-          ! Check if IDF input (ProgramControl) = iIDFSetThreads
-          ! Check # active sims (cntActv) = inumActiveSims [report only?]
+  ! METHODOLOGY EMPLOYED:
+  ! Check Max Threads (OMP_NUM_THREADS) = MaxNumberOfThreads, iEnvSetThreads
+  ! Check EP Max Threads (EP_OMP_NUM_THREADS) = iepEnvSetThreads
+  ! Check if IDF input (ProgramControl) = iIDFSetThreads
+  ! Check # active sims (cntActv) = inumActiveSims [report only?]
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataSystemVariables
   USE InputProcessor, ONLY: GetNumObjectsFound, GetObjectItem
   USE DataIPShortCuts
-#if defined(_OPENMP) && defined(HBIRE_USE_OMP)
-use omp_lib, ONLY: omp_get_max_threads,omp_get_num_threads,omp_set_num_threads
-#endif
+  #if defined(_OPENMP) && defined(HBIRE_USE_OMP)
+  use omp_lib, ONLY: omp_get_max_threads,omp_get_num_threads,omp_set_num_threads
+  #endif
 
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-          ! na
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! SUBROUTINE PARAMETER DEFINITIONS:
   CHARACTER(len=*), PARAMETER :: Blank=' '
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   CHARACTER(len=10) :: cEnvValue
   INTEGER :: ios
-#ifdef HBIRE_USE_OMP
+  #ifdef HBIRE_USE_OMP
   INTEGER :: TotHTSurfs        ! Number of BuildingSurface:Detailed items to obtain
   INTEGER :: TotDetailedWalls  ! Number of Wall:Detailed items to obtain
   INTEGER :: TotDetailedRoofs  ! Number of RoofCeiling:Detailed items to obtain
@@ -2653,16 +2653,16 @@ use omp_lib, ONLY: omp_get_max_threads,omp_get_num_threads,omp_set_num_threads
   TotRectIZFloors       =GetNumObjectsFound('Floor:Interzone')
 
   iNominalTotSurfaces=TotHTSurfs + TotDetailedWalls + TotDetailedRoofs + TotDetailedFloors +              &
-        TotHTSubs + TotIntMass + TotRectWindows + TotRectDoors + TotRectGlazedDoors + TotRectIZWindows + &
-        TotRectIZDoors + TotRectIZGlazedDoors + TotRectExtWalls + TotRectIntWalls + TotRectIZWalls +     &
-        TotRectUGWalls + TotRectRoofs + TotRectCeilings + TotRectIZCeilings + TotRectGCFloors +          &
-        TotRectIntFloors + TotRectIZFloors
+  TotHTSubs + TotIntMass + TotRectWindows + TotRectDoors + TotRectGlazedDoors + TotRectIZWindows + &
+  TotRectIZDoors + TotRectIZGlazedDoors + TotRectExtWalls + TotRectIntWalls + TotRectIZWalls +     &
+  TotRectUGWalls + TotRectRoofs + TotRectCeilings + TotRectIZCeilings + TotRectGCFloors +          &
+  TotRectIntFloors + TotRectIZFloors
 
   cCurrentModuleObject='ProgramControl'
   IF (GetNumObjectsFound(cCurrentModuleObject) > 0) THEN
     CALL GetObjectItem(cCurrentModuleObject,1,cAlphaArgs,NumAlphas,rNumericArgs,NumNumbers,ios,  &
-                   AlphaBlank=lAlphaFieldBlanks,NumBlank=lNumericFieldBlanks,  &
-                   AlphaFieldnames=cAlphaFieldNames,NumericFieldNames=cNumericFieldNames)
+    AlphaBlank=lAlphaFieldBlanks,NumBlank=lNumericFieldBlanks,  &
+    AlphaFieldnames=cAlphaFieldNames,NumericFieldNames=cNumericFieldNames)
     iIDFsetThreadsInput=INT(rNumericArgs(1))
     IF (iIDFsetThreadsInput <= 0) THEN
       iIDFsetThreadsInput=MaxNumberOfThreads
@@ -2682,9 +2682,9 @@ use omp_lib, ONLY: omp_get_max_threads,omp_get_num_threads,omp_set_num_threads
     IF (lepSetThreadsInput)  NumberIntRadThreads=iepEnvSetThreads
     IF (lIDFSetThreadsInput) NumberIntRadThreads=iIDFSetThreadsInput
   ENDIF
-#else
-INTEGER :: DebugFile       =150 !RS: Debugging file denotion, hopefully this works.
-    
+  #else
+  INTEGER :: DebugFile       =150 !RS: Debugging file denotion, hopefully this works.
+
   OPEN(unit=DebugFile,file='Debug.txt')    !RS: Debugging
 
   Threading=.false.
@@ -2694,7 +2694,7 @@ INTEGER :: DebugFile       =150 !RS: Debugging file denotion, hopefully this wor
     WRITE(DebugFile,*) 'CheckThreading: '//TRIM(cCurrentModuleObject)//' is not available in this version.'
   ENDIF
   MaxNumberOfThreads=1
-#endif
+  #endif
   ! just reporting
   cEnvValue=' '
   CALL Get_Environment_Variable(cNumActiveSims,cEnvValue)
@@ -2714,62 +2714,62 @@ END MODULE SimulationManager
 
 SUBROUTINE Resimulate(ResimExt, ResimHB, ResimHVAC)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Peter Graham Ellis
-          !       DATE WRITTEN   August 2005
-          !       MODIFIED       Sep 2011 LKL/BG - resimulate only zones needing it for Radiant systems
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Peter Graham Ellis
+  !       DATE WRITTEN   August 2005
+  !       MODIFIED       Sep 2011 LKL/BG - resimulate only zones needing it for Radiant systems
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine is called as necessary by the Demand Manager to resimulate some of the modules that have
-          ! already been simulated for the current timestep.  For example, if LIGHTS are demand limited, the lighting
-          ! power is reduced which also impacts the zone internal heat gains and therefore requires that the entire
-          ! zone heat balance must be resimulated.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine is called as necessary by the Demand Manager to resimulate some of the modules that have
+  ! already been simulated for the current timestep.  For example, if LIGHTS are demand limited, the lighting
+  ! power is reduced which also impacts the zone internal heat gains and therefore requires that the entire
+  ! zone heat balance must be resimulated.
 
-          ! METHODOLOGY EMPLOYED:
-          ! If the zone heat balance must be resimulated, all the major subroutines are called sequentially in order
-          ! to recalculate the impacts of demand limiting.  This routine is called from ManageHVAC _before_ any variables
-          ! are reported or histories are updated.  This routine can be called multiple times without the overall
-          ! simulation moving forward in time.
-          !
-          ! If only HVAC components are demand limited, then the HVAC system is resimulated, not the entire heat balance.
-          ! Similarly, if ony exterior lights and equipment are demand limited, it is only necessary to resimulate the
-          ! exterior energy use, not the entire heat balance, nor the HVAC system.
-          !
-          ! Below is the hierarchy of subroutine calls.  The calls marked with an asterisk are resimulated here.
-          !
-          ! ManageSimulation
-          !     ManageWeather
-          !     ManageDemand
-          !   * ManageExteriorEnergyUse
-          !     ManageHeatBalance
-          !       * InitHeatBalance
-          !             PerformSolarCalculations
-          !         ManageSurfaceHeatBalance
-          !           * InitSurfaceHeatBalance
-          !                 ManageInternalHeatGains
-          !           * CalcHeatBalanceOutsideSurf
-          !           * CalcHeatBalanceInsideSurf
-          !             ManageAirHeatBalance
-          !                *InitAirHeatBalance
-          !                 CalcHeatBalanceAir
-          !                   * CalcAirFlow
-          !                   * ManageRefrigeratedCaseRacks
-          !                     ManageHVAC
-          !                       * ManageZoneAirUpdates 'GET ZONE SETPOINTS'
-          !                       * ManageZoneAirUpdates 'PREDICT'
-          !                       * SimHVAC
-          !                         UpdateDataandReport
-          !                 ReportAirHeatBalance
-          !             UpdateFinalSurfaceHeatBalance
-          !             UpdateThermalHistories
-          !             UpdateMoistureHistories
-          !             ManageThermalComfort
-          !             ReportSurfaceHeatBalance
-          !         RecKeepHeatBalance
-          !         ReportHeatBalance
+  ! METHODOLOGY EMPLOYED:
+  ! If the zone heat balance must be resimulated, all the major subroutines are called sequentially in order
+  ! to recalculate the impacts of demand limiting.  This routine is called from ManageHVAC _before_ any variables
+  ! are reported or histories are updated.  This routine can be called multiple times without the overall
+  ! simulation moving forward in time.
+  !
+  ! If only HVAC components are demand limited, then the HVAC system is resimulated, not the entire heat balance.
+  ! Similarly, if ony exterior lights and equipment are demand limited, it is only necessary to resimulate the
+  ! exterior energy use, not the entire heat balance, nor the HVAC system.
+  !
+  ! Below is the hierarchy of subroutine calls.  The calls marked with an asterisk are resimulated here.
+  !
+  ! ManageSimulation
+  !     ManageWeather
+  !     ManageDemand
+  !   * ManageExteriorEnergyUse
+  !     ManageHeatBalance
+  !       * InitHeatBalance
+  !             PerformSolarCalculations
+  !         ManageSurfaceHeatBalance
+  !           * InitSurfaceHeatBalance
+  !                 ManageInternalHeatGains
+  !           * CalcHeatBalanceOutsideSurf
+  !           * CalcHeatBalanceInsideSurf
+  !             ManageAirHeatBalance
+  !                *InitAirHeatBalance
+  !                 CalcHeatBalanceAir
+  !                   * CalcAirFlow
+  !                   * ManageRefrigeratedCaseRacks
+  !                     ManageHVAC
+  !                       * ManageZoneAirUpdates 'GET ZONE SETPOINTS'
+  !                       * ManageZoneAirUpdates 'PREDICT'
+  !                       * SimHVAC
+  !                         UpdateDataandReport
+  !                 ReportAirHeatBalance
+  !             UpdateFinalSurfaceHeatBalance
+  !             UpdateThermalHistories
+  !             UpdateMoistureHistories
+  !             ManageThermalComfort
+  !             ReportSurfaceHeatBalance
+  !         RecKeepHeatBalance
+  !         ReportHeatBalance
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataPrecisionGlobals
   USE DemandManager, ONLY: DemandManagerExtIterations, DemandManagerHBIterations, DemandManagerHVACIterations
   USE ExteriorEnergyUse, ONLY: ManageExteriorEnergyUse
@@ -2780,22 +2780,22 @@ SUBROUTINE Resimulate(ResimExt, ResimHB, ResimHVAC)
   USE DataHeatBalFanSys, ONLY: iGetZoneSetpoints, iPredictStep, iCorrectStep
   USE HVACManager, ONLY: SimHVAC, CalcAirFlowSimple
   USE DataInterfaces, ONLY:  ShowContinueErrorTimeStamp, &
-                            CalcHeatBalanceOutsideSurf, CalcHeatBalanceInsideSurf !ShowSevereError,
+  CalcHeatBalanceOutsideSurf, CalcHeatBalanceInsideSurf !ShowSevereError,
   USE DataHVACGlobals, ONLY: UseZoneTimeStepHistory !, InitDSwithZoneHistory
   USE ZoneContaminantPredictorCorrector, ONLY: ManageZoneContaminanUpdates
   USE DataContaminantBalance, ONLY: Contaminant
 
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   LOGICAL, INTENT(INOUT) :: ResimExt   ! Flag to resimulate the exterior energy use simulation
   LOGICAL, INTENT(INOUT) :: ResimHB    ! Flag to resimulate the heat balance simulation (including HVAC)
   LOGICAL, INTENT(INOUT) :: ResimHVAC  ! Flag to resimulate the HVAC simulation
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   REAL(r64) :: ZoneTempChange               ! Dummy variable needed for calling ManageZoneAirUpdates
 
-          ! FLOW:
+  ! FLOW:
   IF (ResimExt) THEN
     CALL ManageExteriorEnergyUse
 
@@ -2819,14 +2819,14 @@ SUBROUTINE Resimulate(ResimExt, ResimHB, ResimHVAC)
   IF (ResimHVAC) THEN
     ! HVAC simulation
     CALL ManageZoneAirUpdates(iGetZoneSetpoints,ZoneTempChange,.FALSE.,  UseZoneTimeStepHistory, &
-              0.0D0 )
+    0.0D0 )
     If (Contaminant%SimulateContaminants) &
-      CALL ManageZoneContaminanUpdates(iGetZoneSetpoints,.FALSE.,UseZoneTimeStepHistory,0.0D0)
+    CALL ManageZoneContaminanUpdates(iGetZoneSetpoints,.FALSE.,UseZoneTimeStepHistory,0.0D0)
     CALL CalcAirFlowSimple
     CALL ManageZoneAirUpdates(iPredictStep,ZoneTempChange,.FALSE.,  UseZoneTimeStepHistory,  &
-               0.0D0 )
+    0.0D0 )
     If (Contaminant%SimulateContaminants) &
-      CALL ManageZoneContaminanUpdates(iPredictStep,.FALSE.,UseZoneTimeStepHistory,0.0D0 )
+    CALL ManageZoneContaminanUpdates(iPredictStep,.FALSE.,UseZoneTimeStepHistory,0.0D0 )
     CALL SimHVAC
 
     DemandManagerHVACIterations = DemandManagerHVACIterations + 1
@@ -2838,7 +2838,7 @@ END SUBROUTINE Resimulate
 
 !     NOTICE
 !
-!     Copyright © 1996-2012 The Board of Trustees of the University of Illinois
+!     Copyright ï¿½ 1996-2012 The Board of Trustees of the University of Illinois
 !     and The Regents of the University of California through Ernest Orlando Lawrence
 !     Berkeley National Laboratory.  All rights reserved.
 !

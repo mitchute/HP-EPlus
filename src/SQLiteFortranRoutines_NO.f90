@@ -1,25 +1,25 @@
 MODULE ISO_C_FUNCTION_BINDING
-!    USE, INTRINSIC :: ISO_C_BINDING
+  !    USE, INTRINSIC :: ISO_C_BINDING
 END MODULE ISO_C_FUNCTION_BINDING
 
 MODULE SQLiteProcedures
 
-! Note most of the procedures below are stubs -- they have no function other than to satisfy compiler requirements
+  ! Note most of the procedures below are stubs -- they have no function other than to satisfy compiler requirements
 
-USE DataPrecisionGlobals
+  USE DataPrecisionGlobals
 
-    INTEGER, PARAMETER :: MaxMessageSize     = 4096
-LOGICAL, SAVE :: WriteOutputToSQLite = .FALSE.
-LOGICAL, SAVE :: WriteTabularDataToSQLite = .FALSE.
+  INTEGER, PARAMETER :: MaxMessageSize     = 4096
+  LOGICAL, SAVE :: WriteOutputToSQLite = .FALSE.
+  LOGICAL, SAVE :: WriteTabularDataToSQLite = .FALSE.
 
-    INTEGER            :: SQLdbTimeIndex = 0
-PUBLIC
+  INTEGER            :: SQLdbTimeIndex = 0
+  PUBLIC
 
 CONTAINS
 
-SUBROUTINE CreateSQLiteDatabase
+  SUBROUTINE CreateSQLiteDatabase
 
-   ! SUBROUTINE INFORMATION:
+    ! SUBROUTINE INFORMATION:
     !       AUTHOR         Linda Lawrie
     !       DATE WRITTEN   September 2008
     !       MODIFIED       na
@@ -37,7 +37,7 @@ SUBROUTINE CreateSQLiteDatabase
 
     USE InputProcessor !, ONLY: GetNumObjectsFound  !RS: Debugging
     USE DataGlobals_HPSimIntegrated, ONLY: MaxNameLength !, ShowSevereError, ShowContinueError
-   ! USE DataInterfaces, ONLY: ShowSevereError, ShowContinueError
+    ! USE DataInterfaces, ONLY: ShowSevereError, ShowContinueError
 
     IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
@@ -46,11 +46,11 @@ SUBROUTINE CreateSQLiteDatabase
 
     ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
     ! na
-    
+
     INTEGER :: DebugFile       =150 !RS: Debugging file denotion, hopfully this works.
-    
+
     OPEN(unit=DebugFile,file='Debug.txt')    !RS: Debugging
-   
+
     IF (GetNumObjectsFound('Output:SQLite') > 0) THEN
       !CALL ShowSevereError('SQLite is not available in this version')  !RS: Secret Search String
       WRITE (DebugFile,*) GetNumObjectsFound('Output:SQLite')
@@ -60,10 +60,10 @@ SUBROUTINE CreateSQLiteDatabase
       WriteOutputToSQLite = .FALSE.
     END IF
 
-END SUBROUTINE CreateSQLiteDatabase
+  END SUBROUTINE CreateSQLiteDatabase
 
-SUBROUTINE CreateSQLiteReportVariableDictionaryRecord (reportVariableReportID, storeTypeIndex, &
-           indexGroup, keyedValueString, variableName, indexType, units, reportingFreq, scheduleName)
+  SUBROUTINE CreateSQLiteReportVariableDictionaryRecord (reportVariableReportID, storeTypeIndex, &
+    indexGroup, keyedValueString, variableName, indexType, units, reportingFreq, scheduleName)
 
     IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
@@ -78,9 +78,9 @@ SUBROUTINE CreateSQLiteReportVariableDictionaryRecord (reportVariableReportID, s
     INTEGER, INTENT(IN) :: reportingFreq
     CHARACTER(len=*), INTENT(IN), OPTIONAL :: scheduleName
 
-END SUBROUTINE CreateSQLiteReportVariableDictionaryRecord
+  END SUBROUTINE CreateSQLiteReportVariableDictionaryRecord
 
-SUBROUTINE CreateSQLiteReportVariableDataRecord (recordIndex, timeIndex, value, reportingInterval, &
+  SUBROUTINE CreateSQLiteReportVariableDataRecord (recordIndex, timeIndex, value, reportingInterval, &
     minValue, minValueDate, maxValue, maxValueDate, minutesPerTimeStep)
 
     IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
@@ -96,16 +96,16 @@ SUBROUTINE CreateSQLiteReportVariableDataRecord (recordIndex, timeIndex, value, 
     INTEGER, INTENT(IN), OPTIONAL :: minValueDate
     INTEGER, INTENT(IN), OPTIONAL :: minutesPerTimeStep
 
-END SUBROUTINE CreateSQLiteReportVariableDataRecord
+  END SUBROUTINE CreateSQLiteReportVariableDataRecord
 
-INTEGER FUNCTION CreateSQLiteTimeIndexRecord(reportingInterval, recordIndex, CumlativeSimulationDays, &
+  INTEGER FUNCTION CreateSQLiteTimeIndexRecord(reportingInterval, recordIndex, CumlativeSimulationDays, &
     Month, DayOfMonth, Hour, EndMinute, StartMinute, DST, DayType)
 
     IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
     ! FUNCTION ARGUMENT DEFINITIONS:
     INTEGER, INTENT(IN) :: reportingInterval
-        ! See Module Parameter Definitons for LocalReportEach, LocalReportTimeStep, LocalReportHourly, etc.
+    ! See Module Parameter Definitons for LocalReportEach, LocalReportTimeStep, LocalReportHourly, etc.
     INTEGER, INTENT(IN) :: recordIndex
     INTEGER, INTENT(IN) :: CumlativeSimulationDays
     INTEGER, INTENT(IN), OPTIONAL :: Month
@@ -118,57 +118,57 @@ INTEGER FUNCTION CreateSQLiteTimeIndexRecord(reportingInterval, recordIndex, Cum
 
     CreateSQLiteTimeIndexRecord = -1
 
-END FUNCTION CreateSQLiteTimeIndexRecord
+  END FUNCTION CreateSQLiteTimeIndexRecord
 
-SUBROUTINE CreateSQLiteZoneTable
-END SUBROUTINE CreateSQLiteZoneTable
+  SUBROUTINE CreateSQLiteZoneTable
+  END SUBROUTINE CreateSQLiteZoneTable
 
-SUBROUTINE CreateSQLiteNominalLightingTable
-END SUBROUTINE CreateSQLiteNominalLightingTable
+  SUBROUTINE CreateSQLiteNominalLightingTable
+  END SUBROUTINE CreateSQLiteNominalLightingTable
 
-SUBROUTINE CreateSQLiteNominalPeopleTable
-END SUBROUTINE CreateSQLiteNominalPeopleTable
+  SUBROUTINE CreateSQLiteNominalPeopleTable
+  END SUBROUTINE CreateSQLiteNominalPeopleTable
 
-SUBROUTINE CreateSQLiteNominalElectricEquipmentTable
-END SUBROUTINE CreateSQLiteNominalElectricEquipmentTable
+  SUBROUTINE CreateSQLiteNominalElectricEquipmentTable
+  END SUBROUTINE CreateSQLiteNominalElectricEquipmentTable
 
-SUBROUTINE CreateSQLiteNominalGasEquipmentTable
-END SUBROUTINE CreateSQLiteNominalGasEquipmentTable
+  SUBROUTINE CreateSQLiteNominalGasEquipmentTable
+  END SUBROUTINE CreateSQLiteNominalGasEquipmentTable
 
-SUBROUTINE CreateSQLiteNominalSteamEquipmentTable
-END SUBROUTINE CreateSQLiteNominalSteamEquipmentTable
+  SUBROUTINE CreateSQLiteNominalSteamEquipmentTable
+  END SUBROUTINE CreateSQLiteNominalSteamEquipmentTable
 
-SUBROUTINE CreateSQLiteNominalHotWaterEquipmentTable
-END SUBROUTINE CreateSQLiteNominalHotWaterEquipmentTable
+  SUBROUTINE CreateSQLiteNominalHotWaterEquipmentTable
+  END SUBROUTINE CreateSQLiteNominalHotWaterEquipmentTable
 
-SUBROUTINE CreateSQLiteNominalOtherEquipmentTable
-END SUBROUTINE CreateSQLiteNominalOtherEquipmentTable
+  SUBROUTINE CreateSQLiteNominalOtherEquipmentTable
+  END SUBROUTINE CreateSQLiteNominalOtherEquipmentTable
 
-SUBROUTINE CreateSQLiteNominalBaseboardHeatTable
-END SUBROUTINE CreateSQLiteNominalBaseboardHeatTable
+  SUBROUTINE CreateSQLiteNominalBaseboardHeatTable
+  END SUBROUTINE CreateSQLiteNominalBaseboardHeatTable
 
-SUBROUTINE CreateSQLiteSurfacesTable
-END SUBROUTINE CreateSQLiteSurfacesTable
+  SUBROUTINE CreateSQLiteSurfacesTable
+  END SUBROUTINE CreateSQLiteSurfacesTable
 
-SUBROUTINE CreateSQLiteConstructionsTable
-END SUBROUTINE CreateSQLiteConstructionsTable
+  SUBROUTINE CreateSQLiteConstructionsTable
+  END SUBROUTINE CreateSQLiteConstructionsTable
 
-SUBROUTINE CreateSQLiteMaterialsTable
-END SUBROUTINE CreateSQLiteMaterialsTable
+  SUBROUTINE CreateSQLiteMaterialsTable
+  END SUBROUTINE CreateSQLiteMaterialsTable
 
-SUBROUTINE CreateSQLiteZoneListTable
-END SUBROUTINE CreateSQLiteZoneListTable
+  SUBROUTINE CreateSQLiteZoneListTable
+  END SUBROUTINE CreateSQLiteZoneListTable
 
-SUBROUTINE CreateSQLiteZoneGroupTable
-END SUBROUTINE CreateSQLiteZoneGroupTable
+  SUBROUTINE CreateSQLiteZoneGroupTable
+  END SUBROUTINE CreateSQLiteZoneGroupTable
 
-SUBROUTINE CreateSQLiteInfiltrationTable
-END SUBROUTINE CreateSQLiteInfiltrationTable
+  SUBROUTINE CreateSQLiteInfiltrationTable
+  END SUBROUTINE CreateSQLiteInfiltrationTable
 
-SUBROUTINE CreateSQLiteVentilationTable
-END SUBROUTINE CreateSQLiteVentilationTable
+  SUBROUTINE CreateSQLiteVentilationTable
+  END SUBROUTINE CreateSQLiteVentilationTable
 
-SUBROUTINE AddSQLiteZoneSizingRecord (ZoneName, LoadType, CalcDesLoad, UserDesLoad, CalcDesFlow, UserDesFlow, DesDayName, &
+  SUBROUTINE AddSQLiteZoneSizingRecord (ZoneName, LoadType, CalcDesLoad, UserDesLoad, CalcDesFlow, UserDesFlow, DesDayName, &
     PeakHrMin, PeakTemp, PeakHumRat, MinOAVolFlow)
 
     IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
@@ -186,9 +186,9 @@ SUBROUTINE AddSQLiteZoneSizingRecord (ZoneName, LoadType, CalcDesLoad, UserDesLo
     REAL(r64), INTENT(IN)        :: PeakHumRat   ! humidity ratio at peak [kg water/kg dry air]
     REAL(r64), INTENT(IN)        :: MinOAVolFlow ! zone design minimum outside air flow rate [m3/s]
 
-END SUBROUTINE AddSQLiteZoneSizingRecord
+  END SUBROUTINE AddSQLiteZoneSizingRecord
 
-SUBROUTINE AddSQLiteSystemSizingRecord (SysName, VarDesc, VarValue)
+  SUBROUTINE AddSQLiteSystemSizingRecord (SysName, VarDesc, VarValue)
 
     IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
@@ -197,9 +197,9 @@ SUBROUTINE AddSQLiteSystemSizingRecord (SysName, VarDesc, VarValue)
     CHARACTER(len=*), INTENT(IN) :: VarDesc      ! the description of the input variable
     REAL(r64), INTENT(IN)        :: VarValue     ! the value from the sizing calculation
 
-END SUBROUTINE AddSQLiteSystemSizingRecord
+  END SUBROUTINE AddSQLiteSystemSizingRecord
 
-SUBROUTINE AddSQLiteComponentSizingRecord (CompType, CompName, VarDesc, VarValue)
+  SUBROUTINE AddSQLiteComponentSizingRecord (CompType, CompName, VarDesc, VarValue)
 
     IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
@@ -209,13 +209,13 @@ SUBROUTINE AddSQLiteComponentSizingRecord (CompType, CompName, VarDesc, VarValue
     CHARACTER(len=*), INTENT(IN) :: VarDesc   ! the description of the input variable
     REAL(r64), INTENT(IN)        :: VarValue  ! the value from the sizing calculation
 
-END SUBROUTINE AddSQLiteComponentSizingRecord
+  END SUBROUTINE AddSQLiteComponentSizingRecord
 
-SUBROUTINE CreateSQLiteRoomAirModelTable
-END SUBROUTINE CreateSQLiteRoomAirModelTable
+  SUBROUTINE CreateSQLiteRoomAirModelTable
+  END SUBROUTINE CreateSQLiteRoomAirModelTable
 
-SUBROUTINE CreateSQLiteMeterDictionaryRecord (meterReportID, storeTypeIndex, indexGroup, &
-           keyedValueString, variableName, indexType, units, reportingFreq, scheduleName)
+  SUBROUTINE CreateSQLiteMeterDictionaryRecord (meterReportID, storeTypeIndex, indexGroup, &
+    keyedValueString, variableName, indexType, units, reportingFreq, scheduleName)
 
     IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
@@ -230,9 +230,9 @@ SUBROUTINE CreateSQLiteMeterDictionaryRecord (meterReportID, storeTypeIndex, ind
     INTEGER, INTENT(IN) :: reportingFreq
     CHARACTER(len=*), INTENT(IN), OPTIONAL :: scheduleName
 
-END SUBROUTINE CreateSQLiteMeterDictionaryRecord
+  END SUBROUTINE CreateSQLiteMeterDictionaryRecord
 
-SUBROUTINE CreateSQLiteMeterRecord (recordIndex, timeIndex, value, reportingInterval, &
+  SUBROUTINE CreateSQLiteMeterRecord (recordIndex, timeIndex, value, reportingInterval, &
     minValue, minValueDate, maxValue, maxValueDate, minutesPerTimeStep)
 
     IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
@@ -248,21 +248,21 @@ SUBROUTINE CreateSQLiteMeterRecord (recordIndex, timeIndex, value, reportingInte
     INTEGER, INTENT(IN), OPTIONAL :: minValueDate
     INTEGER, INTENT(IN), OPTIONAL :: minutesPerTimeStep
 
-END SUBROUTINE CreateSQLiteMeterRecord
+  END SUBROUTINE CreateSQLiteMeterRecord
 
-SUBROUTINE SQLiteWriteMessageMacro (message)
+  SUBROUTINE SQLiteWriteMessageMacro (message)
 
     IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
     ! SUBROUTINE ARGUMENT DEFINITIONS:
     CHARACTER(len=*), INTENT(IN) :: message
 
-END SUBROUTINE SQLiteWriteMessageMacro
+  END SUBROUTINE SQLiteWriteMessageMacro
 
-SUBROUTINE CreateZoneExtendedOutput
-END SUBROUTINE CreateZoneExtendedOutput
+  SUBROUTINE CreateZoneExtendedOutput
+  END SUBROUTINE CreateZoneExtendedOutput
 
-SUBROUTINE CreateSQLiteDaylightMapTitle (mapNum, mapName, environmentName, zone, refPt1, refPt2, zCoord)
+  SUBROUTINE CreateSQLiteDaylightMapTitle (mapNum, mapName, environmentName, zone, refPt1, refPt2, zCoord)
 
     ! SUBROUTINE INFORMATION:
     !       AUTHOR         Greg Stark
@@ -293,9 +293,9 @@ SUBROUTINE CreateSQLiteDaylightMapTitle (mapNum, mapName, environmentName, zone,
     CHARACTER(len=*), INTENT(IN) :: refPt1
     CHARACTER(len=*), INTENT(IN) :: refPt2
 
-END SUBROUTINE CreateSQLiteDaylightMapTitle
+  END SUBROUTINE CreateSQLiteDaylightMapTitle
 
-SUBROUTINE CreateSQLiteDaylightMap (mapNum, month, dayOfMonth, hourOfDay, nX, x, nY, y, illuminance)
+  SUBROUTINE CreateSQLiteDaylightMap (mapNum, month, dayOfMonth, hourOfDay, nX, x, nY, y, illuminance)
 
     ! SUBROUTINE INFORMATION:
     !       AUTHOR         Greg Stark
@@ -328,9 +328,9 @@ SUBROUTINE CreateSQLiteDaylightMap (mapNum, month, dayOfMonth, hourOfDay, nX, x,
     REAL(r64), INTENT(IN), DIMENSION(:) :: y
     REAL(r64), INTENT(IN), DIMENSION(:,:) :: illuminance
 
-END SUBROUTINE CreateSQLiteDaylightMap
+  END SUBROUTINE CreateSQLiteDaylightMap
 
-SUBROUTINE CreateSQLiteTabularDataRecords(body,rowLabels,columnLabels,ReportName,ReportForString,TableName)
+  SUBROUTINE CreateSQLiteTabularDataRecords(body,rowLabels,columnLabels,ReportName,ReportForString,TableName)
 
     IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
@@ -343,9 +343,9 @@ SUBROUTINE CreateSQLiteTabularDataRecords(body,rowLabels,columnLabels,ReportName
     CHARACTER(len=*),INTENT(IN)                   :: TableName
 
 
-END SUBROUTINE CreateSQLiteTabularDataRecords
+  END SUBROUTINE CreateSQLiteTabularDataRecords
 
-SUBROUTINE InitializeTabularDataTable
+  SUBROUTINE InitializeTabularDataTable
 
     IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
@@ -363,15 +363,15 @@ SUBROUTINE InitializeTabularDataTable
 
     ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
 
-END SUBROUTINE InitializeTabularDataTable
+  END SUBROUTINE InitializeTabularDataTable
 
-SUBROUTINE InitializeTabularDataView
+  SUBROUTINE InitializeTabularDataView
 
     IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-END SUBROUTINE InitializeTabularDataView
+  END SUBROUTINE InitializeTabularDataView
 
-SUBROUTINE CreateSQLiteSimulationsRecord(ID)
+  SUBROUTINE CreateSQLiteSimulationsRecord(ID)
 
     ! USE STATEMENTS:
     USE ISO_C_FUNCTION_BINDING
@@ -381,15 +381,15 @@ SUBROUTINE CreateSQLiteSimulationsRecord(ID)
     ! SUBROUTINE ARGUMENT DEFINITIONS:
     INTEGER, INTENT(IN) :: ID
 
-END SUBROUTINE CreateSQLiteSimulationsRecord
+  END SUBROUTINE CreateSQLiteSimulationsRecord
 
-SUBROUTINE CreateSQLiteEnvironmentPeriodRecord()
+  SUBROUTINE CreateSQLiteEnvironmentPeriodRecord()
 
     IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-END SUBROUTINE CreateSQLiteEnvironmentPeriodRecord
+  END SUBROUTINE CreateSQLiteEnvironmentPeriodRecord
 
-SUBROUTINE CreateSQLiteErrorRecord (simulationIndex, errorType, &
+  SUBROUTINE CreateSQLiteErrorRecord (simulationIndex, errorType, &
     errorMessage, cnt)
     ! SUBROUTINE INFORMATION:
     !       AUTHOR         Kyle Benne
@@ -411,16 +411,16 @@ SUBROUTINE CreateSQLiteErrorRecord (simulationIndex, errorType, &
     INTEGER, INTENT(IN) :: errorType
     INTEGER, INTENT(IN) :: cnt
     CHARACTER(len=*), INTENT(IN) :: errorMessage
-END SUBROUTINE CreateSQLiteErrorRecord
-SUBROUTINE UpdateSQLiteErrorRecord (errorMessage)
+  END SUBROUTINE CreateSQLiteErrorRecord
+  SUBROUTINE UpdateSQLiteErrorRecord (errorMessage)
     ! SUBROUTINE INFORMATION:
     !       AUTHOR         Kyle Benne
     !       DATE WRITTEN   August 2010
     !       RE-ENGINEERED  na
     ! PURPOSE OF THIS SUBROUTINE:
     ! This subroutine updates error records in the Errors table.
-    ! This is used to append text to an error that continues on 
-    ! to the next line.  The errorMessage is always appended to the 
+    ! This is used to append text to an error that continues on
+    ! to the next line.  The errorMessage is always appended to the
     ! last record inserted into the Errors table.
     !
     ! METHODOLOGY EMPLOYED:
@@ -433,15 +433,15 @@ SUBROUTINE UpdateSQLiteErrorRecord (errorMessage)
     IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
     ! SUBROUTINE ARGUMENT DEFINITIONS:
     CHARACTER(len=*), INTENT(IN) :: errorMessage
-END SUBROUTINE UpdateSQLiteErrorRecord
-SUBROUTINE UpdateSQLiteSimulationRecord (completed, completedSuccessfully)
+  END SUBROUTINE UpdateSQLiteErrorRecord
+  SUBROUTINE UpdateSQLiteSimulationRecord (completed, completedSuccessfully)
     ! SUBROUTINE INFORMATION:
     !       AUTHOR         Kyle Benne
     !       DATE WRITTEN   August 2010
     !       RE-ENGINEERED  na
     ! PURPOSE OF THIS SUBROUTINE:
     ! This subroutine updates simulation records in the Simulations table.
-    ! A simulation record is first inserted as 
+    ! A simulation record is first inserted as
     ! completed = false and
     ! completedSuccessfully = false
     ! This subroutine updates those records.
@@ -456,31 +456,30 @@ SUBROUTINE UpdateSQLiteSimulationRecord (completed, completedSuccessfully)
     ! SUBROUTINE ARGUMENT DEFINITIONS:
     LOGICAL, INTENT(IN) :: completed
     LOGICAL, INTENT(IN) :: completedSuccessfully
-END SUBROUTINE UpdateSQLiteSimulationRecord
-!     NOTICE
-!
-!     Copyright © 1996-2012 The Board of Trustees of the University of Illinois
-!     and The Regents of the University of California through Ernest Orlando Lawrence
-!     Berkeley National Laboratory.  All rights reserved.
-!
-!     Portions of the EnergyPlus software package have been developed and copyrighted
-!     by other individuals, companies and institutions.  These portions have been
-!     incorporated into the EnergyPlus software package under license.   For a complete
-!     list of contributors, see "Notice" located in EnergyPlus.f90.
-!
-!     NOTICE: The U.S. Government is granted for itself and others acting on its
-!     behalf a paid-up, nonexclusive, irrevocable, worldwide license in this data to
-!     reproduce, prepare derivative works, and perform publicly and display publicly.
-!     Beginning five (5) years after permission to assert copyright is granted,
-!     subject to two possible five year renewals, the U.S. Government is granted for
-!     itself and others acting on its behalf a paid-up, non-exclusive, irrevocable
-!     worldwide license in this data to reproduce, prepare derivative works,
-!     distribute copies to the public, perform publicly and display publicly, and to
-!     permit others to do so.
-!
-!     TRADEMARKS: EnergyPlus is a trademark of the US Department of Energy.
-!
-!     Copyright © 2008 Building Synergies, LLC.  All rights reserved.
+  END SUBROUTINE UpdateSQLiteSimulationRecord
+  !     NOTICE
+  !
+  !     Copyright ï¿½ 1996-2012 The Board of Trustees of the University of Illinois
+  !     and The Regents of the University of California through Ernest Orlando Lawrence
+  !     Berkeley National Laboratory.  All rights reserved.
+  !
+  !     Portions of the EnergyPlus software package have been developed and copyrighted
+  !     by other individuals, companies and institutions.  These portions have been
+  !     incorporated into the EnergyPlus software package under license.   For a complete
+  !     list of contributors, see "Notice" located in EnergyPlus.f90.
+  !
+  !     NOTICE: The U.S. Government is granted for itself and others acting on its
+  !     behalf a paid-up, nonexclusive, irrevocable, worldwide license in this data to
+  !     reproduce, prepare derivative works, and perform publicly and display publicly.
+  !     Beginning five (5) years after permission to assert copyright is granted,
+  !     subject to two possible five year renewals, the U.S. Government is granted for
+  !     itself and others acting on its behalf a paid-up, non-exclusive, irrevocable
+  !     worldwide license in this data to reproduce, prepare derivative works,
+  !     distribute copies to the public, perform publicly and display publicly, and to
+  !     permit others to do so.
+  !
+  !     TRADEMARKS: EnergyPlus is a trademark of the US Department of Energy.
+  !
+  !     Copyright ï¿½ 2008 Building Synergies, LLC.  All rights reserved.
 
 END MODULE SQLiteProcedures
-

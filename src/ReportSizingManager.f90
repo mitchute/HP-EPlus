@@ -1,46 +1,46 @@
 MODULE ReportSizingManager
 
-          ! Module containing the routines dealing with the <module_name>
+  ! Module containing the routines dealing with the <module_name>
 
-          ! MODULE INFORMATION:
-          !       AUTHOR         Linda Lawrie<author>
-          !       DATE WRITTEN   November 2010
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! MODULE INFORMATION:
+  !       AUTHOR         Linda Lawrie<author>
+  !       DATE WRITTEN   November 2010
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS MODULE:
-          ! Provide module interface for ReportSizingOutput
+  ! PURPOSE OF THIS MODULE:
+  ! Provide module interface for ReportSizingOutput
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! OTHER NOTES:
-          ! na
+  ! OTHER NOTES:
+  ! na
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
 
-IMPLICIT NONE ! Enforce explicit typing of all variables
+  IMPLICIT NONE ! Enforce explicit typing of all variables
 
-PUBLIC ! Everything private unless explicitly made public
+  PUBLIC ! Everything private unless explicitly made public
 
-          ! MODULE PARAMETER DEFINITIONS:
-          ! na
+  ! MODULE PARAMETER DEFINITIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! MODULE VARIABLE DECLARATIONS:
-          ! na
+  ! MODULE VARIABLE DECLARATIONS:
+  ! na
 
-          ! SUBROUTINE SPECIFICATIONS FOR MODULE <module_name>:
+  ! SUBROUTINE SPECIFICATIONS FOR MODULE <module_name>:
 
 CONTAINS
 
-SUBROUTINE ReportSizingOutput(CompType,CompName,VarDesc,VarValue)
+  SUBROUTINE ReportSizingOutput(CompType,CompName,VarDesc,VarValue)
 
     ! SUBROUTINE INFORMATION:
     !       AUTHOR         Fred Buhl
@@ -85,8 +85,8 @@ SUBROUTINE ReportSizingOutput(CompType,CompName,VarDesc,VarValue)
     LOGICAL, SAVE :: MyOneTimeFlag = .TRUE.
 
     IF (MyOneTimeFlag) THEN
-        WRITE(OutputFileInits, 990)
-        MyOneTimeFlag = .FALSE.
+      WRITE(OutputFileInits, 990)
+      MyOneTimeFlag = .FALSE.
     END IF
 
     WRITE (OutputFileInits, 991) TRIM(CompType), TRIM(CompName), TRIM(VarDesc), TRIM(RoundSigDigits(VarValue,5))
@@ -97,36 +97,35 @@ SUBROUTINE ReportSizingOutput(CompType,CompName,VarDesc,VarValue)
     IF (WriteOutputToSQLite) CALL AddSQLiteComponentSizingRecord(CompType, CompName, VarDesc, VarValue)
 
     990 FORMAT('! <Component Sizing Information>, Component Type, Component Name, ', &
-        'Input Field Description, Value')
+    'Input Field Description, Value')
     991 FORMAT(' Component Sizing Information, ',A,', ',A,', ',A,', ',A)
 
     RETURN
 
-END SUBROUTINE ReportSizingOutput
+  END SUBROUTINE ReportSizingOutput
 
-!     NOTICE
-!
-!     Copyright © 1996-2012 The Board of Trustees of the University of Illinois
-!     and The Regents of the University of California through Ernest Orlando Lawrence
-!     Berkeley National Laboratory.  All rights reserved.
-!
-!     Portions of the EnergyPlus software package have been developed and copyrighted
-!     by other individuals, companies and institutions.  These portions have been
-!     incorporated into the EnergyPlus software package under license.   For a complete
-!     list of contributors, see "Notice" located in EnergyPlus.f90.
-!
-!     NOTICE: The U.S. Government is granted for itself and others acting on its
-!     behalf a paid-up, nonexclusive, irrevocable, worldwide license in this data to
-!     reproduce, prepare derivative works, and perform publicly and display publicly.
-!     Beginning five (5) years after permission to assert copyright is granted,
-!     subject to two possible five year renewals, the U.S. Government is granted for
-!     itself and others acting on its behalf a paid-up, non-exclusive, irrevocable
-!     worldwide license in this data to reproduce, prepare derivative works,
-!     distribute copies to the public, perform publicly and display publicly, and to
-!     permit others to do so.
-!
-!     TRADEMARKS: EnergyPlus is a trademark of the US Department of Energy.
-!
+  !     NOTICE
+  !
+  !     Copyright ï¿½ 1996-2012 The Board of Trustees of the University of Illinois
+  !     and The Regents of the University of California through Ernest Orlando Lawrence
+  !     Berkeley National Laboratory.  All rights reserved.
+  !
+  !     Portions of the EnergyPlus software package have been developed and copyrighted
+  !     by other individuals, companies and institutions.  These portions have been
+  !     incorporated into the EnergyPlus software package under license.   For a complete
+  !     list of contributors, see "Notice" located in EnergyPlus.f90.
+  !
+  !     NOTICE: The U.S. Government is granted for itself and others acting on its
+  !     behalf a paid-up, nonexclusive, irrevocable, worldwide license in this data to
+  !     reproduce, prepare derivative works, and perform publicly and display publicly.
+  !     Beginning five (5) years after permission to assert copyright is granted,
+  !     subject to two possible five year renewals, the U.S. Government is granted for
+  !     itself and others acting on its behalf a paid-up, non-exclusive, irrevocable
+  !     worldwide license in this data to reproduce, prepare derivative works,
+  !     distribute copies to the public, perform publicly and display publicly, and to
+  !     permit others to do so.
+  !
+  !     TRADEMARKS: EnergyPlus is a trademark of the US Department of Energy.
+  !
 
 END MODULE ReportSizingManager
-

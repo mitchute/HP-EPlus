@@ -1,48 +1,48 @@
 MODULE DELIGHTMANAGERF
 
-    ! MODULE INFORMATION
-    !       AUTHOR         Robert J. Hitchcock
-    !       DATE WRITTEN   August 2003
-    !       MODIFIED       January 2004
-    !       RE-ENGINEERED  na
+  ! MODULE INFORMATION
+  !       AUTHOR         Robert J. Hitchcock
+  !       DATE WRITTEN   August 2003
+  !       MODIFIED       January 2004
+  !       RE-ENGINEERED  na
 
-    ! PURPOSE OF THIS MODULE:
+  ! PURPOSE OF THIS MODULE:
 
-    ! Do nothing except show fatal error when calls are made to DElight subroutines.
-    ! Fatal errors will only be generated when a user include DElight objects in the input IDF.
-    ! This module replaces DElightManagerF.f90 when building EnergyPlus without the DElight LIB and DLL.
+  ! Do nothing except show fatal error when calls are made to DElight subroutines.
+  ! Fatal errors will only be generated when a user include DElight objects in the input IDF.
+  ! This module replaces DElightManagerF.f90 when building EnergyPlus without the DElight LIB and DLL.
 
-    ! METHODOLOGY EMPLOYED:
+  ! METHODOLOGY EMPLOYED:
 
-    !
-    ! REFERENCES:
-
-
-    ! OTHER NOTES:
+  !
+  ! REFERENCES:
 
 
+  ! OTHER NOTES:
 
-    ! USE STATEMENTS:
-    ! <use statements for data only modules>
-    USE DataPrecisionGlobals
-    USE DataDElight
 
-    IMPLICIT NONE         ! Enforce explicit typing of all variables
 
-    PUBLIC DElightDaylightCoefficients
-    PUBLIC DElightElecLtgCtrl
-    PUBLIC DElightFreeMemory
-    PUBLIC DElightOutputGenerator
-    PUBLIC DElightInputGenerator
+  ! USE STATEMENTS:
+  ! <use statements for data only modules>
+  USE DataPrecisionGlobals
+  USE DataDElight
 
-    ! MODULE VARIABLE DECLARATIONS:
+  IMPLICIT NONE         ! Enforce explicit typing of all variables
 
-    CONTAINS
+  PUBLIC DElightDaylightCoefficients
+  PUBLIC DElightElecLtgCtrl
+  PUBLIC DElightFreeMemory
+  PUBLIC DElightOutputGenerator
+  PUBLIC DElightInputGenerator
 
-    ! SUBROUTINE SPECIFICATIONS FOR MODULE DElightManagerF
-    ! MODULE SUBROUTINES:
+  ! MODULE VARIABLE DECLARATIONS:
 
-SUBROUTINE  DElightDaylightCoefficients (dBldgLat, iErrorFlag)
+CONTAINS
+
+  ! SUBROUTINE SPECIFICATIONS FOR MODULE DElightManagerF
+  ! MODULE SUBROUTINES:
+
+  SUBROUTINE  DElightDaylightCoefficients (dBldgLat, iErrorFlag)
 
     ! SUBROUTINE INFORMATION:
     !       AUTHOR         Robert J. Hitchcock
@@ -84,11 +84,11 @@ SUBROUTINE  DElightDaylightCoefficients (dBldgLat, iErrorFlag)
 
     return
 
-END SUBROUTINE DElightDaylightCoefficients
+  END SUBROUTINE DElightDaylightCoefficients
 
-SUBROUTINE DElightElecLtgCtrl (iNameLength, cZoneName, dBldgLat, &
-                            dHISKF, dHISUNF, dCloudFraction, dSOLCOSX, dSOLCOSY, dSOLCOSZ, &
-                            pdPowerReducFac, iErrorFlag)
+  SUBROUTINE DElightElecLtgCtrl (iNameLength, cZoneName, dBldgLat, &
+    dHISKF, dHISUNF, dCloudFraction, dSOLCOSX, dSOLCOSY, dSOLCOSZ, &
+    pdPowerReducFac, iErrorFlag)
 
     ! SUBROUTINE INFORMATION:
     !       AUTHOR         Robert J. Hitchcock
@@ -116,7 +116,7 @@ SUBROUTINE DElightElecLtgCtrl (iNameLength, cZoneName, dBldgLat, &
     ! SUBROUTINE PARAMETER DEFINITIONS:
     INTEGER iNameLength
     CHARACTER(len=*) cZoneName
-!    REAL(r64) rBldgLat
+    !    REAL(r64) rBldgLat
     REAL(r64) :: dBldgLat
     REAL(r64) :: dHISKF
     REAL(r64) :: dHISUNF
@@ -139,9 +139,9 @@ SUBROUTINE DElightElecLtgCtrl (iNameLength, cZoneName, dBldgLat, &
 
     return
 
-END SUBROUTINE DElightElecLtgCtrl
+  END SUBROUTINE DElightElecLtgCtrl
 
-SUBROUTINE DElightFreeMemory ()
+  SUBROUTINE DElightFreeMemory ()
 
     ! SUBROUTINE INFORMATION:
     !       AUTHOR         Robert J. Hitchcock
@@ -178,9 +178,9 @@ SUBROUTINE DElightFreeMemory ()
 
     return
 
-END SUBROUTINE DElightFreeMemory
+  END SUBROUTINE DElightFreeMemory
 
-SUBROUTINE DElightOutputGenerator (iOutputFlag)
+  SUBROUTINE DElightOutputGenerator (iOutputFlag)
 
     ! SUBROUTINE INFORMATION:
     !       AUTHOR         Robert J. Hitchcock
@@ -218,9 +218,9 @@ SUBROUTINE DElightOutputGenerator (iOutputFlag)
 
     return
 
-END SUBROUTINE DElightOutputGenerator
+  END SUBROUTINE DElightOutputGenerator
 
-SUBROUTINE DElightInputGenerator
+  SUBROUTINE DElightInputGenerator
 
     ! SUBROUTINE INFORMATION:
     !       AUTHOR         Robert J. Hitchcock
@@ -260,9 +260,9 @@ SUBROUTINE DElightInputGenerator
 
     return
 
-END SUBROUTINE DElightInputGenerator
+  END SUBROUTINE DElightInputGenerator
 
-SUBROUTINE SetupDElightOutput4EPlus
+  SUBROUTINE SetupDElightOutput4EPlus
 
     ! SUBROUTINE INFORMATION:
     !       AUTHOR         Robert J. Hitchcock
@@ -302,9 +302,9 @@ SUBROUTINE SetupDElightOutput4EPlus
 
     return
 
-END SUBROUTINE SetupDElightOutput4EPlus
+  END SUBROUTINE SetupDElightOutput4EPlus
 
-FUNCTION ReplaceBlanksWithUnderscores(InputString) RESULT (ResultString)
+  FUNCTION ReplaceBlanksWithUnderscores(InputString) RESULT (ResultString)
 
     ! FUNCTION INFORMATION:
     !       AUTHOR         Robert J. Hitchcock
@@ -343,35 +343,30 @@ FUNCTION ReplaceBlanksWithUnderscores(InputString) RESULT (ResultString)
 
     RETURN
 
-END FUNCTION ReplaceBlanksWithUnderscores
+  END FUNCTION ReplaceBlanksWithUnderscores
 
-!     NOTICE
-!
-!     Copyright © 1996-2012 The Board of Trustees of the University of Illinois
-!     and The Regents of the University of California through Ernest Orlando Lawrence
-!     Berkeley National Laboratory.  All rights reserved.
-!
-!     Portions of the EnergyPlus software package have been developed and copyrighted
-!     by other individuals, companies and institutions.  These portions have been
-!     incorporated into the EnergyPlus software package under license.   For a complete
-!     list of contributors, see "Notice" located in EnergyPlus.f90.
-!
-!     NOTICE: The U.S. Government is granted for itself and others acting on its
-!     behalf a paid-up, nonexclusive, irrevocable, worldwide license in this data to
-!     reproduce, prepare derivative works, and perform publicly and display publicly.
-!     Beginning five (5) years after permission to assert copyright is granted,
-!     subject to two possible five year renewals, the U.S. Government is granted for
-!     itself and others acting on its behalf a paid-up, non-exclusive, irrevocable
-!     worldwide license in this data to reproduce, prepare derivative works,
-!     distribute copies to the public, perform publicly and display publicly, and to
-!     permit others to do so.
-!
-!     TRADEMARKS: EnergyPlus is a trademark of the US Department of Energy.
-!
+  !     NOTICE
+  !
+  !     Copyright ï¿½ 1996-2012 The Board of Trustees of the University of Illinois
+  !     and The Regents of the University of California through Ernest Orlando Lawrence
+  !     Berkeley National Laboratory.  All rights reserved.
+  !
+  !     Portions of the EnergyPlus software package have been developed and copyrighted
+  !     by other individuals, companies and institutions.  These portions have been
+  !     incorporated into the EnergyPlus software package under license.   For a complete
+  !     list of contributors, see "Notice" located in EnergyPlus.f90.
+  !
+  !     NOTICE: The U.S. Government is granted for itself and others acting on its
+  !     behalf a paid-up, nonexclusive, irrevocable, worldwide license in this data to
+  !     reproduce, prepare derivative works, and perform publicly and display publicly.
+  !     Beginning five (5) years after permission to assert copyright is granted,
+  !     subject to two possible five year renewals, the U.S. Government is granted for
+  !     itself and others acting on its behalf a paid-up, non-exclusive, irrevocable
+  !     worldwide license in this data to reproduce, prepare derivative works,
+  !     distribute copies to the public, perform publicly and display publicly, and to
+  !     permit others to do so.
+  !
+  !     TRADEMARKS: EnergyPlus is a trademark of the US Department of Energy.
+  !
 
 END MODULE DELIGHTMANAGERF
-
-
-
-
-

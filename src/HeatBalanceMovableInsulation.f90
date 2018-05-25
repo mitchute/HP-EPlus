@@ -20,18 +20,18 @@ MODULE HeatBalanceMovableInsulation
   ! OTHER NOTES: none
 
   ! USE STATEMENTS:
-          ! Use statements for data only modules
-USE DataPrecisionGlobals
-USE DataHeatBalance, ONLY : Material
-USE DataSurfaces,    ONLY : Surface
+  ! Use statements for data only modules
+  USE DataPrecisionGlobals
+  USE DataHeatBalance, ONLY : Material
+  USE DataSurfaces,    ONLY : Surface
 
-          ! Use statements for access to subroutines in other modules
-USE ScheduleManager, ONLY : GetCurrentScheduleValue
-!USE DataGlobals_HPSimIntegrated,  ONLY : ShowFatalError
+  ! Use statements for access to subroutines in other modules
+  USE ScheduleManager, ONLY : GetCurrentScheduleValue
+  !USE DataGlobals_HPSimIntegrated,  ONLY : ShowFatalError
 
-IMPLICIT NONE         ! Enforce explicit typing of all variables
+  IMPLICIT NONE         ! Enforce explicit typing of all variables
 
-PRIVATE ! Everything private unless explicitly made public
+  PRIVATE ! Everything private unless explicitly made public
 
   ! MODULE PARAMETER DEFINITIONS
   ! na
@@ -41,169 +41,168 @@ PRIVATE ! Everything private unless explicitly made public
   ! MODULE VARIABLE DECLARATIONS:
 
   ! SUBROUTINE SPECIFICATIONS FOR MODULE HeatBalanceMovableInsulation
-PUBLIC  EvalOutsideMovableInsulation
-PUBLIC  EvalInsideMovableInsulation
+  PUBLIC  EvalOutsideMovableInsulation
+  PUBLIC  EvalInsideMovableInsulation
 
 CONTAINS
 
-SUBROUTINE EvalOutsideMovableInsulation(SurfNum,HMovInsul,RoughIndexMovInsul,AbsExt)
+  SUBROUTINE EvalOutsideMovableInsulation(SurfNum,HMovInsul,RoughIndexMovInsul,AbsExt)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Rick Strand
-          !       DATE WRITTEN   March 1998
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+    ! SUBROUTINE INFORMATION:
+    !       AUTHOR         Rick Strand
+    !       DATE WRITTEN   March 1998
+    !       MODIFIED       na
+    !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine determines whether or not outside movable insulation
-          ! on opaque surfaces is present at the current time.
+    ! PURPOSE OF THIS SUBROUTINE:
+    ! This subroutine determines whether or not outside movable insulation
+    ! on opaque surfaces is present at the current time.
 
-          ! METHODOLOGY EMPLOYED:
-          ! The SurfNum is passed in and then the rest of the parameters are set
-          ! if movable insulation is present.  If it is not present, then
-          ! HMovInsul is set to zero.
+    ! METHODOLOGY EMPLOYED:
+    ! The SurfNum is passed in and then the rest of the parameters are set
+    ! if movable insulation is present.  If it is not present, then
+    ! HMovInsul is set to zero.
 
-          ! REFERENCES:
-          ! (I)BLAST legacy routine OMVINS
+    ! REFERENCES:
+    ! (I)BLAST legacy routine OMVINS
 
-          ! USE STATEMENTS:
-          ! na
+    ! USE STATEMENTS:
+    ! na
 
-  IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
+    IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+    ! SUBROUTINE PARAMETER DEFINITIONS:
+    ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+    ! INTERFACE BLOCK SPECIFICATIONS
+    ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+    ! DERIVED TYPE DEFINITIONS
+    ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-  INTEGER, INTENT(IN)  :: SurfNum            ! DO loop counter for surfaces
-  REAL(r64),    INTENT(OUT) :: HMovInsul          ! Resistance or "h" value of movable insulation
-  INTEGER, INTENT(OUT) :: RoughIndexMovInsul ! Roughness index of movable insulation
-  REAL(r64),    INTENT(OUT) :: AbsExt             ! Absorptivity of outer most layer
+    ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+    INTEGER, INTENT(IN)  :: SurfNum            ! DO loop counter for surfaces
+    REAL(r64),    INTENT(OUT) :: HMovInsul          ! Resistance or "h" value of movable insulation
+    INTEGER, INTENT(OUT) :: RoughIndexMovInsul ! Roughness index of movable insulation
+    REAL(r64),    INTENT(OUT) :: AbsExt             ! Absorptivity of outer most layer
 
-  REAL(r64)    :: MovInsulSchedVal   ! Value of the movable insulation schedule for current time
+    REAL(r64)    :: MovInsulSchedVal   ! Value of the movable insulation schedule for current time
 
-          ! FLOW:
-  MovInsulSchedVal = GetCurrentScheduleValue(Surface(SurfNum)%SchedMovInsulExt)
+    ! FLOW:
+    MovInsulSchedVal = GetCurrentScheduleValue(Surface(SurfNum)%SchedMovInsulExt)
 
-  IF (MovInsulSchedVal <= 0.0) THEN ! Movable insulation not present at current time
+    IF (MovInsulSchedVal <= 0.0) THEN ! Movable insulation not present at current time
 
-    HMovInsul = 0.0
+      HMovInsul = 0.0
 
-  ELSE  ! Movable insulation present-->calculate output parameters
+    ELSE  ! Movable insulation present-->calculate output parameters
 
-          ! Double check resistance and conductivity to avoid divide by zero problems
-    IF ((Material(Surface(SurfNum)%MaterialMovInsulExt)%Resistance) <= 0.0) THEN
-      IF ((Material(Surface(SurfNum)%MaterialMovInsulExt)%Conductivity) > 0.0) THEN
-        Material(Surface(SurfNum)%MaterialMovInsulExt)%Resistance = Material(Surface(SurfNum)%MaterialMovInsulExt)%Thickness    &
-                                                                   /Material(Surface(SurfNum)%MaterialMovInsulExt)%Conductivity
-      ELSE
-        CALL ShowFatalError('No resistance or conductivity found for material ' &
-                            //TRIM(Material(Surface(SurfNum)%MaterialMovInsulExt)%Name))
+      ! Double check resistance and conductivity to avoid divide by zero problems
+      IF ((Material(Surface(SurfNum)%MaterialMovInsulExt)%Resistance) <= 0.0) THEN
+        IF ((Material(Surface(SurfNum)%MaterialMovInsulExt)%Conductivity) > 0.0) THEN
+          Material(Surface(SurfNum)%MaterialMovInsulExt)%Resistance = Material(Surface(SurfNum)%MaterialMovInsulExt)%Thickness    &
+          /Material(Surface(SurfNum)%MaterialMovInsulExt)%Conductivity
+        ELSE
+          CALL ShowFatalError('No resistance or conductivity found for material ' &
+          //TRIM(Material(Surface(SurfNum)%MaterialMovInsulExt)%Name))
+        END IF
       END IF
+
+      HMovInsul          = 1.0d0/( MovInsulSchedVal &
+      *Material(Surface(SurfNum)%MaterialMovInsulExt)%Resistance )
+      RoughIndexMovInsul = Material(Surface(SurfNum)%MaterialMovInsulExt)%Roughness
+      AbsExt             = MAX(0.0d0, 1.0d0-Material(Surface(SurfNum)%MaterialMovInsulExt)%Trans &
+      -Material(Surface(SurfNum)%MaterialMovInsulExt)%ReflectSolBeamFront)
+
     END IF
 
-    HMovInsul          = 1.0d0/( MovInsulSchedVal &
-                              *Material(Surface(SurfNum)%MaterialMovInsulExt)%Resistance )
-    RoughIndexMovInsul = Material(Surface(SurfNum)%MaterialMovInsulExt)%Roughness
-    AbsExt             = MAX(0.0d0, 1.0d0-Material(Surface(SurfNum)%MaterialMovInsulExt)%Trans &
-                                     -Material(Surface(SurfNum)%MaterialMovInsulExt)%ReflectSolBeamFront)
 
-  END IF
+    RETURN
+
+  END SUBROUTINE EvalOutsideMovableInsulation
 
 
-  RETURN
+  SUBROUTINE EvalInsideMovableInsulation(SurfNum,HMovInsul,AbsInt)
 
-END SUBROUTINE EvalOutsideMovableInsulation
+    ! SUBROUTINE INFORMATION:
+    !       AUTHOR         Rick Strand
+    !       DATE WRITTEN   March 1998
+    !       MODIFIED       Nov. 1999, FW, add AbsInt; change MaterialMovInsulExt to
+    !                      MaterialMovInsulInt
+    !       RE-ENGINEERED  na
 
+    ! PURPOSE OF THIS SUBROUTINE:
+    ! This subroutine determines whether or not inside movable insulation
+    ! is present at the current time.
 
-SUBROUTINE EvalInsideMovableInsulation(SurfNum,HMovInsul,AbsInt)
+    ! METHODOLOGY EMPLOYED:
+    ! The SurfNum is passed in and then the rest of the parameters are set
+    ! if movable insulation is present.  If it is not present, then
+    ! HMovInsul is set to zero.
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Rick Strand
-          !       DATE WRITTEN   March 1998
-          !       MODIFIED       Nov. 1999, FW, add AbsInt; change MaterialMovInsulExt to
-          !                      MaterialMovInsulInt
-          !       RE-ENGINEERED  na
+    ! REFERENCES:
+    ! (I)BLAST legacy routine IMVINS
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine determines whether or not inside movable insulation
-          ! is present at the current time.
+    ! USE STATEMENTS:
+    ! na
 
-          ! METHODOLOGY EMPLOYED:
-          ! The SurfNum is passed in and then the rest of the parameters are set
-          ! if movable insulation is present.  If it is not present, then
-          ! HMovInsul is set to zero.
+    IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! REFERENCES:
-          ! (I)BLAST legacy routine IMVINS
+    ! SUBROUTINE PARAMETER DEFINITIONS:
+    ! na
 
-          ! USE STATEMENTS:
-          ! na
+    ! INTERFACE BLOCK SPECIFICATIONS
+    ! na
 
-  IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
+    ! DERIVED TYPE DEFINITIONS
+    ! na
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+    ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+    INTEGER, INTENT(IN)  :: SurfNum            ! DO loop counter for surfaces
+    REAL(r64),    INTENT(OUT) :: HMovInsul          ! Resistance or "h" value of movable insulation
+    REAL(r64),    INTENT(OUT) :: AbsInt             ! Inside solar absorptance of movable insulation
+    REAL(r64)    :: MovInsulSchedVal   ! Value of the movable insulation schedule for current time
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+    ! FLOW:
+    MovInsulSchedVal = GetCurrentScheduleValue(Surface(SurfNum)%SchedMovInsulExt)
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+    IF (MovInsulSchedVal <= 0.0) THEN ! Movable insulation not present at current time
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-  INTEGER, INTENT(IN)  :: SurfNum            ! DO loop counter for surfaces
-  REAL(r64),    INTENT(OUT) :: HMovInsul          ! Resistance or "h" value of movable insulation
-  REAL(r64),    INTENT(OUT) :: AbsInt             ! Inside solar absorptance of movable insulation
-  REAL(r64)    :: MovInsulSchedVal   ! Value of the movable insulation schedule for current time
+      HMovInsul = 0.0
 
-          ! FLOW:
-  MovInsulSchedVal = GetCurrentScheduleValue(Surface(SurfNum)%SchedMovInsulExt)
+    ELSE  ! Movable insulation present-->calculate output parameters
 
-  IF (MovInsulSchedVal <= 0.0) THEN ! Movable insulation not present at current time
+      HMovInsul = 1.0/(MovInsulSchedVal*Material(Surface(SurfNum)%MaterialMovInsulInt)%Resistance)
+      AbsInt = Material(Surface(SurfNum)%MaterialMovInsulInt)%AbsorpSolar
 
-    HMovInsul = 0.0
+    END IF
 
-  ELSE  ! Movable insulation present-->calculate output parameters
+    RETURN
 
-    HMovInsul = 1.0/(MovInsulSchedVal*Material(Surface(SurfNum)%MaterialMovInsulInt)%Resistance)
-    AbsInt = Material(Surface(SurfNum)%MaterialMovInsulInt)%AbsorpSolar
+  END SUBROUTINE EvalInsideMovableInsulation
 
-  END IF
-
-  RETURN
-
-END SUBROUTINE EvalInsideMovableInsulation
-
-!     NOTICE
-!
-!     Copyright © 1996-2012 The Board of Trustees of the University of Illinois
-!     and The Regents of the University of California through Ernest Orlando Lawrence
-!     Berkeley National Laboratory.  All rights reserved.
-!
-!     Portions of the EnergyPlus software package have been developed and copyrighted
-!     by other individuals, companies and institutions.  These portions have been
-!     incorporated into the EnergyPlus software package under license.   For a complete
-!     list of contributors, see "Notice" located in EnergyPlus.f90.
-!
-!     NOTICE: The U.S. Government is granted for itself and others acting on its
-!     behalf a paid-up, nonexclusive, irrevocable, worldwide license in this data to
-!     reproduce, prepare derivative works, and perform publicly and display publicly.
-!     Beginning five (5) years after permission to assert copyright is granted,
-!     subject to two possible five year renewals, the U.S. Government is granted for
-!     itself and others acting on its behalf a paid-up, non-exclusive, irrevocable
-!     worldwide license in this data to reproduce, prepare derivative works,
-!     distribute copies to the public, perform publicly and display publicly, and to
-!     permit others to do so.
-!
-!     TRADEMARKS: EnergyPlus is a trademark of the US Department of Energy.
-!
+  !     NOTICE
+  !
+  !     Copyright ï¿½ 1996-2012 The Board of Trustees of the University of Illinois
+  !     and The Regents of the University of California through Ernest Orlando Lawrence
+  !     Berkeley National Laboratory.  All rights reserved.
+  !
+  !     Portions of the EnergyPlus software package have been developed and copyrighted
+  !     by other individuals, companies and institutions.  These portions have been
+  !     incorporated into the EnergyPlus software package under license.   For a complete
+  !     list of contributors, see "Notice" located in EnergyPlus.f90.
+  !
+  !     NOTICE: The U.S. Government is granted for itself and others acting on its
+  !     behalf a paid-up, nonexclusive, irrevocable, worldwide license in this data to
+  !     reproduce, prepare derivative works, and perform publicly and display publicly.
+  !     Beginning five (5) years after permission to assert copyright is granted,
+  !     subject to two possible five year renewals, the U.S. Government is granted for
+  !     itself and others acting on its behalf a paid-up, non-exclusive, irrevocable
+  !     worldwide license in this data to reproduce, prepare derivative works,
+  !     distribute copies to the public, perform publicly and display publicly, and to
+  !     permit others to do so.
+  !
+  !     TRADEMARKS: EnergyPlus is a trademark of the US Department of Energy.
+  !
 
 END MODULE HeatBalanceMovableInsulation
-

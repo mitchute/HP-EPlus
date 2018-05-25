@@ -1,144 +1,144 @@
 MODULE PlantPressureSystem
 
-          ! Module containing the routines dealing with the PlantPressureSystem simulation
+  ! Module containing the routines dealing with the PlantPressureSystem simulation
 
-          ! MODULE INFORMATION:
-          !       AUTHOR         Edwin Lee
-          !       DATE WRITTEN   August 2009
-          !       MODIFIED       February 2010: Add phase 2: loop flow correction
-          !       RE-ENGINEERED  na
+  ! MODULE INFORMATION:
+  !       AUTHOR         Edwin Lee
+  !       DATE WRITTEN   August 2009
+  !       MODIFIED       February 2010: Add phase 2: loop flow correction
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS MODULE:
-          ! This module manages plant pressure-based simulations
+  ! PURPOSE OF THIS MODULE:
+  ! This module manages plant pressure-based simulations
 
-          ! METHODOLOGY EMPLOYED:
-          ! General EnergyPlus Methodology:
+  ! METHODOLOGY EMPLOYED:
+  ! General EnergyPlus Methodology:
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! OTHER NOTES:
-          !  Phase 1: Pump Power Correction: -Loop/Parallel flows are not resolved based on pressure drop
-          !                                  -Every flow path must see at least one branch with pressure information
-          !                                  -Pump power is updated based on the required pump head
-          !  Phase 2: Pump Flow Correction: -Loop flow resolved based on pump curve and loop pressure drop
-          !                                 -Parallel flows not resolved
-          !                                 -Every flow path must see at least one branch with pressure information
-          !                                 -Pump curve must be given also
-          !  Phase 3: Pressure Simulation: -Loop and parallel flows are resolved
-          !                                -All branches must have pressure information and pump must have pump curve
-          !                                -Not currently implemented
+  ! OTHER NOTES:
+  !  Phase 1: Pump Power Correction: -Loop/Parallel flows are not resolved based on pressure drop
+  !                                  -Every flow path must see at least one branch with pressure information
+  !                                  -Pump power is updated based on the required pump head
+  !  Phase 2: Pump Flow Correction: -Loop flow resolved based on pump curve and loop pressure drop
+  !                                 -Parallel flows not resolved
+  !                                 -Every flow path must see at least one branch with pressure information
+  !                                 -Pump curve must be given also
+  !  Phase 3: Pressure Simulation: -Loop and parallel flows are resolved
+  !                                -All branches must have pressure information and pump must have pump curve
+  !                                -Not currently implemented
 
-          ! USE STATEMENTS:
-USE DataPrecisionGlobals
-USE DataGlobals_HPSimIntegrated, ONLY: MaxNameLength,Pi !,ShowWarningError,ShowSevereError,ShowFatalError,ShowContinueError
-USE DataInterfaces, ONLY: SetupOutputVariable
-USE DataBranchAirLoopPlant
+  ! USE STATEMENTS:
+  USE DataPrecisionGlobals
+  USE DataGlobals_HPSimIntegrated, ONLY: MaxNameLength,Pi !,ShowWarningError,ShowSevereError,ShowFatalError,ShowContinueError
+  USE DataInterfaces, ONLY: SetupOutputVariable
+  USE DataBranchAirLoopPlant
 
-IMPLICIT NONE ! Enforce explicit typing of all variables
+  IMPLICIT NONE ! Enforce explicit typing of all variables
 
-PRIVATE ! Everything private unless explicitly made public
-
-
-          ! MODULE PARAMETER/ENUMERATIONS DEFINITIONS:
-CHARACTER(*), PARAMETER        :: Blank                   = ' '
+  PRIVATE ! Everything private unless explicitly made public
 
 
-          ! DERIVED TYPE DEFINITIONS:
-!TYPE, PUBLIC:: PlantPressureCurveData
-!  CHARACTER(len=MaxNameLength) :: Name                    = Blank
-!  REAL(r64)                    :: EquivDiameter           = 0.0d0   !- An effective diameter for calculation of Re & e/D [m]
-!  REAL(r64)                    :: MinorLossCoeff          = 0.0d0   !- K factor                                          [-]
-!  REAL(r64)                    :: EquivLength             = 0.0d0   !- An effective length to apply friction calculation [m]
-!  REAL(r64)                    :: EquivRoughness          = 0.0d0   !- An effective roughness (e) to calculate e/D       [m]
-!  LOGICAL                      :: ConstantFpresent        = .FALSE. !- Signal for if a constant value of f was entered
-!  REAL(r64)                    :: ConstantF               = 0.0d0   !- Constant value of f (if applicable)               [-]
-!END TYPE PlantPressureCurveData
-!
-!          ! MODULE VARIABLE DECLARATIONS:
-!TYPE(PlantPressureCurveData), ALLOCATABLE, DIMENSION(:),PUBLIC :: PressureCurve
-!LOGICAL  :: GetInputFlag = .TRUE. !Module level, since GetInput could be called by SIMPRESSUREDROP or by BRANCHINPUTMANAGER
+  ! MODULE PARAMETER/ENUMERATIONS DEFINITIONS:
+  CHARACTER(*), PARAMETER        :: Blank                   = ' '
 
-          ! SUBROUTINE SPECIFICATIONS FOR MODULE:
 
-     ! Driver/Manager Routines
-PUBLIC  SimPressureDropSystem
+  ! DERIVED TYPE DEFINITIONS:
+  !TYPE, PUBLIC:: PlantPressureCurveData
+  !  CHARACTER(len=MaxNameLength) :: Name                    = Blank
+  !  REAL(r64)                    :: EquivDiameter           = 0.0d0   !- An effective diameter for calculation of Re & e/D [m]
+  !  REAL(r64)                    :: MinorLossCoeff          = 0.0d0   !- K factor                                          [-]
+  !  REAL(r64)                    :: EquivLength             = 0.0d0   !- An effective length to apply friction calculation [m]
+  !  REAL(r64)                    :: EquivRoughness          = 0.0d0   !- An effective roughness (e) to calculate e/D       [m]
+  !  LOGICAL                      :: ConstantFpresent        = .FALSE. !- Signal for if a constant value of f was entered
+  !  REAL(r64)                    :: ConstantF               = 0.0d0   !- Constant value of f (if applicable)               [-]
+  !END TYPE PlantPressureCurveData
+  !
+  !          ! MODULE VARIABLE DECLARATIONS:
+  !TYPE(PlantPressureCurveData), ALLOCATABLE, DIMENSION(:),PUBLIC :: PressureCurve
+  !LOGICAL  :: GetInputFlag = .TRUE. !Module level, since GetInput could be called by SIMPRESSUREDROP or by BRANCHINPUTMANAGER
 
-     ! Initialization routines for module
-!PRIVATE GetPressureSystemInput
-PRIVATE InitPressureDrop
+  ! SUBROUTINE SPECIFICATIONS FOR MODULE:
 
-     ! Algorithms/Calculation routines for the module
-PRIVATE BranchPressureDrop
-!PRIVATE PressureCurveValue
-!PRIVATE CalculateMoodyFrictionFactor
+  ! Driver/Manager Routines
+  PUBLIC  SimPressureDropSystem
 
-     ! Update routines to check convergence and update nodes
-PRIVATE UpdatePressureDrop
+  ! Initialization routines for module
+  !PRIVATE GetPressureSystemInput
+  PRIVATE InitPressureDrop
 
-     ! Utility routines for module
-PRIVATE DistributePressureOnBranch
-PRIVATE PassPressureAcrossMixer
-PRIVATE PassPressureAcrossSplitter
-PRIVATE PassPressureAcrossInterface
+  ! Algorithms/Calculation routines for the module
+  PRIVATE BranchPressureDrop
+  !PRIVATE PressureCurveValue
+  !PRIVATE CalculateMoodyFrictionFactor
 
-     ! Public Utility routines
-!PUBLIC GetPressureCurveTypeAndIndex
-PUBLIC ResolveLoopFlowVsPressure
+  ! Update routines to check convergence and update nodes
+  PRIVATE UpdatePressureDrop
+
+  ! Utility routines for module
+  PRIVATE DistributePressureOnBranch
+  PRIVATE PassPressureAcrossMixer
+  PRIVATE PassPressureAcrossSplitter
+  PRIVATE PassPressureAcrossInterface
+
+  ! Public Utility routines
+  !PUBLIC GetPressureCurveTypeAndIndex
+  PUBLIC ResolveLoopFlowVsPressure
 
 CONTAINS
 
-SUBROUTINE SimPressureDropSystem(LoopNum, FirstHVACIteration, CallType, LoopSideNum, BranchNum)
+  SUBROUTINE SimPressureDropSystem(LoopNum, FirstHVACIteration, CallType, LoopSideNum, BranchNum)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Edwin Lee
-          !       DATE WRITTEN   August 2009
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+    ! SUBROUTINE INFORMATION:
+    !       AUTHOR         Edwin Lee
+    !       DATE WRITTEN   August 2009
+    !       MODIFIED       na
+    !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This routine is the public interface for pressure system simulation
-          ! Calls are made to private components as needed
+    ! PURPOSE OF THIS SUBROUTINE:
+    ! This routine is the public interface for pressure system simulation
+    ! Calls are made to private components as needed
 
-          ! METHODOLOGY EMPLOYED:
-          ! Standard EnergyPlus methodology
+    ! METHODOLOGY EMPLOYED:
+    ! Standard EnergyPlus methodology
 
-          ! REFERENCES:
-          ! na
+    ! REFERENCES:
+    ! na
 
-          ! USE STATEMENTS:
-  USE DataPlant, ONLY : PressureCall_Init, PressureCall_Calc, PressureCall_Update, PlantLoop, Press_NoPressure
+    ! USE STATEMENTS:
+    USE DataPlant, ONLY : PressureCall_Init, PressureCall_Calc, PressureCall_Update, PlantLoop, Press_NoPressure
 
-  IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
+    IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-  INTEGER,           INTENT(IN)   :: LoopNum            ! Plant Loop to update pressure information
-  LOGICAL,           INTENT(IN)   :: FirstHVACIteration ! System flag
-  INTEGER,           INTENT(IN)   :: CallType           ! Enumerated call type
-  INTEGER, OPTIONAL, INTENT(IN)   :: LoopSideNum        ! Loop side num for specific branch simulation
-  INTEGER, OPTIONAL, INTENT(IN)   :: BranchNUm          ! Branch num for specific branch simulation
+    ! SUBROUTINE ARGUMENT DEFINITIONS:
+    INTEGER,           INTENT(IN)   :: LoopNum            ! Plant Loop to update pressure information
+    LOGICAL,           INTENT(IN)   :: FirstHVACIteration ! System flag
+    INTEGER,           INTENT(IN)   :: CallType           ! Enumerated call type
+    INTEGER, OPTIONAL, INTENT(IN)   :: LoopSideNum        ! Loop side num for specific branch simulation
+    INTEGER, OPTIONAL, INTENT(IN)   :: BranchNUm          ! Branch num for specific branch simulation
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+    ! SUBROUTINE PARAMETER DEFINITIONS:
+    ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+    ! INTERFACE BLOCK SPECIFICATIONS:
+    ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+    ! DERIVED TYPE DEFINITIONS:
+    ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-          ! na
+    ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+    ! na
 
-  !Check if we need to get pressure curve input data
-!  IF (GetInputFlag) CALL GetPressureSystemInput
+    !Check if we need to get pressure curve input data
+    !  IF (GetInputFlag) CALL GetPressureSystemInput
 
-  !Exit out of any calculation routines if we don't do pressure simulation for this loop
-  IF ((PlantLoop(LoopNum)%PressureSimType == Press_NoPressure) .AND.  &
-      ((CallType == PressureCall_Calc) .OR. (CallType == PressureCall_Update))) RETURN
+    !Exit out of any calculation routines if we don't do pressure simulation for this loop
+    IF ((PlantLoop(LoopNum)%PressureSimType == Press_NoPressure) .AND.  &
+    ((CallType == PressureCall_Calc) .OR. (CallType == PressureCall_Update))) RETURN
 
-  !Pass to another routine based on calling flag
-  SELECT CASE (CallType)
+    !Pass to another routine based on calling flag
+    SELECT CASE (CallType)
     CASE (PressureCall_Init)
       CALL InitPressureDrop(LoopNum, FirstHVACIteration)
     CASE (PressureCall_Calc)
@@ -147,258 +147,258 @@ SUBROUTINE SimPressureDropSystem(LoopNum, FirstHVACIteration, CallType, LoopSide
       CALL UpdatePressureDrop(LoopNum)
     CASE DEFAULT
       !Calling routines should only use the three possible keywords here
-  END SELECT
+    END SELECT
 
-  RETURN
+    RETURN
 
-END SUBROUTINE SimPressureDropSystem
+  END SUBROUTINE SimPressureDropSystem
 
-!=================================================================================================!
+  !=================================================================================================!
 
-!SUBROUTINE GetPressureSystemInput()
-!
-!          ! SUBROUTINE INFORMATION:
-!          !       AUTHOR         Edwin Lee
-!          !       DATE WRITTEN   August 2009
-!          !       MODIFIED       na
-!          !       RE-ENGINEERED  na
-!
-!          ! PURPOSE OF THIS SUBROUTINE:
-!          ! Currently it just reads the input for pressure curve objects
-!
-!          ! METHODOLOGY EMPLOYED:
-!          ! General EnergyPlus Methodology
-!
-!          ! REFERENCES:
-!          ! na
-!
-!          ! USE STATEMENTS:
-!  USE InputProcessor, ONLY  :  GetNumObjectsFound, GetObjectItem, VerifyName
-!  USE DataIPShortcuts
-!
-!  IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
-!
-!          ! SUBROUTINE ARGUMENT DEFINITIONS:
-!          ! na
-!
-!          ! SUBROUTINE PARAMETER DEFINITIONS:
-!  CHARACTER(len=MaxNameLength), PARAMETER :: CurveObjectName = 'Curve:Functional:PressureDrop'
-!
-!          ! INTERFACE BLOCK SPECIFICATIONS:
-!          ! na
-!
-!          ! DERIVED TYPE DEFINITIONS:
-!          ! na
-!
-!          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-!  INTEGER                         ::  NumPressure
-!  CHARACTER(len=MaxNameLength),DIMENSION(1) :: Alphas  ! Alpha items for object
-!  REAL(r64), DIMENSION(5)         :: Numbers ! Numeric items for object
-!  INTEGER                         :: NumAlphas  ! Number of Alphas for each GetObjectItem call
-!  INTEGER                         :: NumNumbers ! Number of Numbers for each GetObjectItem call
-!  INTEGER                         :: IOStatus   ! Used in GetObjectItem
-!  LOGICAL                         :: ErrsFound=.false.  ! Set to true if errors in input, fatal at end of routine
-!  LOGICAL                         :: IsNotOK              ! Flag to verify name
-!  LOGICAL                         :: IsBlank              ! Flag for blank name
-!  INTEGER                         :: CurveNum
-!
-!  NumPressure = GetNumObjectsFound(CurveObjectName)
-!  ALLOCATE(PressureCurve(NumPressure))
-!  DO CurveNum = 1, NumPressure
-!    CALL GetObjectItem(TRIM(CurveObjectName),CurveNum,Alphas,NumAlphas,Numbers,NumNumbers,IOStatus,     &
-!                NumBlank=lNumericFieldBlanks,AlphaFieldnames=cAlphaFieldNames,NumericFieldNames=cNumericFieldNames)
-!    IsNotOK=.FALSE.
-!    IsBlank=.FALSE.
-!    CALL VerifyName(Alphas(1),PressureCurve%Name,CurveNum-1,IsNotOK,IsBlank,TRIM(CurveObjectName)//' Name')
-!    IF (IsNotOK) THEN
-!      ErrsFound=.true.
-!      IF (IsBlank) Alphas(1)='xxxxx'
-!    ENDIF
-!    PressureCurve(CurveNum)%Name      = Alphas(1)
-!    PressureCurve(CurveNum)%EquivDiameter  = Numbers(1)
-!    PressureCurve(CurveNum)%MinorLossCoeff = Numbers(2)
-!    PressureCurve(CurveNum)%EquivLength    = Numbers(3)
-!    PressureCurve(CurveNum)%EquivRoughness = Numbers(4)
-!    IF (NumNumbers > 4 .AND. .NOT. lNumericFieldBlanks(5)) THEN
-!      IF (Numbers(5) .NE. 0.0d0) THEN
-!        PressureCurve(CurveNum)%ConstantFpresent   = .TRUE.
-!        PressureCurve(CurveNum)%ConstantF          = Numbers(5)
-!      END IF
-!    END IF
-!  END DO
-!
-!  IF (ErrsFound) THEN
-!    CALL ShowFatalError('GetCurveInput: Errors found in Curve Objects.  Preceding condition(s) cause termination.')
-!  END IF
-!
-!  GetInputFlag = .FALSE.
-!
-!  RETURN
-!
-!END SUBROUTINE
-!
-!=================================================================================================!
+  !SUBROUTINE GetPressureSystemInput()
+  !
+  !          ! SUBROUTINE INFORMATION:
+  !          !       AUTHOR         Edwin Lee
+  !          !       DATE WRITTEN   August 2009
+  !          !       MODIFIED       na
+  !          !       RE-ENGINEERED  na
+  !
+  !          ! PURPOSE OF THIS SUBROUTINE:
+  !          ! Currently it just reads the input for pressure curve objects
+  !
+  !          ! METHODOLOGY EMPLOYED:
+  !          ! General EnergyPlus Methodology
+  !
+  !          ! REFERENCES:
+  !          ! na
+  !
+  !          ! USE STATEMENTS:
+  !  USE InputProcessor, ONLY  :  GetNumObjectsFound, GetObjectItem, VerifyName
+  !  USE DataIPShortcuts
+  !
+  !  IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
+  !
+  !          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  !          ! na
+  !
+  !          ! SUBROUTINE PARAMETER DEFINITIONS:
+  !  CHARACTER(len=MaxNameLength), PARAMETER :: CurveObjectName = 'Curve:Functional:PressureDrop'
+  !
+  !          ! INTERFACE BLOCK SPECIFICATIONS:
+  !          ! na
+  !
+  !          ! DERIVED TYPE DEFINITIONS:
+  !          ! na
+  !
+  !          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  !  INTEGER                         ::  NumPressure
+  !  CHARACTER(len=MaxNameLength),DIMENSION(1) :: Alphas  ! Alpha items for object
+  !  REAL(r64), DIMENSION(5)         :: Numbers ! Numeric items for object
+  !  INTEGER                         :: NumAlphas  ! Number of Alphas for each GetObjectItem call
+  !  INTEGER                         :: NumNumbers ! Number of Numbers for each GetObjectItem call
+  !  INTEGER                         :: IOStatus   ! Used in GetObjectItem
+  !  LOGICAL                         :: ErrsFound=.false.  ! Set to true if errors in input, fatal at end of routine
+  !  LOGICAL                         :: IsNotOK              ! Flag to verify name
+  !  LOGICAL                         :: IsBlank              ! Flag for blank name
+  !  INTEGER                         :: CurveNum
+  !
+  !  NumPressure = GetNumObjectsFound(CurveObjectName)
+  !  ALLOCATE(PressureCurve(NumPressure))
+  !  DO CurveNum = 1, NumPressure
+  !    CALL GetObjectItem(TRIM(CurveObjectName),CurveNum,Alphas,NumAlphas,Numbers,NumNumbers,IOStatus,     &
+  !                NumBlank=lNumericFieldBlanks,AlphaFieldnames=cAlphaFieldNames,NumericFieldNames=cNumericFieldNames)
+  !    IsNotOK=.FALSE.
+  !    IsBlank=.FALSE.
+  !    CALL VerifyName(Alphas(1),PressureCurve%Name,CurveNum-1,IsNotOK,IsBlank,TRIM(CurveObjectName)//' Name')
+  !    IF (IsNotOK) THEN
+  !      ErrsFound=.true.
+  !      IF (IsBlank) Alphas(1)='xxxxx'
+  !    ENDIF
+  !    PressureCurve(CurveNum)%Name      = Alphas(1)
+  !    PressureCurve(CurveNum)%EquivDiameter  = Numbers(1)
+  !    PressureCurve(CurveNum)%MinorLossCoeff = Numbers(2)
+  !    PressureCurve(CurveNum)%EquivLength    = Numbers(3)
+  !    PressureCurve(CurveNum)%EquivRoughness = Numbers(4)
+  !    IF (NumNumbers > 4 .AND. .NOT. lNumericFieldBlanks(5)) THEN
+  !      IF (Numbers(5) .NE. 0.0d0) THEN
+  !        PressureCurve(CurveNum)%ConstantFpresent   = .TRUE.
+  !        PressureCurve(CurveNum)%ConstantF          = Numbers(5)
+  !      END IF
+  !    END IF
+  !  END DO
+  !
+  !  IF (ErrsFound) THEN
+  !    CALL ShowFatalError('GetCurveInput: Errors found in Curve Objects.  Preceding condition(s) cause termination.')
+  !  END IF
+  !
+  !  GetInputFlag = .FALSE.
+  !
+  !  RETURN
+  !
+  !END SUBROUTINE
+  !
+  !=================================================================================================!
 
-SUBROUTINE InitPressureDrop(LoopNum, FirstHVACIteration)
+  SUBROUTINE InitPressureDrop(LoopNum, FirstHVACIteration)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Edwin Lee
-          !       DATE WRITTEN   August 2009
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+    ! SUBROUTINE INFORMATION:
+    !       AUTHOR         Edwin Lee
+    !       DATE WRITTEN   August 2009
+    !       MODIFIED       na
+    !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Initializes output variables and data structure
-          ! On FirstHVAC, updates the demand inlet node pressure
+    ! PURPOSE OF THIS SUBROUTINE:
+    ! Initializes output variables and data structure
+    ! On FirstHVAC, updates the demand inlet node pressure
 
-          ! METHODOLOGY EMPLOYED:
-          ! General EnergyPlus Methodology
+    ! METHODOLOGY EMPLOYED:
+    ! General EnergyPlus Methodology
 
-          ! REFERENCES:
-          ! na
+    ! REFERENCES:
+    ! na
 
-          ! USE STATEMENTS:
-  USE DataPlant,       ONLY :  PlantLoop, DemandSide, SupplySide, Press_NoPressure, CommonPipe_No
-  USE DataEnvironment, ONLY :  StdBaroPress
-  USE DataLoopNode,    ONLY :  Node
+    ! USE STATEMENTS:
+    USE DataPlant,       ONLY :  PlantLoop, DemandSide, SupplySide, Press_NoPressure, CommonPipe_No
+    USE DataEnvironment, ONLY :  StdBaroPress
+    USE DataLoopNode,    ONLY :  Node
 
-  IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
+    IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-  INTEGER, INTENT(IN)      ::  LoopNum
-  LOGICAL, INTENT(IN)      ::  FirstHVACIteration
+    ! SUBROUTINE ARGUMENT DEFINITIONS:
+    INTEGER, INTENT(IN)      ::  LoopNum
+    LOGICAL, INTENT(IN)      ::  FirstHVACIteration
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-  INTEGER, PARAMETER       :: LoopType_Plant     = 1
-  INTEGER, PARAMETER       :: LoopType_Condenser = 2
+    ! SUBROUTINE PARAMETER DEFINITIONS:
+    INTEGER, PARAMETER       :: LoopType_Plant     = 1
+    INTEGER, PARAMETER       :: LoopType_Condenser = 2
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+    ! INTERFACE BLOCK SPECIFICATIONS:
+    ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+    ! DERIVED TYPE DEFINITIONS:
+    ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-  !Initialization Variables
-  LOGICAL, SAVE            ::  OneTimeInit = .TRUE.
-  LOGICAL, SAVE, ALLOCATABLE, DIMENSION(:) :: LoopInit
+    ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+    !Initialization Variables
+    LOGICAL, SAVE            ::  OneTimeInit = .TRUE.
+    LOGICAL, SAVE, ALLOCATABLE, DIMENSION(:) :: LoopInit
 
-  !Simulation Variables
-  LOGICAL                  ::  ErrorsFound
-  INTEGER                  ::  LoopSideNum
-  INTEGER                  ::  CompNum
-  INTEGER                  ::  BranchNum
-  INTEGER                  ::  NumBranches
-  INTEGER                  ::  BranchPressureTally
-  LOGICAL                  ::  SeriesPressureComponentFound
-  LOGICAL, DIMENSION(2)    ::  FullParallelBranchSetFound
-  LOGICAL, SAVE            ::  CommonPipeErrorEncountered = .FALSE.
+    !Simulation Variables
+    LOGICAL                  ::  ErrorsFound
+    INTEGER                  ::  LoopSideNum
+    INTEGER                  ::  CompNum
+    INTEGER                  ::  BranchNum
+    INTEGER                  ::  NumBranches
+    INTEGER                  ::  BranchPressureTally
+    LOGICAL                  ::  SeriesPressureComponentFound
+    LOGICAL, DIMENSION(2)    ::  FullParallelBranchSetFound
+    LOGICAL, SAVE            ::  CommonPipeErrorEncountered = .FALSE.
 
-  IF (OneTimeInit) THEN
-    !First allocate the initialization array to each plant loop
-    ALLOCATE(LoopInit(SIZE(PlantLoop)))
-    LoopInit = .TRUE.
-    OneTimeInit = .FALSE.
-  END IF
+    IF (OneTimeInit) THEN
+      !First allocate the initialization array to each plant loop
+      ALLOCATE(LoopInit(SIZE(PlantLoop)))
+      LoopInit = .TRUE.
+      OneTimeInit = .FALSE.
+    END IF
 
-  ! CurrentModuleObject='Curve:Functional:PressureDrop'
-  IF (LoopInit(LoopNum)) THEN
+    ! CurrentModuleObject='Curve:Functional:PressureDrop'
+    IF (LoopInit(LoopNum)) THEN
 
-    !Initialize
-    ErrorsFound = .FALSE.
-    FullParallelBranchSetFound = .FALSE.
-    SeriesPressureComponentFound = .FALSE.
+      !Initialize
+      ErrorsFound = .FALSE.
+      FullParallelBranchSetFound = .FALSE.
+      SeriesPressureComponentFound = .FALSE.
 
-    !Need to go along plant loop and set up component pressure drop data structure!
-    DO LoopSideNum = DemandSide, SupplySide
+      !Need to go along plant loop and set up component pressure drop data structure!
+      DO LoopSideNum = DemandSide, SupplySide
 
-      !Loop through all branches on this loop side
-      DO BranchNum = 1, SIZE(PlantLoop(LoopNum)%LoopSide(LoopSideNum)%Branch)
+        !Loop through all branches on this loop side
+        DO BranchNum = 1, SIZE(PlantLoop(LoopNum)%LoopSide(LoopSideNum)%Branch)
 
-        !If this branch has valid pressure drop data
-        IF (PlantLoop(LoopNum)%LoopSide(LoopSideNum)%Branch(BranchNum)%PressureCurveIndex .GT. 0) THEN
+          !If this branch has valid pressure drop data
+          IF (PlantLoop(LoopNum)%LoopSide(LoopSideNum)%Branch(BranchNum)%PressureCurveIndex .GT. 0) THEN
 
-          !Update flags for higher level structure
-          PlantLoop(LoopNum)%LoopSide(LoopSideNum)%Branch(BranchNum)%HasPressureComponents = .TRUE.
-          PlantLoop(LoopNum)%LoopSide(LoopSideNum)%HasPressureComponents = .TRUE.
-          PlantLoop(LoopNum)%HasPressureComponents = .TRUE.
+            !Update flags for higher level structure
+            PlantLoop(LoopNum)%LoopSide(LoopSideNum)%Branch(BranchNum)%HasPressureComponents = .TRUE.
+            PlantLoop(LoopNum)%LoopSide(LoopSideNum)%HasPressureComponents = .TRUE.
+            PlantLoop(LoopNum)%HasPressureComponents = .TRUE.
 
-          !Setup output variable
-          CALL SetupOutputVariable('Branch Pressure Drop[Pa]',  &
-                       PlantLoop(LoopNum)%LoopSide(LoopSideNum)%Branch(BranchNum)%PressureDrop &
-                       ,'Plant','Average', PlantLoop(LoopNum)%LoopSide(LoopSideNum)%Branch(BranchNum)%Name)
+            !Setup output variable
+            CALL SetupOutputVariable('Branch Pressure Drop[Pa]',  &
+            PlantLoop(LoopNum)%LoopSide(LoopSideNum)%Branch(BranchNum)%PressureDrop &
+            ,'Plant','Average', PlantLoop(LoopNum)%LoopSide(LoopSideNum)%Branch(BranchNum)%Name)
 
+          END IF
+
+        END DO
+
+        !Set up loopside level variables if applicable
+        IF (PlantLoop(LoopNum)%LoopSide(LoopSideNum)%HasPressureComponents) THEN
+          IF (LoopSideNum==DemandSide) THEN
+            IF (PlantLoop(LoopNum)%TypeOfLoop==LoopType_Plant) THEN
+              CALL SetupOutputVariable('Plant Loop Demand Side Pressure Drop[Pa]',  &
+              PlantLoop(LoopNum)%LoopSide(LoopSideNum)%PressureDrop &
+              ,'Plant','Average', PlantLoop(LoopNum)%Name)
+            ELSE IF ( PlantLoop(LoopNum)%TypeOfLoop == LoopType_Condenser ) THEN
+              CALL SetupOutputVariable('Cond Loop Demand Side Pressure Drop[Pa]',  &
+              PlantLoop(LoopNum)%LoopSide(LoopSideNum)%PressureDrop &
+              ,'Plant','Average', PlantLoop(LoopNum)%Name)
+            END IF
+          ELSE IF (LoopSideNum==SupplySide) THEN
+            IF (PlantLoop(LoopNum)%TypeOfLoop==LoopType_Plant) THEN
+              CALL SetupOutputVariable('Plant Loop Supply Side Pressure Drop[Pa]',  &
+              PlantLoop(LoopNum)%LoopSide(LoopSideNum)%PressureDrop &
+              ,'Plant','Average', PlantLoop(LoopNum)%Name)
+            ELSE IF ( PlantLoop(LoopNum)%TypeOfLoop == LoopType_Condenser ) THEN
+              CALL SetupOutputVariable('Cond Loop Supply Side Pressure Drop[Pa]',  &
+              PlantLoop(LoopNum)%LoopSide(LoopSideNum)%PressureDrop &
+              ,'Plant','Average', PlantLoop(LoopNum)%Name)
+            END IF
+          END IF
         END IF
 
       END DO
 
-      !Set up loopside level variables if applicable
-      IF (PlantLoop(LoopNum)%LoopSide(LoopSideNum)%HasPressureComponents) THEN
-        IF (LoopSideNum==DemandSide) THEN
-          IF (PlantLoop(LoopNum)%TypeOfLoop==LoopType_Plant) THEN
-            CALL SetupOutputVariable('Plant Loop Demand Side Pressure Drop[Pa]',  &
-                       PlantLoop(LoopNum)%LoopSide(LoopSideNum)%PressureDrop &
-                       ,'Plant','Average', PlantLoop(LoopNum)%Name)
-          ELSE IF ( PlantLoop(LoopNum)%TypeOfLoop == LoopType_Condenser ) THEN
-            CALL SetupOutputVariable('Cond Loop Demand Side Pressure Drop[Pa]',  &
-                       PlantLoop(LoopNum)%LoopSide(LoopSideNum)%PressureDrop &
-                       ,'Plant','Average', PlantLoop(LoopNum)%Name)
+      IF (PlantLoop(LoopNum)%HasPressureComponents) THEN
+
+        !Set up loop level variables if applicable
+        IF ( PlantLoop(LoopNum)%TypeOfLoop == LoopType_Plant ) THEN
+          CALL SetupOutputVariable('Plant Loop Pressure Drop[Pa]',  &
+          PlantLoop(LoopNum)%PressureDrop &
+          ,'Plant','Average', PlantLoop(LoopNum)%Name)
+        ELSE IF ( PlantLoop(LoopNum)%TypeOfLoop == LoopType_Condenser ) THEN
+          CALL SetupOutputVariable('Cond Loop Pressure Drop[Pa]',  &
+          PlantLoop(LoopNum)%PressureDrop &
+          ,'Plant','Average', PlantLoop(LoopNum)%Name)
+        END IF
+
+        !Check for illegal configurations on this plant loop
+        DO LoopSideNum = DemandSide, SupplySide
+          !Check for illegal parallel branch setups
+          BranchPressureTally = 0
+          NumBranches = SIZE(PlantLoop(LoopNum)%LoopSide(LoopSideNum)%Branch)
+          IF (NumBranches.GT.2) THEN
+            DO BranchNum = 2, NumBranches-1
+              IF (PlantLoop(LoopNum)%LoopSide(LoopSideNum)%Branch(BranchNum)%HasPressureComponents) THEN
+                PlantLoop(LoopNum)%LoopSide(LoopSideNum)%HasParallelPressComps = .TRUE.
+                BranchPressureTally = BranchPressureTally + 1
+              END IF
+            END DO
           END IF
-        ELSE IF (LoopSideNum==SupplySide) THEN
-          IF (PlantLoop(LoopNum)%TypeOfLoop==LoopType_Plant) THEN
-            CALL SetupOutputVariable('Plant Loop Supply Side Pressure Drop[Pa]',  &
-                       PlantLoop(LoopNum)%LoopSide(LoopSideNum)%PressureDrop &
-                       ,'Plant','Average', PlantLoop(LoopNum)%Name)
-          ELSE IF ( PlantLoop(LoopNum)%TypeOfLoop == LoopType_Condenser ) THEN
-            CALL SetupOutputVariable('Cond Loop Supply Side Pressure Drop[Pa]',  &
-                       PlantLoop(LoopNum)%LoopSide(LoopSideNum)%PressureDrop &
-                       ,'Plant','Average', PlantLoop(LoopNum)%Name)
+          IF (BranchPressureTally == 0) THEN
+            !no parallel branches, ok for this check
+          ELSE IF (BranchPressureTally == SIZE(PlantLoop(LoopNum)%LoopSide(LoopSideNum)%Branch)-2) THEN
+            !all parallel branches have pressure components
+            FullParallelBranchSetFound(LoopSideNum) = .TRUE.
+          ELSE
+            !we aren't ok
+            CALL ShowSevereError('Pressure drop component configuration error detected on loop: '//PlantLoop(LoopNum)%Name)
+            CALL ShowContinueError('Pressure drop components must be on ALL or NONE of the parallel branches.')
+            CALL ShowContinueError('Partial distribution is not allowed.')
+            ErrorsFound = .TRUE.
           END IF
-        END IF
-      END IF
-
-    END DO
-
-    IF (PlantLoop(LoopNum)%HasPressureComponents) THEN
-
-      !Set up loop level variables if applicable
-      IF ( PlantLoop(LoopNum)%TypeOfLoop == LoopType_Plant ) THEN
-        CALL SetupOutputVariable('Plant Loop Pressure Drop[Pa]',  &
-                     PlantLoop(LoopNum)%PressureDrop &
-                     ,'Plant','Average', PlantLoop(LoopNum)%Name)
-      ELSE IF ( PlantLoop(LoopNum)%TypeOfLoop == LoopType_Condenser ) THEN
-        CALL SetupOutputVariable('Cond Loop Pressure Drop[Pa]',  &
-                     PlantLoop(LoopNum)%PressureDrop &
-                     ,'Plant','Average', PlantLoop(LoopNum)%Name)
-      END IF
-
-      !Check for illegal configurations on this plant loop
-      DO LoopSideNum = DemandSide, SupplySide
-        !Check for illegal parallel branch setups
-        BranchPressureTally = 0
-        NumBranches = SIZE(PlantLoop(LoopNum)%LoopSide(LoopSideNum)%Branch)
-        IF (NumBranches.GT.2) THEN
-          DO BranchNum = 2, NumBranches-1
-            IF (PlantLoop(LoopNum)%LoopSide(LoopSideNum)%Branch(BranchNum)%HasPressureComponents) THEN
-              PlantLoop(LoopNum)%LoopSide(LoopSideNum)%HasParallelPressComps = .TRUE.
-              BranchPressureTally = BranchPressureTally + 1
-            END IF
-          END DO
-        END IF
-        IF (BranchPressureTally == 0) THEN
-          !no parallel branches, ok for this check
-        ELSE IF (BranchPressureTally == SIZE(PlantLoop(LoopNum)%LoopSide(LoopSideNum)%Branch)-2) THEN
-          !all parallel branches have pressure components
-          FullParallelBranchSetFound(LoopSideNum) = .TRUE.
-        ELSE
-          !we aren't ok
-          CALL ShowSevereError('Pressure drop component configuration error detected on loop: '//PlantLoop(LoopNum)%Name)
-          CALL ShowContinueError('Pressure drop components must be on ALL or NONE of the parallel branches.')
-          CALL ShowContinueError('Partial distribution is not allowed.')
-          ErrorsFound = .TRUE.
-        END IF
-        IF (PlantLoop(LoopNum)%LoopSide(LoopSideNum)%Branch(1)%HasPressureComponents .OR. &
-            PlantLoop(LoopNum)%LoopSide(LoopSideNum)%Branch(NumBranches)%HasPressureComponents) THEN
+          IF (PlantLoop(LoopNum)%LoopSide(LoopSideNum)%Branch(1)%HasPressureComponents .OR. &
+          PlantLoop(LoopNum)%LoopSide(LoopSideNum)%Branch(NumBranches)%HasPressureComponents) THEN
           !we have a series component pressure branch (whether a single branch half loop or mixer/splitter setup
           SeriesPressureComponentFound = .TRUE.
         END IF
@@ -490,22 +490,22 @@ END SUBROUTINE InitPressureDrop
 
 SUBROUTINE BranchPressureDrop(LoopNum,LoopSideNum,BranchNum)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Edwin Lee
-          !       DATE WRITTEN   August 2009
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Edwin Lee
+  !       DATE WRITTEN   August 2009
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This will choose an appropriate pressure drop calculation routine based on structure flags
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This will choose an appropriate pressure drop calculation routine based on structure flags
 
-          ! METHODOLOGY EMPLOYED:
-          ! Standard EnergyPlus Methodology
+  ! METHODOLOGY EMPLOYED:
+  ! Standard EnergyPlus Methodology
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataLoopNode,    ONLY   :  Node
   USE FluidProperties, ONLY   :  GetDensityGlycol, GetViscosityGlycol
   USE DataPlant,       ONLY   :  PlantLoop
@@ -513,22 +513,22 @@ SUBROUTINE BranchPressureDrop(LoopNum,LoopSideNum,BranchNum)
 
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   INTEGER,   INTENT(IN)       ::  LoopNum            !Plant Loop Index
   INTEGER,   INTENT(IN)       ::  LoopSideNum        !LoopSide Index (1=Demand, 2=Supply) on Plant Loop LoopNum
   INTEGER,   INTENT(IN)       ::  BranchNum          !Branch Index on LoopSide LoopSideNum
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! SUBROUTINE PARAMETER DEFINITIONS:
   CHARACTER(len=*), PARAMETER :: RoutineName  = 'CalcPlantPressureSystem'
   CHARACTER(len=*), PARAMETER :: DummyFluid   = ' '
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER                     :: FluidIndex          !Plant loop level Fluid Index
   INTEGER                     :: InletNodeNum        !Component inlet node number
   INTEGER                     :: OutletNodeNum       !Component outlet node number
@@ -563,25 +563,25 @@ SUBROUTINE BranchPressureDrop(LoopNum,LoopSideNum,BranchNum)
 
   !Call the appropriate pressure calculation routine
   SELECT CASE (PressureCurveType)
-    CASE (PressureCurve_Pressure)
-      !DeltaP = [f*(L/D) + K] * (rho * V^2) / 2
-      BranchDeltaPress = PressureCurveValue(PressureCurveIndex, NodeMassFlow, NodeDensity, NodeViscosity)
+  CASE (PressureCurve_Pressure)
+    !DeltaP = [f*(L/D) + K] * (rho * V^2) / 2
+    BranchDeltaPress = PressureCurveValue(PressureCurveIndex, NodeMassFlow, NodeDensity, NodeViscosity)
 
-    CASE (PressureCurve_Generic)
-      !DeltaP = func(mdot)
-      !Generic curve, only pass V1=mass flow rate
-      BranchDeltaPress = CurveValue(PressureCurveIndex, NodeMassFlow)
+  CASE (PressureCurve_Generic)
+    !DeltaP = func(mdot)
+    !Generic curve, only pass V1=mass flow rate
+    BranchDeltaPress = CurveValue(PressureCurveIndex, NodeMassFlow)
 
-    CASE DEFAULT
-      !Shouldn't end up here, but just in case
-      ErrorCounter = ErrorCounter + 1
-      IF (ErrorCounter == 1) THEN
-        CALL ShowSevereError('Plant pressure simulation encountered a branch which contains invalid branch pressure curve type.')
-        CALL ShowContinueError('Occurs for branch: '//PlantLoop(LoopNum)%LoopSide(LoopSideNum)%Branch(BranchNum)%Name)
-        CALL ShowContinueError('This error will be issued only once, although other branches may encounter the same problem')
-        CALL ShowContinueError('For now, pressure drop on this branch will be set to zero.')
-        CALL ShowContinueError('Verify all pressure inputs and pressure drop output variables to ensure proper simulation')
-      END IF
+  CASE DEFAULT
+    !Shouldn't end up here, but just in case
+    ErrorCounter = ErrorCounter + 1
+    IF (ErrorCounter == 1) THEN
+      CALL ShowSevereError('Plant pressure simulation encountered a branch which contains invalid branch pressure curve type.')
+      CALL ShowContinueError('Occurs for branch: '//PlantLoop(LoopNum)%LoopSide(LoopSideNum)%Branch(BranchNum)%Name)
+      CALL ShowContinueError('This error will be issued only once, although other branches may encounter the same problem')
+      CALL ShowContinueError('For now, pressure drop on this branch will be set to zero.')
+      CALL ShowContinueError('Verify all pressure inputs and pressure drop output variables to ensure proper simulation')
+    END IF
 
   END SELECT
 
@@ -768,43 +768,43 @@ END SUBROUTINE BranchPressureDrop
 
 SUBROUTINE UpdatePressureDrop(LoopNum)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Edwin Lee
-          !       DATE WRITTEN   August 2009
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Edwin Lee
+  !       DATE WRITTEN   August 2009
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Evaluate the pressure drop across an entire plant loop and places the value
-          ! on the PlantLoop(:) data structure for the pump to use
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! Evaluate the pressure drop across an entire plant loop and places the value
+  ! on the PlantLoop(:) data structure for the pump to use
 
-          ! METHODOLOGY EMPLOYED:
-          ! Assumes that the supply inlet is the starting node, which will be set to some standard pressure
-          ! Then we move around the loop backward from this reference point and go until we hit a pump and stop.
-          ! The pressure difference from reference to pump is the new required pump head.
+  ! METHODOLOGY EMPLOYED:
+  ! Assumes that the supply inlet is the starting node, which will be set to some standard pressure
+  ! Then we move around the loop backward from this reference point and go until we hit a pump and stop.
+  ! The pressure difference from reference to pump is the new required pump head.
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataPlant,       ONLY :  PlantLoop, DemandSide, SupplySide
   USE DataLoopNode,    ONLY :  Node
 
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   INTEGER, INTENT(IN)      ::  LoopNum
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER                  ::  LoopSideNum
   INTEGER                  ::  BranchNum
   INTEGER                  ::  NumBranches
@@ -866,10 +866,10 @@ SUBROUTINE UpdatePressureDrop(LoopNum)
       DO BranchNum = NumBranches-1, 2, -1 !Working backward (not necessary, but consistent)
         ParallelBranchCounter = ParallelBranchCounter + 1
         CALL DistributePressureOnBranch(LoopNum,LoopSideNum,BranchNum, &
-                                        ParallelBranchPressureDrops(ParallelBranchCounter),FoundAPumpOnBranch)
+        ParallelBranchPressureDrops(ParallelBranchCounter),FoundAPumpOnBranch)
         !Store the branch inlet pressure so we can pass it properly across the splitter
         ParallelBranchInletPressures(ParallelBranchCounter) = &
-          Node(PlantLoop(LoopNum)%LoopSide(LoopSideNum)%Branch(BranchNum)%NodeNumIn)%Press
+        Node(PlantLoop(LoopNum)%LoopSide(LoopSideNum)%Branch(BranchNum)%NodeNumIn)%Press
       END DO
 
       !Now take max inlet pressure to pass across splitter and max branch pressure for bookkeeping
@@ -947,19 +947,19 @@ SUBROUTINE UpdatePressureDrop(LoopNum)
       !Only add this branch if the K value is non-zero
       IF (PlantLoop(LoopNum)%LoopSide(LoopSideNum)%Branch(BranchNum)%PressureEffectiveK .GT. 0.0d0) THEN
         TempVal_SumOfOneByRootK = TempVal_SumOfOneByRootK  &
-                                  + (1.0d0 / SQRT(PlantLoop(LoopNum)%LoopSide(LoopSideNum)%Branch(BranchNum)%PressureEffectiveK))
+        + (1.0d0 / SQRT(PlantLoop(LoopNum)%LoopSide(LoopSideNum)%Branch(BranchNum)%PressureEffectiveK))
       END IF
 
     END DO
 
     !Add parallel branches if they are greater than zero, by taking the sum and performing (1/(SUM^2))
     IF (TempVal_SumOfOneByRootK .GT. 0.0d0)   &
-       EffectiveLoopSideKValue = EffectiveLoopSideKValue + (1.0d0/(TempVal_SumOfOneByRootK ** 2))
+    EffectiveLoopSideKValue = EffectiveLoopSideKValue + (1.0d0/(TempVal_SumOfOneByRootK ** 2))
 
     !Always take the last branch K, it will be in series
     BranchNum = SIZE(PlantLoop(LoopNum)%LoopSide(LoopSideNum)%Branch)
     EffectiveLoopSideKValue = EffectiveLoopSideKValue +   &
-                                PlantLoop(LoopNum)%LoopSide(LoopSideNum)%Branch(BranchNum)%PressureEffectiveK
+    PlantLoop(LoopNum)%LoopSide(LoopSideNum)%Branch(BranchNum)%PressureEffectiveK
 
     !Assign this loop side's K-value
     PlantLoop(LoopNum)%LoopSide(LoopSideNum)%PressureEffectiveK = EffectiveLoopSideKValue
@@ -980,46 +980,46 @@ END SUBROUTINE UpdatePressureDrop
 
 SUBROUTINE DistributePressureOnBranch(LoopNum,LoopSideNum,BranchNum,BranchPressureDrop,PumpFound)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Edwin Lee
-          !       DATE WRITTEN   August 2009
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Edwin Lee
+  !       DATE WRITTEN   August 2009
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Apply proper pressure to nodes along branch
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! Apply proper pressure to nodes along branch
 
-          ! METHODOLOGY EMPLOYED:
-          ! Move backward through components, passing pressure upstream
-          ! Account for branch pressure drop at branch inlet node
-          ! Update PlantLoop(:)%LoopSide(:)%Branch(:)%PressureDrop Variable
+  ! METHODOLOGY EMPLOYED:
+  ! Move backward through components, passing pressure upstream
+  ! Account for branch pressure drop at branch inlet node
+  ! Update PlantLoop(:)%LoopSide(:)%Branch(:)%PressureDrop Variable
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataPlant,    ONLY :  PlantLoop, GenEquipTypes_Pump, DemandSide, SupplySide
   USE DataLoopNode, ONLY :  Node
 
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   INTEGER,   INTENT(IN)      ::  LoopNum
   INTEGER,   INTENT(IN)      ::  LoopSideNum
   INTEGER,   INTENT(IN)      ::  BranchNum
   REAL(r64), INTENT(INOUT)   ::  BranchPressureDrop
   LOGICAL                    ::  PumpFound
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER                  ::  CompNum
   INTEGER                  ::  NumCompsOnBranch
   REAL(r64)                ::  TempBranchPressureDrop
@@ -1060,7 +1060,7 @@ SUBROUTINE DistributePressureOnBranch(LoopNum,LoopSideNum,BranchNum,BranchPressu
   !Otherwise update the inlet node of the last component on the branch with this corrected pressure
   !This essentially sets all the pressure drop on the branch to be accounted for on the last component
   Node(PlantLoop(LoopNum)%LoopSide(LoopSideNum)%Branch(BranchNum)%Comp(NumCompsOnBranch)%NodeNumIn)%Press &
-   = Node(PlantLoop(LoopNum)%LoopSide(LoopSideNum)%Branch(BranchNum)%Comp(NumCompsOnBranch)%NodeNumOut)%Press + BranchPressureDrop
+  = Node(PlantLoop(LoopNum)%LoopSide(LoopSideNum)%Branch(BranchNum)%Comp(NumCompsOnBranch)%NodeNumOut)%Press + BranchPressureDrop
 
   !Then Smear any internal nodes with this new node pressure by working backward through
   ! all but the last component, and passing node pressure upstream
@@ -1087,45 +1087,45 @@ END SUBROUTINE DistributePressureOnBranch
 
 SUBROUTINE PassPressureAcrossMixer(LoopNum,LoopSideNum,MixerPressure,NumBranchesOnLoopSide)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Edwin Lee
-          !       DATE WRITTEN   August 2009
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Edwin Lee
+  !       DATE WRITTEN   August 2009
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Set mixer inlet pressures, or in other words, set mixer inlet branch outlet pressures
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! Set mixer inlet pressures, or in other words, set mixer inlet branch outlet pressures
 
-          ! METHODOLOGY EMPLOYED:
-          ! Set outlet node pressures for all parallel branches on this loopside
-          ! Note that this is extremely simple, but is set to it's own routine to allow for clarity
-          !  when possible expansion occurs during further development
+  ! METHODOLOGY EMPLOYED:
+  ! Set outlet node pressures for all parallel branches on this loopside
+  ! Note that this is extremely simple, but is set to it's own routine to allow for clarity
+  !  when possible expansion occurs during further development
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataPlant,    ONLY :  PlantLoop
   USE DataLoopNode, ONLY :  Node
 
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   INTEGER,   INTENT(IN)      ::  LoopNum
   INTEGER,   INTENT(IN)      ::  LoopSideNum
   REAL(r64), INTENT(INOUT)   ::  MixerPressure
   INTEGER,   INTENT(IN)      ::  NumBranchesOnLoopSide
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER                    ::  BranchNum
 
   DO BranchNum = 2, NumBranchesOnLoopSide-1
@@ -1138,45 +1138,45 @@ END SUBROUTINE PassPressureAcrossMixer
 
 SUBROUTINE PassPressureAcrossSplitter(LoopNum,LoopSideNum,SplitterInletPressure)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Edwin Lee
-          !       DATE WRITTEN   August 2009
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Edwin Lee
+  !       DATE WRITTEN   August 2009
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Set the splitter inlet pressure in anticipation of the inlet branch pressure being simulated
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! Set the splitter inlet pressure in anticipation of the inlet branch pressure being simulated
 
-          ! METHODOLOGY EMPLOYED:
-          ! Set outlet node of loopside inlet branch to splitter pressure
-          ! Note that this is extremely simple, but is set to it's own routine to allow for clarity
-          !  when possible expansion occurs during further development
+  ! METHODOLOGY EMPLOYED:
+  ! Set outlet node of loopside inlet branch to splitter pressure
+  ! Note that this is extremely simple, but is set to it's own routine to allow for clarity
+  !  when possible expansion occurs during further development
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataPlant,    ONLY :  PlantLoop
   USE DataLoopNode, ONLY :  Node
 
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   INTEGER,   INTENT(IN)      ::  LoopNum
   INTEGER,   INTENT(IN)      ::  LoopSideNum
   REAL(r64), INTENT(INOUT)   ::  SplitterInletPressure
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! SUBROUTINE PARAMETER DEFINITIONS:
   INTEGER, PARAMETER         ::  InletBranchNum = 1
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-          ! na
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! na
 
   Node(PlantLoop(LoopNum)%LoopSide(LoopSideNum)%Branch(InletBranchNum)%NodeNumOut)%Press = SplitterInletPressure
 
@@ -1186,42 +1186,42 @@ END SUBROUTINE PassPressureAcrossSplitter
 
 SUBROUTINE PassPressureAcrossInterface(LoopNum)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Edwin Lee
-          !       DATE WRITTEN   August 2009
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Edwin Lee
+  !       DATE WRITTEN   August 2009
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Pass pressure backward across plant demand inlet/supply outlet interface
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! Pass pressure backward across plant demand inlet/supply outlet interface
 
-          ! METHODOLOGY EMPLOYED:
-          ! Set outlet node pressure of supply side equal to inlet node pressure of demand side
-          ! Note that this is extremely simple, but is set to it's own routine to allow for clarity
-          !  when possible expansion occurs during further development
+  ! METHODOLOGY EMPLOYED:
+  ! Set outlet node pressure of supply side equal to inlet node pressure of demand side
+  ! Note that this is extremely simple, but is set to it's own routine to allow for clarity
+  !  when possible expansion occurs during further development
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataPlant,    ONLY :  PlantLoop, DemandSide, SupplySide
   USE DataLoopNode, ONLY :  Node
 
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   INTEGER,   INTENT(IN)      ::  LoopNum
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER :: DemandInletNodeNum
   INTEGER :: SupplyOutletNodeNum
 
@@ -1347,31 +1347,31 @@ END SUBROUTINE PassPressureAcrossInterface
 
 
 REAL(r64) FUNCTION ResolveLoopFlowVsPressure(LoopNum, SystemMassFlow, PumpCurveNum, &
-                                             PumpSpeed, PumpImpellerDia, MinPhi, MaxPhi)  RESULT (ResolvedLoopMassFlowRate)
+  PumpSpeed, PumpImpellerDia, MinPhi, MaxPhi)  RESULT (ResolvedLoopMassFlowRate)
 
 
-          ! FUNCTION INFORMATION:
-          !       AUTHOR         Kaustubh Phalak
-          !       DATE WRITTEN   Feb 2010
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! FUNCTION INFORMATION:
+  !       AUTHOR         Kaustubh Phalak
+  !       DATE WRITTEN   Feb 2010
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS FUNCTION:
-          ! To provide a means to simulate a constant speed pump curve and system curve to
-          !  find a more realistic operating point for the plant.
+  ! PURPOSE OF THIS FUNCTION:
+  ! To provide a means to simulate a constant speed pump curve and system curve to
+  !  find a more realistic operating point for the plant.
 
-          ! METHODOLOGY EMPLOYED:
-          ! Pressure drop of complete loop is found for a perticular flow rate.
-          !  i.e. pressuredrop = K * massflow ^ 2
-          ! System curve is then solved with pump curve already entered
-          !  and flow rate provided by the pump will be calculated.
-          ! This routine does not trap for errors if a pressure simulation is not to be performed.
-          ! Calling routine should only call this if needed.
+  ! METHODOLOGY EMPLOYED:
+  ! Pressure drop of complete loop is found for a perticular flow rate.
+  !  i.e. pressuredrop = K * massflow ^ 2
+  ! System curve is then solved with pump curve already entered
+  !  and flow rate provided by the pump will be calculated.
+  ! This routine does not trap for errors if a pressure simulation is not to be performed.
+  ! Calling routine should only call this if needed.
 
-          ! REFERENCES:
-          !  -
+  ! REFERENCES:
+  !  -
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE General,          ONLY: RoundSigDigits
   USE DataPlant,        ONLY: PlantLoop, SupplySide
   USE DataLoopNode,     ONLY: Node
@@ -1380,7 +1380,7 @@ REAL(r64) FUNCTION ResolveLoopFlowVsPressure(LoopNum, SystemMassFlow, PumpCurveN
 
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! FUNCTION ARGUMENT DEFINITIONS:
+  ! FUNCTION ARGUMENT DEFINITIONS:
   INTEGER,    INTENT(IN)  ::  LoopNum         !- Index of which plant/condenser loop is being simulated
   REAL(r64),  INTENT(IN)  ::  SystemMassFlow  !- Initial "guess" at system mass flow rate [kg/s]
   INTEGER,    INTENT(IN)  ::  PumpCurveNum    !- Pump curve to use when calling the curve manager for psi = f(phi)
@@ -1389,20 +1389,20 @@ REAL(r64) FUNCTION ResolveLoopFlowVsPressure(LoopNum, SystemMassFlow, PumpCurveN
   REAL(r64),  INTENT(IN)  ::  MinPhi          !- Minimum allowable value of phi, requested by the pump manager from curve mgr
   REAL(r64),  INTENT(IN)  ::  MaxPhi          !- Maximum allowable value of phi, requested by the pump manager from curve mgr
 
-          ! FUNCTION PARAMETER DEFINITIONS:
+  ! FUNCTION PARAMETER DEFINITIONS:
   CHARACTER(len=*), PARAMETER   ::  RoutineName      = 'ResolvedLoopMassFlowRate: '
   INTEGER,          PARAMETER   ::  MaxIters         = 100
   CHARACTER(LEN=*), PARAMETER   ::  DummyFluidName   = ' '
   REAL(r64),        PARAMETER   ::  PressureConvergeCriteria = 0.1d0   !Pa
   REAL(r64),        PARAMETER   ::  ZeroTolerance    = 0.0001d0
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! FUNCTION LOCAL VARIABLE DECLARATIONS:
+  ! FUNCTION LOCAL VARIABLE DECLARATIONS:
   REAL(r64)                     ::  PumpPressureRise
   Real(r64)                     ::  NodeTemperature
   Real(r64)                     ::  NodeDensity
@@ -1422,7 +1422,7 @@ REAL(r64) FUNCTION ResolveLoopFlowVsPressure(LoopNum, SystemMassFlow, PumpCurveN
   REAL(r64)                     ::  MdotDeltaPrevious
   REAL(r64)                     ::  DampingFactor
 
-   !Get loop level data
+  !Get loop level data
   FluidIndex         = PlantLoop(LoopNum)%FluidIndex
   LoopEffectiveK     = PlantLoop(LoopNum)%PressureEffectiveK
   SystemPressureDrop = LoopEffectiveK * SystemMassFlow **2.0d0
@@ -1520,13 +1520,13 @@ REAL(r64) FUNCTION ResolveLoopFlowVsPressure(LoopNum, SystemMassFlow, PumpCurveN
 
   RETURN
 
-  End FUNCTION ResolveLoopFlowVsPressure
+End FUNCTION ResolveLoopFlowVsPressure
 
 !=================================================================================================!
 
 !     NOTICE
 !
-!     Copyright © 1996-2012 The Board of Trustees of the University of Illinois
+!     Copyright ï¿½ 1996-2012 The Board of Trustees of the University of Illinois
 !     and The Regents of the University of California through Ernest Orlando Lawrence
 !     Berkeley National Laboratory.  All rights reserved.
 !
@@ -1549,4 +1549,3 @@ REAL(r64) FUNCTION ResolveLoopFlowVsPressure(LoopNum, SystemMassFlow, PumpCurveN
 !
 
 END MODULE PlantPressureSystem
-

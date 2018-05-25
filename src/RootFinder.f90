@@ -138,9 +138,9 @@ MODULE RootFinder
   USE General,        ONLY : TrimSigDigits
   USE DataInterfaces
 
-IMPLICIT NONE         ! Enforce explicit typing of all variables
+  IMPLICIT NONE         ! Enforce explicit typing of all variables
 
-PUBLIC
+  PUBLIC
 
   ! MODULE PARAMETER DEFINITIONS
   ! na
@@ -171,7 +171,7 @@ PUBLIC
   PRIVATE CheckLowerUpperBracket       ! LowerPoint%X < X < UpperPoint%X
   PRIVATE CheckInternalConsistency     ! For debugging only
   PRIVATE CheckSlope                   ! For an increasing function, MinPoint%Y < MaxPoint%Y;
-                                       ! For a decreasing function,  MinPoint%Y > MaxPoint%Y
+  ! For a decreasing function,  MinPoint%Y > MaxPoint%Y
   PRIVATE CheckNonSingularity          ! MinPoint%Y == MaxPoint%Y
   PRIVATE CheckMinConstraint
   PRIVATE CheckMaxConstraint
@@ -195,67 +195,67 @@ PUBLIC
 
 CONTAINS
 
-! MODULE SUBROUTINES:
-!*************************************************************************
+  ! MODULE SUBROUTINES:
+  !*************************************************************************
 
-SUBROUTINE SetupRootFinder( RootFinderData, SlopeType, MethodType, TolX, ATolX, ATolY )
+  SUBROUTINE SetupRootFinder( RootFinderData, SlopeType, MethodType, TolX, ATolX, ATolY )
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Dimitri Curtil (LBNL)
-          !       DATE WRITTEN   February 2006
-          !       MODIFIED
-          !       RE-ENGINEERED  na
+    ! SUBROUTINE INFORMATION:
+    !       AUTHOR         Dimitri Curtil (LBNL)
+    !       DATE WRITTEN   February 2006
+    !       MODIFIED
+    !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine loads the numerical controls for the root finder.
+    ! PURPOSE OF THIS SUBROUTINE:
+    ! This subroutine loads the numerical controls for the root finder.
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+    ! METHODOLOGY EMPLOYED:
+    ! na
 
-          ! REFERENCES:
-          ! na
+    ! REFERENCES:
+    ! na
 
-          ! USE STATEMENTS:
-          ! na
+    ! USE STATEMENTS:
+    ! na
 
-  IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
+    IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-  TYPE(RootFinderDataType), INTENT(INOUT) :: RootFinderData     ! Data used by root finding algorithm
-  INTEGER, INTENT(IN)                     :: SlopeType          ! Either iSlopeIncreasing or iSlopeDecreasing
-  INTEGER, INTENT(IN)                     :: MethodType         ! Any of the iMethod<name> code but iMethodNone
-  REAL(r64), INTENT(IN)                        :: TolX               ! Relative tolerance for X variables
-  REAL(r64), INTENT(IN)                        :: ATolX              ! Absolute tolerance for X variables
-  REAL(r64), INTENT(IN)                        :: ATolY              ! Absolute tolerance for Y variables
+    ! SUBROUTINE ARGUMENT DEFINITIONS:
+    TYPE(RootFinderDataType), INTENT(INOUT) :: RootFinderData     ! Data used by root finding algorithm
+    INTEGER, INTENT(IN)                     :: SlopeType          ! Either iSlopeIncreasing or iSlopeDecreasing
+    INTEGER, INTENT(IN)                     :: MethodType         ! Any of the iMethod<name> code but iMethodNone
+    REAL(r64), INTENT(IN)                        :: TolX               ! Relative tolerance for X variables
+    REAL(r64), INTENT(IN)                        :: ATolX              ! Absolute tolerance for X variables
+    REAL(r64), INTENT(IN)                        :: ATolY              ! Absolute tolerance for Y variables
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+    ! SUBROUTINE PARAMETER DEFINITIONS:
+    ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+    ! INTERFACE BLOCK SPECIFICATIONS
+    ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+    ! DERIVED TYPE DEFINITIONS
+    ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-          ! na
+    ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+    ! na
 
-          ! FLOW:
+    ! FLOW:
 
-  ! Load assumed action for underlying function F(X)
-  IF ( SlopeType /= iSlopeIncreasing .AND. SlopeType /= iSlopeDecreasing ) THEN
-    CALL ShowSevereError('SetupRootFinder: Invalid function slope specification. Valid choices are:' )
-    CALL ShowContinueError('SetupRootFinder: iSlopeIncreasing='//TRIM(TrimSigDigits(iSlopeIncreasing)))
-    CALL ShowContinueError('SetupRootFinder: iSlopeDecreasing='//TRIM(TrimSigDigits(iSlopeDecreasing)))
-    CALL ShowFatalError('SetupRootFinder: Preceding error causes program termination.')
-  END IF
-  RootFinderData%Controls%SlopeType = SlopeType
+    ! Load assumed action for underlying function F(X)
+    IF ( SlopeType /= iSlopeIncreasing .AND. SlopeType /= iSlopeDecreasing ) THEN
+      CALL ShowSevereError('SetupRootFinder: Invalid function slope specification. Valid choices are:' )
+      CALL ShowContinueError('SetupRootFinder: iSlopeIncreasing='//TRIM(TrimSigDigits(iSlopeIncreasing)))
+      CALL ShowContinueError('SetupRootFinder: iSlopeDecreasing='//TRIM(TrimSigDigits(iSlopeDecreasing)))
+      CALL ShowFatalError('SetupRootFinder: Preceding error causes program termination.')
+    END IF
+    RootFinderData%Controls%SlopeType = SlopeType
 
-  ! Load solution method
-  IF ( MethodType /= iMethodBisection .AND.     &
-       MethodType /= iMethodFalsePosition .AND. &
-       MethodType /= iMethodSecant .AND.        &
-       MethodType /= iMethodBrent ) THEN
+    ! Load solution method
+    IF ( MethodType /= iMethodBisection .AND.     &
+    MethodType /= iMethodFalsePosition .AND. &
+    MethodType /= iMethodSecant .AND.        &
+    MethodType /= iMethodBrent ) THEN
 
     CALL ShowSevereError('SetupRootFinder: Invalid solution method specification. Valid choices are:' )
     CALL ShowContinueError('SetupRootFinder: iMethodBisection='//TRIM(TrimSigDigits(iMethodBisection)))
@@ -295,44 +295,44 @@ END SUBROUTINE SetupRootFinder
 
 SUBROUTINE ResetRootFinder( RootFinderData, XMin, XMax )
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Dimitri Curtil (LBNL)
-          !       DATE WRITTEN   February 2006
-          !       MODIFIED
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Dimitri Curtil (LBNL)
+  !       DATE WRITTEN   February 2006
+  !       MODIFIED
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine initializes the data for the root finder.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine initializes the data for the root finder.
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   TYPE(RootFinderDataType), INTENT(INOUT) :: RootFinderData ! Data used by root finding algorithm
   REAL(r64), INTENT(IN)                        :: XMin           ! Minimum X value allowed
   REAL(r64), INTENT(IN)                        :: XMax           ! Maximum X value allowed
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-          ! na
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! na
 
-          ! FLOW:
+  ! FLOW:
 
   ! Reset min point
   RootFinderData%MinPoint%X           = XMin
@@ -384,54 +384,54 @@ END SUBROUTINE ResetRootFinder
 
 SUBROUTINE InitializeRootFinder( RootFinderData, XMin, XMax )
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Dimitri Curtil (LBNL)
-          !       DATE WRITTEN   February 2006
-          !       MODIFIED
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Dimitri Curtil (LBNL)
+  !       DATE WRITTEN   February 2006
+  !       MODIFIED
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine initializes the min and max for the root finder before
-          ! finding a new root.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine initializes the min and max for the root finder before
+  ! finding a new root.
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   TYPE(RootFinderDataType), INTENT(INOUT) :: RootFinderData ! Data used by root finding algorithm
   REAL(r64), INTENT(IN)                        :: XMin           ! Minimum X value allowed
   REAL(r64), INTENT(IN)                        :: XMax           ! Maximum X value allowed
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   REAL(r64)                               :: SavedXCandidate
   REAL(r64)                               :: XMinReset
-          ! FLOW:
+  ! FLOW:
   XMinReset = XMin
   IF ( XMin > XMax) THEN
     IF (XMax == 0.0) THEN
       XMinReset = XMax
     ELSE
       CALL ShowFatalError( &
-        'InitializeRootFinder: Invalid min/max bounds '// &
-        'XMin='// TRIM(TrimSigDigits(XMin,6))//' must be smaller than '// &
-        'XMax='// TRIM(TrimSigDigits(XMax,6)) &
+      'InitializeRootFinder: Invalid min/max bounds '// &
+      'XMin='// TRIM(TrimSigDigits(XMin,6))//' must be smaller than '// &
+      'XMax='// TRIM(TrimSigDigits(XMax,6)) &
       )
     END IF
   END IF
@@ -448,8 +448,8 @@ SUBROUTINE InitializeRootFinder( RootFinderData, XMin, XMax )
   !
   ! NOTE: If XMin == XMax then this forces the value of XCandidateto the desired solution
   RootFinderData%XCandidate = MIN( RootFinderData%MaxPoint%X, &
-                                    MAX( SavedXCandidate, &
-                                         RootFinderData%MinPoint%X ) )
+  MAX( SavedXCandidate, &
+  RootFinderData%MinPoint%X ) )
 
   RETURN
 
@@ -458,101 +458,101 @@ END SUBROUTINE InitializeRootFinder
 
 SUBROUTINE IterateRootFinder( RootFinderData, X, Y, IsDoneFlag )
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Dimitri Curtil (LBNL)
-          !       DATE WRITTEN   March 2006
-          !       MODIFIED
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Dimitri Curtil (LBNL)
+  !       DATE WRITTEN   March 2006
+  !       MODIFIED
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine is the workhorse of the root finder framework.
-          ! It should be invoked with every new candidate (X,Y) until
-          ! convergence is achieved or abnormal termination is detected.
-          !
-          ! The subroutine performs the following tasks:
-          ! - it checks for convergence
-          ! - it updates the internal data with the current iterate (X,Y)
-          ! - it computes a new root candidate if not converged yet.
-          !
-          ! Sets IsDoneFlag to FALSE when iteration should continue with the new candidate value.
-          ! Sets IsDoneFlag to TRUE  when iteration should be stopped because convergence has been achieved
-          ! or because of a fatal error.
-          !
-          ! Note that only upon normal termination (iStatusOK<...> codes)
-          ! will the XCandidate value contain the root.
-          ! If the root has not been located yet the XCandidate value contains
-          ! the next candidate root to try.
-          !
-          ! Status                          IsDoneFlag          XCandidate
-          ! ========================================================================
-          ! iStatusErrorRange               TRUE                na
-          ! iStatusErrorSingular            TRUE                na
-          ! iStatusErrorSlope               TRUE                na
-          ! iStatusErrorBracket             TRUE                na
-          ! ------------------------------------------------------------------------
-          ! iStatusOKMin                    TRUE                MinPoint%X
-          ! iStatusOKMax                    TRUE                MaxPoint%X
-          ! iStatusOK                       TRUE                X
-          ! iStatusOKRoundOff               TRUE                X
-          ! ------------------------------------------------------------------------
-          ! iStatusNone                     FALSE               AdvanceRootFinder()
-          ! iStatusWarningNonMonotonic      FALSE               AdvanceRootFinder()
-          ! iStatusWarningSingular          FALSE               AdvanceRootFinder()
-          !
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine is the workhorse of the root finder framework.
+  ! It should be invoked with every new candidate (X,Y) until
+  ! convergence is achieved or abnormal termination is detected.
+  !
+  ! The subroutine performs the following tasks:
+  ! - it checks for convergence
+  ! - it updates the internal data with the current iterate (X,Y)
+  ! - it computes a new root candidate if not converged yet.
+  !
+  ! Sets IsDoneFlag to FALSE when iteration should continue with the new candidate value.
+  ! Sets IsDoneFlag to TRUE  when iteration should be stopped because convergence has been achieved
+  ! or because of a fatal error.
+  !
+  ! Note that only upon normal termination (iStatusOK<...> codes)
+  ! will the XCandidate value contain the root.
+  ! If the root has not been located yet the XCandidate value contains
+  ! the next candidate root to try.
+  !
+  ! Status                          IsDoneFlag          XCandidate
+  ! ========================================================================
+  ! iStatusErrorRange               TRUE                na
+  ! iStatusErrorSingular            TRUE                na
+  ! iStatusErrorSlope               TRUE                na
+  ! iStatusErrorBracket             TRUE                na
+  ! ------------------------------------------------------------------------
+  ! iStatusOKMin                    TRUE                MinPoint%X
+  ! iStatusOKMax                    TRUE                MaxPoint%X
+  ! iStatusOK                       TRUE                X
+  ! iStatusOKRoundOff               TRUE                X
+  ! ------------------------------------------------------------------------
+  ! iStatusNone                     FALSE               AdvanceRootFinder()
+  ! iStatusWarningNonMonotonic      FALSE               AdvanceRootFinder()
+  ! iStatusWarningSingular          FALSE               AdvanceRootFinder()
+  !
 
-          ! METHODOLOGY EMPLOYED:
-          ! The methodology reflects the same approach implemented in the subroutine CalcSimpleController()
-          ! whereby the iteration was exited by checking the following conditions in this specified
-          ! sequence:
-          !   1. Check for singular function so that YMin /= YMax
-          !   2. Check for slope condition for the residual function
-          !      - increasing: YMin < YMax
-          !      - decreasing: YMin > YMax
-          !   3. Check for min constraint
-          !      - increasing: YMin <= 0
-          !      - decreasing: YMin >= 0
-          !   4. Check for max constraint
-          !      - increasing: YMax > 0
-          !      - decreasing: YMax < 0
-          !   5. Check unconstrained convergence
-          !
-          ! Note that the slope condition was not explicitly checked in the original implementation
-          ! in CalcSimpleController().
-          !
-          ! Finally, we also check the X increments between successive iterations to detect possible
-          ! cases whereby the allowed precision in the X space limits the precision attainable in
-          ! the Y space. This check is implemented in:
-          ! - CheckIncrementRoundOff()
-          ! - CheckBracketRoundOff()
-          !
+  ! METHODOLOGY EMPLOYED:
+  ! The methodology reflects the same approach implemented in the subroutine CalcSimpleController()
+  ! whereby the iteration was exited by checking the following conditions in this specified
+  ! sequence:
+  !   1. Check for singular function so that YMin /= YMax
+  !   2. Check for slope condition for the residual function
+  !      - increasing: YMin < YMax
+  !      - decreasing: YMin > YMax
+  !   3. Check for min constraint
+  !      - increasing: YMin <= 0
+  !      - decreasing: YMin >= 0
+  !   4. Check for max constraint
+  !      - increasing: YMax > 0
+  !      - decreasing: YMax < 0
+  !   5. Check unconstrained convergence
+  !
+  ! Note that the slope condition was not explicitly checked in the original implementation
+  ! in CalcSimpleController().
+  !
+  ! Finally, we also check the X increments between successive iterations to detect possible
+  ! cases whereby the allowed precision in the X space limits the precision attainable in
+  ! the Y space. This check is implemented in:
+  ! - CheckIncrementRoundOff()
+  ! - CheckBracketRoundOff()
+  !
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   TYPE(RootFinderDataType), INTENT(INOUT) :: RootFinderData ! Data used by root finding algorithm
   REAL(r64), INTENT(IN)                        :: X              ! X value of current iterate
   REAL(r64), INTENT(IN)                        :: Y              ! Y value of current iterate
   LOGICAL, INTENT(OUT), OPTIONAL          :: IsDoneFlag     ! If TRUE indicates that the iteration should be stopped
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-          ! na
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! na
 
-          ! FLOW:
+  ! FLOW:
 
   ! Reset status flag
   RootFinderData%StatusFlag = iStatusNone
@@ -732,50 +732,50 @@ END SUBROUTINE IterateRootFinder
 
 
 INTEGER FUNCTION CheckInternalConsistency( RootFinderData )
-          ! FUNCTION INFORMATION:
-          !       AUTHOR         Dimitri Curtil (LBNL)
-          !       DATE WRITTEN   March 2006
-          !       MODIFIED
-          !       RE-ENGINEERED  na
+  ! FUNCTION INFORMATION:
+  !       AUTHOR         Dimitri Curtil (LBNL)
+  !       DATE WRITTEN   March 2006
+  !       MODIFIED
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS FUNCTION:
-          ! This function checks whether the lower and upper points (if defined)
-          ! determine a consistent interval bracketting the root.
-          !
-          ! Returns the status code accordingly.
-          !
-          ! This function does not modify the argument RooFinderData.
-          !
-          ! Only used internally for debugging.
-          !
+  ! PURPOSE OF THIS FUNCTION:
+  ! This function checks whether the lower and upper points (if defined)
+  ! determine a consistent interval bracketting the root.
+  !
+  ! Returns the status code accordingly.
+  !
+  ! This function does not modify the argument RooFinderData.
+  !
+  ! Only used internally for debugging.
+  !
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! FUNCTION ARGUMENT DEFINITIONS:
+  ! FUNCTION ARGUMENT DEFINITIONS:
   TYPE(RootFinderDataType), INTENT(IN)    :: RootFinderData ! Data used by root finding algorithm
 
-          ! FUNCTION PARAMETER DEFINITIONS:
-          ! na
+  ! FUNCTION PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! FUNCTION LOCAL VARIABLE DECLARATIONS:
-          ! na
+  ! FUNCTION LOCAL VARIABLE DECLARATIONS:
+  ! na
 
-          ! FLOW:
+  ! FLOW:
 
   ! Default initialization
   CheckInternalConsistency = iStatusNone
@@ -879,48 +879,48 @@ END FUNCTION CheckInternalConsistency
 
 
 LOGICAL FUNCTION CheckRootFinderCandidate( RootFinderData, X )
-          ! FUNCTION INFORMATION:
-          !       AUTHOR         Dimitri Curtil (LBNL)
-          !       DATE WRITTEN   February 2006
-          !       MODIFIED
-          !       RE-ENGINEERED  na
+  ! FUNCTION INFORMATION:
+  !       AUTHOR         Dimitri Curtil (LBNL)
+  !       DATE WRITTEN   February 2006
+  !       MODIFIED
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS FUNCTION:
-          ! This function checks whether the root candidate X lies within the specified
-          ! min/max limits as well as within the current lower and upper brackets (if defined).
-          !
-          ! Returns TRUE if X value is a valid root candidate.
-          ! Returns FALSE otherwise.
-          !
+  ! PURPOSE OF THIS FUNCTION:
+  ! This function checks whether the root candidate X lies within the specified
+  ! min/max limits as well as within the current lower and upper brackets (if defined).
+  !
+  ! Returns TRUE if X value is a valid root candidate.
+  ! Returns FALSE otherwise.
+  !
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! FUNCTION ARGUMENT DEFINITIONS:
+  ! FUNCTION ARGUMENT DEFINITIONS:
   TYPE(RootFinderDataType), INTENT(IN)    :: RootFinderData ! Data used by root finding algorithm
   REAL(r64), INTENT(IN)                        :: X              ! X value for current iterate
 
-          ! FUNCTION PARAMETER DEFINITIONS:
-          ! na
+  ! FUNCTION PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! FUNCTION LOCAL VARIABLE DECLARATIONS:
-          ! na
+  ! FUNCTION LOCAL VARIABLE DECLARATIONS:
+  ! na
 
-          ! FLOW:
+  ! FLOW:
 
   IF ( CheckMinMaxRange( RootFinderData, X ) .AND. CheckLowerUpperBracket( RootFinderData, X ) ) THEN
     CheckRootFinderCandidate = .TRUE.
@@ -933,48 +933,48 @@ END FUNCTION CheckRootFinderCandidate
 
 
 LOGICAL FUNCTION CheckMinMaxRange( RootFinderData, X )
-          ! FUNCTION INFORMATION:
-          !       AUTHOR         Dimitri Curtil (LBNL)
-          !       DATE WRITTEN   February 2006
-          !       MODIFIED       Brent Griffith (NREL) added DefinedFlag traps
-          !       RE-ENGINEERED  na
+  ! FUNCTION INFORMATION:
+  !       AUTHOR         Dimitri Curtil (LBNL)
+  !       DATE WRITTEN   February 2006
+  !       MODIFIED       Brent Griffith (NREL) added DefinedFlag traps
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS FUNCTION:
-          ! This function checks whether the current iterate X lies within the specified min/max limits
-          ! or not.
-          !
-          ! Returns TRUE if current iterate satisfies min/max constraints.
-          ! Returns FALSE if current iterate is out-of-range.
-          !
+  ! PURPOSE OF THIS FUNCTION:
+  ! This function checks whether the current iterate X lies within the specified min/max limits
+  ! or not.
+  !
+  ! Returns TRUE if current iterate satisfies min/max constraints.
+  ! Returns FALSE if current iterate is out-of-range.
+  !
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! FUNCTION ARGUMENT DEFINITIONS:
+  ! FUNCTION ARGUMENT DEFINITIONS:
   TYPE(RootFinderDataType), INTENT(IN)    :: RootFinderData ! Data used by root finding algorithm
   REAL(r64), INTENT(IN)                        :: X              ! X value for current iterate
 
-          ! FUNCTION PARAMETER DEFINITIONS:
-          ! na
+  ! FUNCTION PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! FUNCTION LOCAL VARIABLE DECLARATIONS:
-          ! na
+  ! FUNCTION LOCAL VARIABLE DECLARATIONS:
+  ! na
 
-          ! FLOW:
+  ! FLOW:
   IF (RootFinderData%MinPoint%DefinedFlag) THEN  !DSU3 testing
     IF ( X < RootFinderData%MinPoint%X ) THEN
       CheckMinMaxRange = .FALSE.
@@ -996,49 +996,49 @@ END FUNCTION CheckMinMaxRange
 
 
 LOGICAL FUNCTION CheckLowerUpperBracket( RootFinderData, X )
-          ! FUNCTION INFORMATION:
-          !       AUTHOR         Dimitri Curtil (LBNL)
-          !       DATE WRITTEN   February 2006
-          !       MODIFIED       Brent Griffith, March 2010, changed to LowerPoint%X <= X <= UpperPoint%X
-          !       RE-ENGINEERED  na
+  ! FUNCTION INFORMATION:
+  !       AUTHOR         Dimitri Curtil (LBNL)
+  !       DATE WRITTEN   February 2006
+  !       MODIFIED       Brent Griffith, March 2010, changed to LowerPoint%X <= X <= UpperPoint%X
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS FUNCTION:
-          ! This function checks whether the current iterate X lies within the current lower
-          ! and upper points or not (if defined):
-          !   LowerPoint%X < X < UpperPoint%X
-          !
-          ! Returns TRUE if current iterate lies within the lower/upper bracket.
-          ! Returns FALSE otherwise.
-          !
+  ! PURPOSE OF THIS FUNCTION:
+  ! This function checks whether the current iterate X lies within the current lower
+  ! and upper points or not (if defined):
+  !   LowerPoint%X < X < UpperPoint%X
+  !
+  ! Returns TRUE if current iterate lies within the lower/upper bracket.
+  ! Returns FALSE otherwise.
+  !
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! FUNCTION ARGUMENT DEFINITIONS:
+  ! FUNCTION ARGUMENT DEFINITIONS:
   TYPE(RootFinderDataType), INTENT(IN)    :: RootFinderData ! Data used by root finding algorithm
   REAL(r64), INTENT(IN)                        :: X              ! X value for current iterate
 
-          ! FUNCTION PARAMETER DEFINITIONS:
-          ! na
+  ! FUNCTION PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! FUNCTION LOCAL VARIABLE DECLARATIONS:
-          ! na
+  ! FUNCTION LOCAL VARIABLE DECLARATIONS:
+  ! na
 
-          ! FLOW:
+  ! FLOW:
 
 
   IF ( RootFinderData%LowerPoint%DefinedFlag ) THEN
@@ -1062,53 +1062,53 @@ END FUNCTION CheckLowerUpperBracket
 
 
 LOGICAL FUNCTION CheckSlope( RootFinderData )
-          ! FUNCTION INFORMATION:
-          !       AUTHOR         Dimitri Curtil (LBNL)
-          !       DATE WRITTEN   February 2006
-          !       MODIFIED
-          !       RE-ENGINEERED  na
+  ! FUNCTION INFORMATION:
+  !       AUTHOR         Dimitri Curtil (LBNL)
+  !       DATE WRITTEN   February 2006
+  !       MODIFIED
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS FUNCTION:
-          ! This function checks whether the current iterate (X,Y) satisfies the slope
-          ! requirement between the min and max points.
-          !
-          ! Returns FALSE if the slope requirement is NOT satisfied.
-          ! Returns TRUE if the slope requirement is satisfied.
-          !
-          ! PRECONDITION:
-          ! - Function assumes that both the min and max points are defined.
-          !
-          ! POSTCONDITION:
-          ! - RootFinderData is NOT changed by this function.
-          !
+  ! PURPOSE OF THIS FUNCTION:
+  ! This function checks whether the current iterate (X,Y) satisfies the slope
+  ! requirement between the min and max points.
+  !
+  ! Returns FALSE if the slope requirement is NOT satisfied.
+  ! Returns TRUE if the slope requirement is satisfied.
+  !
+  ! PRECONDITION:
+  ! - Function assumes that both the min and max points are defined.
+  !
+  ! POSTCONDITION:
+  ! - RootFinderData is NOT changed by this function.
+  !
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! FUNCTION ARGUMENT DEFINITIONS:
+  ! FUNCTION ARGUMENT DEFINITIONS:
   TYPE(RootFinderDataType), INTENT(IN)    :: RootFinderData ! Data used by root finding algorithm
 
-          ! FUNCTION PARAMETER DEFINITIONS:
-          ! na
+  ! FUNCTION PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! FUNCTION LOCAL VARIABLE DECLARATIONS:
-          ! na
+  ! FUNCTION LOCAL VARIABLE DECLARATIONS:
+  ! na
 
-          ! FLOW:
+  ! FLOW:
 
   ! Check that the slope requirement is respected at the min and max points
   !
@@ -1143,61 +1143,61 @@ END FUNCTION CheckSlope
 
 
 LOGICAL FUNCTION CheckNonSingularity( RootFinderData )
-          ! FUNCTION INFORMATION:
-          !       AUTHOR         Dimitri Curtil (LBNL)
-          !       DATE WRITTEN   February 2006
-          !       MODIFIED
-          !       RE-ENGINEERED  na
+  ! FUNCTION INFORMATION:
+  !       AUTHOR         Dimitri Curtil (LBNL)
+  !       DATE WRITTEN   February 2006
+  !       MODIFIED
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS FUNCTION:
-          ! This function checks whether the min and max points define a locally, singular
-          ! equation system. In a 1-dimensional system, "singularity" is detected if the
-          ! min and max points have the same y-values, thereby producing a zero slope
-          ! across the min/max range.
-          !
-          ! Returns TRUE if the function satisfies the non-singularity condition.
-          ! Returns FALSE otherwise (i.e., F(X) essentially displays a zero slope
-          ! between the min and max points) .
-          !
-          ! PRECONDITION:
-          ! - Function assumes that both the min and max points are defined.
-          !
-          ! POSTCONDITION:
-          ! - RootFinderData is NOT changed by this function.
-          !
+  ! PURPOSE OF THIS FUNCTION:
+  ! This function checks whether the min and max points define a locally, singular
+  ! equation system. In a 1-dimensional system, "singularity" is detected if the
+  ! min and max points have the same y-values, thereby producing a zero slope
+  ! across the min/max range.
+  !
+  ! Returns TRUE if the function satisfies the non-singularity condition.
+  ! Returns FALSE otherwise (i.e., F(X) essentially displays a zero slope
+  ! between the min and max points) .
+  !
+  ! PRECONDITION:
+  ! - Function assumes that both the min and max points are defined.
+  !
+  ! POSTCONDITION:
+  ! - RootFinderData is NOT changed by this function.
+  !
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! FUNCTION ARGUMENT DEFINITIONS:
+  ! FUNCTION ARGUMENT DEFINITIONS:
   TYPE(RootFinderDataType), INTENT(IN)    :: RootFinderData ! Data used by root finding algorithm
 
-          ! FUNCTION PARAMETER DEFINITIONS:
+  ! FUNCTION PARAMETER DEFINITIONS:
   ! Safety factor used to detect a singular residual function between the min and max
   ! points.
   !
   ! NOTE: Requesting exactly the same value is obtained by setting SafetyFactor = 0.0
   REAL(r64), PARAMETER                         :: SafetyFactor = 0.1d0
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! FUNCTION LOCAL VARIABLE DECLARATIONS:
+  ! FUNCTION LOCAL VARIABLE DECLARATIONS:
   REAL(r64)   :: DeltaY     ! Difference between min and max Y-values
   REAL(r64)   :: ATolY      ! Absolute tolerance used to detected equal min and max Y-values
 
-          ! FLOW:
+  ! FLOW:
 
   ! Added this check based on an absolute tolerance test for y values to avoid incorrectly detecting
   ! functions with bad slope due to numerical noise.
@@ -1219,50 +1219,50 @@ END FUNCTION CheckNonSingularity
 
 
 LOGICAL FUNCTION CheckMinConstraint( RootFinderData )
-          ! FUNCTION INFORMATION:
-          !       AUTHOR         Dimitri Curtil (LBNL)
-          !       DATE WRITTEN   February 2006
-          !       MODIFIED
-          !       RE-ENGINEERED  na
+  ! FUNCTION INFORMATION:
+  !       AUTHOR         Dimitri Curtil (LBNL)
+  !       DATE WRITTEN   February 2006
+  !       MODIFIED
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS FUNCTION:
-          ! This function checks whether the min point satisfies the min constraint
-          ! condition or not.
-          !
-          ! PRECONDITION:
-          ! - Function assumes that the min point is defined.
-          !
-          ! POSTCONDITION:
-          ! - RootFinderData is NOT changed by this function.
-          !
+  ! PURPOSE OF THIS FUNCTION:
+  ! This function checks whether the min point satisfies the min constraint
+  ! condition or not.
+  !
+  ! PRECONDITION:
+  ! - Function assumes that the min point is defined.
+  !
+  ! POSTCONDITION:
+  ! - RootFinderData is NOT changed by this function.
+  !
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! FUNCTION ARGUMENT DEFINITIONS:
+  ! FUNCTION ARGUMENT DEFINITIONS:
   TYPE(RootFinderDataType), INTENT(IN)    :: RootFinderData ! Data used by root finding algorithm
 
-          ! FUNCTION PARAMETER DEFINITIONS:
-          ! na
+  ! FUNCTION PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! FUNCTION LOCAL VARIABLE DECLARATIONS:
-          ! na
+  ! FUNCTION LOCAL VARIABLE DECLARATIONS:
+  ! na
 
-          ! FLOW:
+  ! FLOW:
 
   SelectSlope: SELECT CASE ( RootFinderData%Controls%SlopeType )
   CASE ( iSlopeIncreasing )
@@ -1292,50 +1292,50 @@ END FUNCTION CheckMinConstraint
 
 
 LOGICAL FUNCTION CheckMaxConstraint( RootFinderData )
-          ! FUNCTION INFORMATION:
-          !       AUTHOR         Dimitri Curtil (LBNL)
-          !       DATE WRITTEN   February 2006
-          !       MODIFIED
-          !       RE-ENGINEERED  na
+  ! FUNCTION INFORMATION:
+  !       AUTHOR         Dimitri Curtil (LBNL)
+  !       DATE WRITTEN   February 2006
+  !       MODIFIED
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS FUNCTION:
-          ! This function checks whether the max point satisfies the max constraint
-          ! condition or not.
-          !
-          ! PRECONDITION:
-          ! - Function assumes that the max point is defined.
-          !
-          ! POSTCONDITION:
-          ! - RootFinderData is NOT changed by this function.
-          !
+  ! PURPOSE OF THIS FUNCTION:
+  ! This function checks whether the max point satisfies the max constraint
+  ! condition or not.
+  !
+  ! PRECONDITION:
+  ! - Function assumes that the max point is defined.
+  !
+  ! POSTCONDITION:
+  ! - RootFinderData is NOT changed by this function.
+  !
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! FUNCTION ARGUMENT DEFINITIONS:
+  ! FUNCTION ARGUMENT DEFINITIONS:
   TYPE(RootFinderDataType), INTENT(IN)    :: RootFinderData ! Data used by root finding algorithm
 
-          ! FUNCTION PARAMETER DEFINITIONS:
-          ! na
+  ! FUNCTION PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! FUNCTION LOCAL VARIABLE DECLARATIONS:
-          ! na
+  ! FUNCTION LOCAL VARIABLE DECLARATIONS:
+  ! na
 
-          ! FLOW:
+  ! FLOW:
 
   ! Check for max constrained convergence with respect to the new iterate (X,Y)
   SelectSlope: SELECT CASE ( RootFinderData%Controls%SlopeType )
@@ -1366,49 +1366,49 @@ END FUNCTION CheckMaxConstraint
 
 
 LOGICAL FUNCTION CheckRootFinderConvergence( RootFinderData, Y )
-          ! FUNCTION INFORMATION:
-          !       AUTHOR         Dimitri Curtil (LBNL)
-          !       DATE WRITTEN   February 2006
-          !       MODIFIED
-          !       RE-ENGINEERED  na
+  ! FUNCTION INFORMATION:
+  !       AUTHOR         Dimitri Curtil (LBNL)
+  !       DATE WRITTEN   February 2006
+  !       MODIFIED
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS FUNCTION:
-          ! This function checks whether the current iterate (X,Y) satisfies the
-          ! unconstrained convergence criterion or not.
+  ! PURPOSE OF THIS FUNCTION:
+  ! This function checks whether the current iterate (X,Y) satisfies the
+  ! unconstrained convergence criterion or not.
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! FUNCTION ARGUMENT DEFINITIONS:
+  ! FUNCTION ARGUMENT DEFINITIONS:
   TYPE(RootFinderDataType), INTENT(IN)    :: RootFinderData ! Data used by root finding algorithm
   REAL(r64), INTENT(IN)                        :: Y              ! Y value for current iterate
 
-          ! FUNCTION PARAMETER DEFINITIONS:
-          ! na
+  ! FUNCTION PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! FUNCTION LOCAL VARIABLE DECLARATIONS:
-          ! na
+  ! FUNCTION LOCAL VARIABLE DECLARATIONS:
+  ! na
 
-          ! FLOW:
+  ! FLOW:
 
   ! Check for unconstrained convergence
   IF ( ABS(Y) <= RootFinderData%Controls%ATolY ) THEN
-      CheckRootFinderConvergence = .TRUE.
-      RETURN
+    CheckRootFinderConvergence = .TRUE.
+    RETURN
   END IF
 
   CheckRootFinderConvergence = .FALSE.
@@ -1418,45 +1418,45 @@ END FUNCTION CheckRootFinderConvergence
 
 
 LOGICAL FUNCTION CheckIncrementRoundOff( RootFinderData, X )
-          ! FUNCTION INFORMATION:
-          !       AUTHOR         Dimitri Curtil (LBNL)
-          !       DATE WRITTEN   February 2006
-          !       MODIFIED
-          !       RE-ENGINEERED  na
+  ! FUNCTION INFORMATION:
+  !       AUTHOR         Dimitri Curtil (LBNL)
+  !       DATE WRITTEN   February 2006
+  !       MODIFIED
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS FUNCTION:
-          ! This function checks whether the current iterate X satisfies the
-          ! round-off criterion or not.
-          !
+  ! PURPOSE OF THIS FUNCTION:
+  ! This function checks whether the current iterate X satisfies the
+  ! round-off criterion or not.
+  !
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! FUNCTION ARGUMENT DEFINITIONS:
+  ! FUNCTION ARGUMENT DEFINITIONS:
   TYPE(RootFinderDataType), INTENT(IN)    :: RootFinderData ! Data used by root finding algorithm
   REAL(r64), INTENT(IN)                   :: X              ! X value for current iterate
 
-          ! FUNCTION PARAMETER DEFINITIONS:
-          ! na
+  ! FUNCTION PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! FUNCTION LOCAL VARIABLE DECLARATIONS:
+  ! FUNCTION LOCAL VARIABLE DECLARATIONS:
   REAL(r64)       :: DeltaX             ! Increment in X since last iterate
   REAL(r64)       :: TolX               ! Tolerance to satisfy for X increment
-          ! FLOW:
+  ! FLOW:
 
   CheckIncrementRoundOff = .FALSE.
   ! Check for round-off error in X increments since last iterate
@@ -1466,8 +1466,8 @@ LOGICAL FUNCTION CheckIncrementRoundOff( RootFinderData, X )
     DeltaX = X - RootFinderData%CurrentPoint%Y
 
     IF ( ABS(DeltaX) <= ABS(TolX) ) THEN
-        CheckIncrementRoundOff = .TRUE.
-        RETURN
+      CheckIncrementRoundOff = .TRUE.
+      RETURN
     END IF
   END IF
 
@@ -1476,45 +1476,45 @@ END FUNCTION CheckIncrementRoundOff
 
 
 LOGICAL FUNCTION CheckBracketRoundOff( RootFinderData )
-          ! FUNCTION INFORMATION:
-          !       AUTHOR         Dimitri Curtil (LBNL)
-          !       DATE WRITTEN   February 2006
-          !       MODIFIED
-          !       RE-ENGINEERED  na
+  ! FUNCTION INFORMATION:
+  !       AUTHOR         Dimitri Curtil (LBNL)
+  !       DATE WRITTEN   February 2006
+  !       MODIFIED
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS FUNCTION:
-          ! This function checks whether the current lower and upper brackets satisfies
-          ! the round-off criterion or not.
-          !
+  ! PURPOSE OF THIS FUNCTION:
+  ! This function checks whether the current lower and upper brackets satisfies
+  ! the round-off criterion or not.
+  !
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! FUNCTION ARGUMENT DEFINITIONS:
+  ! FUNCTION ARGUMENT DEFINITIONS:
   TYPE(RootFinderDataType), INTENT(IN)    :: RootFinderData ! Data used by root finding algorithm
 
-          ! FUNCTION PARAMETER DEFINITIONS:
-          ! na
+  ! FUNCTION PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! FUNCTION LOCAL VARIABLE DECLARATIONS:
+  ! FUNCTION LOCAL VARIABLE DECLARATIONS:
   REAL(r64)       :: DeltaUL            ! Distance between lower and upper points
   REAL(r64)       :: TypUL              ! Typical value for values lying within lower/upper interval
   REAL(r64)       :: TolUL              ! Tolerance to satisfy for lower-upper distance
-          ! FLOW:
+  ! FLOW:
 
   ! Check for round-off error in Lower/Upper interval
   IF ( RootFinderData%LowerPoint%DefinedFlag .AND.  RootFinderData%UpperPoint%DefinedFlag ) THEN
@@ -1524,8 +1524,8 @@ LOGICAL FUNCTION CheckBracketRoundOff( RootFinderData )
 
     ! Halve tolerance to reflect the fact that solution can be anywhere between the lower and upper points.
     IF ( ABS(DeltaUL) <= 0.5d0 * ABS(TolUL) ) THEN
-        CheckBracketRoundOff = .TRUE.
-        RETURN
+      CheckBracketRoundOff = .TRUE.
+      RETURN
     END IF
   END IF
 
@@ -1536,52 +1536,52 @@ END FUNCTION CheckBracketRoundOff
 
 
 SUBROUTINE UpdateMinMax( RootFinderData, X, Y )
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Dimitri Curtil (LBNL)
-          !       DATE WRITTEN   February 2006
-          !       MODIFIED
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Dimitri Curtil (LBNL)
+  !       DATE WRITTEN   February 2006
+  !       MODIFIED
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine updates the min/max support points in the root finder data.
-          !
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine updates the min/max support points in the root finder data.
+  !
 
-          ! METHODOLOGY EMPLOYED:
-          !
-          ! PRECONDITION:
-          ! na
-          !
-          ! POSTCONDITION:
-          ! - RootFinderData%MinPoint possibly updated
-          ! - RootFinderData%MaxPoint possibly updated
-          !
+  ! METHODOLOGY EMPLOYED:
+  !
+  ! PRECONDITION:
+  ! na
+  !
+  ! POSTCONDITION:
+  ! - RootFinderData%MinPoint possibly updated
+  ! - RootFinderData%MaxPoint possibly updated
+  !
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   TYPE(RootFinderDataType), INTENT(INOUT) :: RootFinderData ! Data used by root finding algorithm
   REAL(r64), INTENT(IN)                        :: X              ! X value for current iterate
   REAL(r64), INTENT(IN)                        :: Y              ! Y value for current iterate, F(X)=Y
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-          ! na
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! na
 
-          ! FLOW:
+  ! FLOW:
 
   ! Update min support point
   IF ( X == RootFinderData%MinPoint%X ) THEN
@@ -1600,58 +1600,58 @@ END SUBROUTINE UpdateMinMax
 
 
 SUBROUTINE UpdateBracket( RootFinderData, X, Y )
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Dimitri Curtil (LBNL)
-          !       DATE WRITTEN   March 2006
-          !       MODIFIED
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Dimitri Curtil (LBNL)
+  !       DATE WRITTEN   March 2006
+  !       MODIFIED
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine updates the lower/upper support points in the root finder data
-          ! with the current iterate (X,Y).
-          !
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine updates the lower/upper support points in the root finder data
+  ! with the current iterate (X,Y).
+  !
 
-          ! METHODOLOGY EMPLOYED:
-         !
-          ! PRECONDITION:
-          ! - The current iterate (X,Y) must satisfy:
-          !   MinPoint%X <= LowerPoint%X < X < UpperPoint%X <= MaxPoint%X
-          ! - RootFinderData%StatusFlag == iStatusNone
-          !
-          ! POSTCONDITION:
-          ! - RootFinderData%LowerPoint possibly updated
-          ! - RootFinderData%UpperPoint possibly updated
-          ! - RootFinderData%StatusFlag possibly updated with:
-          !   - iStatusWarningNonMonotonic
-          !   - iStatusWarningSingular
-          !
+  ! METHODOLOGY EMPLOYED:
+  !
+  ! PRECONDITION:
+  ! - The current iterate (X,Y) must satisfy:
+  !   MinPoint%X <= LowerPoint%X < X < UpperPoint%X <= MaxPoint%X
+  ! - RootFinderData%StatusFlag == iStatusNone
+  !
+  ! POSTCONDITION:
+  ! - RootFinderData%LowerPoint possibly updated
+  ! - RootFinderData%UpperPoint possibly updated
+  ! - RootFinderData%StatusFlag possibly updated with:
+  !   - iStatusWarningNonMonotonic
+  !   - iStatusWarningSingular
+  !
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   TYPE(RootFinderDataType), INTENT(INOUT) :: RootFinderData ! Data used by root finding algorithm
   REAL(r64), INTENT(IN)                        :: X              ! X value for current iterate
   REAL(r64), INTENT(IN)                        :: Y              ! Y value for current iterate, F(X)=Y
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-          ! na
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! na
 
-          ! FLOW:
+  ! FLOW:
 
   SelectSlope: SELECT CASE ( RootFinderData%Controls%SlopeType )
 
@@ -1676,20 +1676,20 @@ SUBROUTINE UpdateBracket( RootFinderData, X, Y )
           ! Should never happen if CheckLowerUpperBracket() is called before
           CALL ShowSevereError('UpdateBracket: Current iterate is smaller than the lower bracket.')
           CALL ShowContinueError( &
-            'UpdateBracket: '// &
-            'X='//TRIM(TrimSigDigits(X,15))//', '// &
-            'Y='//TRIM(TrimSigDigits(Y,15)) &
+          'UpdateBracket: '// &
+          'X='//TRIM(TrimSigDigits(X,15))//', '// &
+          'Y='//TRIM(TrimSigDigits(Y,15)) &
           )
           CALL ShowContinueError( &
-            'UpdateBracket: '// &
-            'XLower='//TRIM(TrimSigDigits(RootFinderData%LowerPoint%X,15))//', '// &
-            'YLower='//TRIM(TrimSigDigits(RootFinderData%LowerPoint%Y,15)) &
+          'UpdateBracket: '// &
+          'XLower='//TRIM(TrimSigDigits(RootFinderData%LowerPoint%X,15))//', '// &
+          'YLower='//TRIM(TrimSigDigits(RootFinderData%LowerPoint%Y,15)) &
           )
           CALL ShowFatalError('UpdateBracket: Preceding error causes program termination.')
         END IF
       END IF
 
-    ! Update upper point
+      ! Update upper point
     ELSE
       IF ( .NOT.RootFinderData%UpperPoint%DefinedFlag ) THEN
         RootFinderData%UpperPoint%DefinedFlag = .TRUE.
@@ -1709,21 +1709,21 @@ SUBROUTINE UpdateBracket( RootFinderData, X, Y )
           ! Should never happen if CheckLowerUpperBracket() is called before
           CALL ShowSevereError('UpdateBracket: Current iterate is greater than the upper bracket.')
           CALL ShowContinueError( &
-            'UpdateBracket: '// &
-            'X='//TRIM(TrimSigDigits(X,15))//', '// &
-            'Y='//TRIM(TrimSigDigits(Y,15)) &
+          'UpdateBracket: '// &
+          'X='//TRIM(TrimSigDigits(X,15))//', '// &
+          'Y='//TRIM(TrimSigDigits(Y,15)) &
           )
           CALL ShowContinueError( &
-            'UpdateBracket: '// &
-            'XUpper='//TRIM(TrimSigDigits(RootFinderData%UpperPoint%X,15))//', '// &
-            'YUpper='//TRIM(TrimSigDigits(RootFinderData%UpperPoint%Y,15)) &
+          'UpdateBracket: '// &
+          'XUpper='//TRIM(TrimSigDigits(RootFinderData%UpperPoint%X,15))//', '// &
+          'YUpper='//TRIM(TrimSigDigits(RootFinderData%UpperPoint%Y,15)) &
           )
           CALL ShowFatalError('UpdateBracket: Preceding error causes program termination.')
         END IF
       END IF
     END IF
 
-  ! Monotone, decreasing function
+    ! Monotone, decreasing function
   CASE ( iSlopeDecreasing )
     ! Update lower point
     IF ( Y >= 0.0 ) THEN
@@ -1745,20 +1745,20 @@ SUBROUTINE UpdateBracket( RootFinderData, X, Y )
           ! Should never happen if CheckLowerUpperBracket() is called before
           CALL ShowSevereError('UpdateBracket: Current iterate is smaller than the lower bracket.')
           CALL ShowContinueError( &
-            'UpdateBracket: '// &
-            'X='//TRIM(TrimSigDigits(X,15))//', '// &
-            'Y='//TRIM(TrimSigDigits(Y,15)) &
+          'UpdateBracket: '// &
+          'X='//TRIM(TrimSigDigits(X,15))//', '// &
+          'Y='//TRIM(TrimSigDigits(Y,15)) &
           )
           CALL ShowContinueError( &
-            'UpdateBracket: '// &
-            'XLower='//TRIM(TrimSigDigits(RootFinderData%LowerPoint%X,15))//', '// &
-            'YLower='//TRIM(TrimSigDigits(RootFinderData%LowerPoint%Y,15)) &
+          'UpdateBracket: '// &
+          'XLower='//TRIM(TrimSigDigits(RootFinderData%LowerPoint%X,15))//', '// &
+          'YLower='//TRIM(TrimSigDigits(RootFinderData%LowerPoint%Y,15)) &
           )
           CALL ShowFatalError('UpdateBracket: Preceding error causes program termination.')
         END IF
       END IF
 
-    ! Update upper point
+      ! Update upper point
     ELSE
       IF ( .NOT.RootFinderData%UpperPoint%DefinedFlag ) THEN
         RootFinderData%UpperPoint%DefinedFlag = .TRUE.
@@ -1778,14 +1778,14 @@ SUBROUTINE UpdateBracket( RootFinderData, X, Y )
           ! Should never happen if CheckLowerUpperBracket() is called before
           CALL ShowSevereError('UpdateBracket: Current iterate is greater than the upper bracket.')
           CALL ShowContinueError( &
-            'UpdateBracket: '// &
-            'X='//TRIM(TrimSigDigits(X,15))//', '// &
-            'Y='//TRIM(TrimSigDigits(Y,15)) &
+          'UpdateBracket: '// &
+          'X='//TRIM(TrimSigDigits(X,15))//', '// &
+          'Y='//TRIM(TrimSigDigits(Y,15)) &
           )
           CALL ShowContinueError( &
-            'UpdateBracket: '// &
-            'XUpper='//TRIM(TrimSigDigits(RootFinderData%UpperPoint%X,15))//', '// &
-            'YUpper='//TRIM(TrimSigDigits(RootFinderData%UpperPoint%Y,15)) &
+          'UpdateBracket: '// &
+          'XUpper='//TRIM(TrimSigDigits(RootFinderData%UpperPoint%X,15))//', '// &
+          'YUpper='//TRIM(TrimSigDigits(RootFinderData%UpperPoint%Y,15)) &
           )
           CALL ShowFatalError('UpdateBracket: Preceding error causes program termination.')
         END IF
@@ -1806,52 +1806,52 @@ END SUBROUTINE UpdateBracket
 
 
 SUBROUTINE UpdateHistory( RootFinderData, X, Y )
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Dimitri Curtil (LBNL)
-          !       DATE WRITTEN   February 2006
-          !       MODIFIED
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Dimitri Curtil (LBNL)
+  !       DATE WRITTEN   February 2006
+  !       MODIFIED
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine updates the min/max support points in the root finder data.
-          !
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine updates the min/max support points in the root finder data.
+  !
 
-          ! METHODOLOGY EMPLOYED:
-          !
-          ! PRECONDITION:
-          ! - The current iterate (X,Y) must be a valid iterate:
-          !   MinPoint%X <= LowerPoint%X < X < UpperPoint%X <= MaxPoint%X
-          !
-          ! POSTCONDITION:
-          ! - RootFinderData%History(:) updated with last 3 best iterates
-          !
+  ! METHODOLOGY EMPLOYED:
+  !
+  ! PRECONDITION:
+  ! - The current iterate (X,Y) must be a valid iterate:
+  !   MinPoint%X <= LowerPoint%X < X < UpperPoint%X <= MaxPoint%X
+  !
+  ! POSTCONDITION:
+  ! - RootFinderData%History(:) updated with last 3 best iterates
+  !
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   TYPE(RootFinderDataType), INTENT(INOUT) :: RootFinderData ! Data used by root finding algorithm
   REAL(r64), INTENT(IN)                        :: X              ! X value for current iterate
   REAL(r64), INTENT(IN)                        :: Y              ! Y value for current iterate, F(X)=Y
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER                                 :: NumHistory
 
-          ! FLOW:
+  ! FLOW:
 
   ! Update history with best iterates so that:
   !   ABS(History(1)%Y) <= ABS(History(2)%Y) <= ABS(History(3)%Y)
@@ -1889,65 +1889,65 @@ END SUBROUTINE UpdateHistory
 
 
 SUBROUTINE UpdateRootFinder( RootFinderData, X, Y )
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Dimitri Curtil (LBNL)
-          !       DATE WRITTEN   February 2006
-          !       MODIFIED
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Dimitri Curtil (LBNL)
+  !       DATE WRITTEN   February 2006
+  !       MODIFIED
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine updates the root finder internal data to account for
-          ! the current iterate (X,Y):
-          ! - Lower / Upper support points
-          ! - Increments for successive iterates
-          ! - Convergence rate
-          !
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine updates the root finder internal data to account for
+  ! the current iterate (X,Y):
+  ! - Lower / Upper support points
+  ! - Increments for successive iterates
+  ! - Convergence rate
+  !
 
-          ! METHODOLOGY EMPLOYED:
-          !
-          ! PRECONDITION:
-          ! - The current iterate (X,Y) must be a valid iterate:
-          !   MinPoint%X <= LowerPoint%X < X < UpperPoint%X <= MaxPoint%X
-          ! - Invoke UpdateRootFinder() only if:
-          !   - CheckRootFinderCandidate() returned TRUE
-          !   - CheckNonSingularity() returned TRUE
-          !   - CheckSlope() returned TRUE
-          !
-          ! POSTCONDITION:
-          ! - RootFinderData%LowerPoint possibly updated
-          ! - RootFinderData%UpperPoint possibly updated
-          ! - RootFinderData%CurrentPoint updated with current iterate (X,Y)
-          ! - RootFinderData%History(:) updated with last 3 best iterates
-          ! - RootFinderData%Increment updated
-          ! - RootFinderData%ConvergenceRate updated
-          !
+  ! METHODOLOGY EMPLOYED:
+  !
+  ! PRECONDITION:
+  ! - The current iterate (X,Y) must be a valid iterate:
+  !   MinPoint%X <= LowerPoint%X < X < UpperPoint%X <= MaxPoint%X
+  ! - Invoke UpdateRootFinder() only if:
+  !   - CheckRootFinderCandidate() returned TRUE
+  !   - CheckNonSingularity() returned TRUE
+  !   - CheckSlope() returned TRUE
+  !
+  ! POSTCONDITION:
+  ! - RootFinderData%LowerPoint possibly updated
+  ! - RootFinderData%UpperPoint possibly updated
+  ! - RootFinderData%CurrentPoint updated with current iterate (X,Y)
+  ! - RootFinderData%History(:) updated with last 3 best iterates
+  ! - RootFinderData%Increment updated
+  ! - RootFinderData%ConvergenceRate updated
+  !
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   TYPE(RootFinderDataType), INTENT(INOUT) :: RootFinderData ! Data used by root finding algorithm
   REAL(r64), INTENT(IN)                        :: X              ! X value for current iterate
   REAL(r64), INTENT(IN)                        :: Y              ! Y value for current iterate, F(X)=Y
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-          ! na
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! na
 
-          ! FLOW:
+  ! FLOW:
 
 
   ! Update history with best iterates so that:
@@ -1985,45 +1985,45 @@ END SUBROUTINE UpdateRootFinder
 
 
 SUBROUTINE SortHistory( N, History )
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Dimitri Curtil (LBNL)
-          !       DATE WRITTEN   March 2006
-          !       MODIFIED
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Dimitri Curtil (LBNL)
+  !       DATE WRITTEN   March 2006
+  !       MODIFIED
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine orders the N points in the history array in increasing
-          ! order of ABS(Y) values.
-          !
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine orders the N points in the history array in increasing
+  ! order of ABS(Y) values.
+  !
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   INTEGER, INTENT(IN)            :: N           ! Number of points to sort in history array
   TYPE(PointType), INTENT(INOUT) :: History(:)  ! Array of PointType variables. At least N of them
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER                       :: I, J
   REAL(r64)                     :: XTemp, YTemp
-          ! FLOW:
+  ! FLOW:
 
   ! Nothing to do if only one point stored in history
   IF ( N <= 1 ) THEN
@@ -2051,55 +2051,55 @@ END SUBROUTINE SortHistory
 
 
 SUBROUTINE AdvanceRootFinder( RootFinderData )
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Dimitri Curtil (LBNL)
-          !       DATE WRITTEN   February 2006
-          !       MODIFIED
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Dimitri Curtil (LBNL)
+  !       DATE WRITTEN   February 2006
+  !       MODIFIED
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine computes the next candidate value based on the information available so far.
-          ! Stores new value into RootFinderData%XCandidate
-          !
-          ! PRECONDITION:
-          ! na
-          !
-          ! POSTCONDITION:
-          ! - LowerPoint%X < XCandidate < UpperPoint%X
-          ! - RootFinderData%CurrentMethodType update with current solution method.
-          !
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine computes the next candidate value based on the information available so far.
+  ! Stores new value into RootFinderData%XCandidate
+  !
+  ! PRECONDITION:
+  ! na
+  !
+  ! POSTCONDITION:
+  ! - LowerPoint%X < XCandidate < UpperPoint%X
+  ! - RootFinderData%CurrentMethodType update with current solution method.
+  !
 
-          ! METHODOLOGY EMPLOYED:
-          ! The subroutine first attempts to bracket the root within a lower and upper point.
-          ! Once it is bracketed, then we use the specified solution methods (Bisection,
-          ! False position, Secant and Brent) to compute the next candidate.
-          !
+  ! METHODOLOGY EMPLOYED:
+  ! The subroutine first attempts to bracket the root within a lower and upper point.
+  ! Once it is bracketed, then we use the specified solution methods (Bisection,
+  ! False position, Secant and Brent) to compute the next candidate.
+  !
 
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   TYPE(RootFinderDataType), INTENT(INOUT) :: RootFinderData ! Data used by root finding algorithm
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   REAL(r64)                               :: XNext = 0.0
 
-          ! FLOW:
+  ! FLOW:
 
   !----------------------------------------------------------------------------
   ! First attempt to bracket root between a lower point and an upper point.
@@ -2110,7 +2110,7 @@ SUBROUTINE AdvanceRootFinder( RootFinderData )
     RootFinderData%CurrentMethodType = iMethodBracket
     ! If we have 2 points already, try to detect lower point using the Secant formula
     IF ( BracketRoot( RootFinderData, XNext ) ) THEN
-        RootFinderData%XCandidate = XNext
+      RootFinderData%XCandidate = XNext
     ELSE
       IF ( .NOT.RootFinderData%MinPoint%DefinedFlag ) THEN
         RootFinderData%XCandidate = RootFinderData%MinPoint%X
@@ -2120,12 +2120,12 @@ SUBROUTINE AdvanceRootFinder( RootFinderData )
       END IF
     END IF
 
-  ! Detect the upper bracket
+    ! Detect the upper bracket
   ELSE IF ( .NOT.RootFinderData%UpperPoint%DefinedFlag ) THEN
     RootFinderData%CurrentMethodType = iMethodBracket
     ! If we have 2 points already, try to detect upper point using the Secant formula
     IF ( BracketRoot( RootFinderData, XNext ) ) THEN
-        RootFinderData%XCandidate = XNext
+      RootFinderData%XCandidate = XNext
     ELSE
       IF ( .NOT.RootFinderData%MaxPoint%DefinedFlag ) THEN
         RootFinderData%XCandidate = RootFinderData%MaxPoint%X
@@ -2136,13 +2136,13 @@ SUBROUTINE AdvanceRootFinder( RootFinderData )
     END IF
 
 
-  !----------------------------------------------------------------------------
-  ! Root finding can start ...
-  !
-  ! Assumptions:
-  ! - the lower and upper support points are defined.
-  ! - the increments are defined (at least 2 history points are available)
-  !----------------------------------------------------------------------------
+    !----------------------------------------------------------------------------
+    ! Root finding can start ...
+    !
+    ! Assumptions:
+    ! - the lower and upper support points are defined.
+    ! - the increments are defined (at least 2 history points are available)
+    !----------------------------------------------------------------------------
   ELSE
     SelectRecoveryMethod: SELECT CASE ( RootFinderData%StatusFlag )
     CASE ( iStatusOKRoundOff )
@@ -2189,60 +2189,60 @@ END SUBROUTINE AdvanceRootFinder
 
 
 LOGICAL FUNCTION BracketRoot( RootFinderData, XNext )
-          ! FUNCTION INFORMATION:
-          !       AUTHOR         Dimitri Curtil (LBNL)
-          !       DATE WRITTEN   February 2006
-          !       MODIFIED
-          !       RE-ENGINEERED  na
+  ! FUNCTION INFORMATION:
+  !       AUTHOR         Dimitri Curtil (LBNL)
+  !       DATE WRITTEN   February 2006
+  !       MODIFIED
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS FUNCTION:
-          ! This function attempts to compute a new point that will bracket the root
-          ! using the secant formula to take advantage of the slope between the last 2
-          ! iterates.
-          !
-          ! Returns TRUE if successfully computed a new bracket in XNext.
-          ! Else returns FASLE and does not update the XNext argument.
-          !
-          ! Should only be used while in braketing mode (iMethodBracket).
-          ! When the lower and upper brackets are detected then the FUNCTION SecantMethod
-          ! should be used instead.
-          !
-          ! PRECONDITION:
-          ! na
-          !
-          ! POSTCONDITION:
-          ! - MinPoint%X <= XNext <= MaxPoint%X
-          ! - LowerPoint%X < XNext < UpperPoint%X
-          !
+  ! PURPOSE OF THIS FUNCTION:
+  ! This function attempts to compute a new point that will bracket the root
+  ! using the secant formula to take advantage of the slope between the last 2
+  ! iterates.
+  !
+  ! Returns TRUE if successfully computed a new bracket in XNext.
+  ! Else returns FASLE and does not update the XNext argument.
+  !
+  ! Should only be used while in braketing mode (iMethodBracket).
+  ! When the lower and upper brackets are detected then the FUNCTION SecantMethod
+  ! should be used instead.
+  !
+  ! PRECONDITION:
+  ! na
+  !
+  ! POSTCONDITION:
+  ! - MinPoint%X <= XNext <= MaxPoint%X
+  ! - LowerPoint%X < XNext < UpperPoint%X
+  !
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! FUNCTION ARGUMENT DEFINITIONS:
+  ! FUNCTION ARGUMENT DEFINITIONS:
   TYPE(RootFinderDataType), INTENT(IN)       :: RootFinderData ! Data used by root finding algorithm
   REAL(r64), INTENT(OUT)                          :: XNext          ! Next value
 
-          ! FUNCTION PARAMETER DEFINITIONS:
-          ! na
+  ! FUNCTION PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! FUNCTION LOCAL VARIABLE DECLARATIONS:
-          ! na
+  ! FUNCTION LOCAL VARIABLE DECLARATIONS:
+  ! na
 
-          ! FLOW:
+  ! FLOW:
 
   ! Cannot use Secant method unless there are at least 2 points
   ! Also do not use Secant method more than once, i.e. NumHistory==3, in order to avoid
@@ -2255,73 +2255,73 @@ LOGICAL FUNCTION BracketRoot( RootFinderData, XNext )
 
   ! Should not use Secant method if the last 2 points produced a warning
   IF ( RootFinderData%StatusFlag == iStatusWarningSingular .OR. &
-       RootFinderData%StatusFlag == iStatusWarningNonMonotonic ) THEN
-    BracketRoot = .FALSE.
+  RootFinderData%StatusFlag == iStatusWarningNonMonotonic ) THEN
+  BracketRoot = .FALSE.
+  RETURN
+END IF
+
+! Try to compute next root candidate using Secant formula
+IF ( SecantFormula( RootFinderData, XNext ) ) THEN
+
+  ! Check that next candidate is consistent with min/max constraints and lower/upper brackets
+  IF ( CheckRootFinderCandidate( RootFinderData, XNext ) ) THEN
+    BracketRoot = .TRUE.
     RETURN
   END IF
+END IF
 
-  ! Try to compute next root candidate using Secant formula
-  IF ( SecantFormula( RootFinderData, XNext ) ) THEN
+BracketRoot = .FALSE.
 
-    ! Check that next candidate is consistent with min/max constraints and lower/upper brackets
-    IF ( CheckRootFinderCandidate( RootFinderData, XNext ) ) THEN
-      BracketRoot = .TRUE.
-      RETURN
-    END IF
-  END IF
-
-  BracketRoot = .FALSE.
-
-  RETURN
+RETURN
 END FUNCTION BracketRoot
 
 
 REAL(r64) FUNCTION BisectionMethod( RootFinderData )
-          ! FUNCTION INFORMATION:
-          !       AUTHOR         Dimitri Curtil (LBNL)
-          !       DATE WRITTEN   February 2006
-          !       MODIFIED
-          !       RE-ENGINEERED  na
+  ! FUNCTION INFORMATION:
+  !       AUTHOR         Dimitri Curtil (LBNL)
+  !       DATE WRITTEN   February 2006
+  !       MODIFIED
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS FUNCTION:
-          ! This function computes the next iterate using the bisection method (aka interval halving).
-          ! Convergence rate is at best linear.
-          !
-          ! PRECONDITION:
-          ! Lower and upper points must be defined and distinct.
-          !
-          ! POSTCONDITION:
-          ! - LowerPoint%X < XCandidate < UpperPoint%X
-          ! - RootFinderData%CurrentMethodType update with current solution method.
-          !
+  ! PURPOSE OF THIS FUNCTION:
+  ! This function computes the next iterate using the bisection method (aka interval halving).
+  ! Convergence rate is at best linear.
+  !
+  ! PRECONDITION:
+  ! Lower and upper points must be defined and distinct.
+  !
+  ! POSTCONDITION:
+  ! - LowerPoint%X < XCandidate < UpperPoint%X
+  ! - RootFinderData%CurrentMethodType update with current solution method.
+  !
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! FUNCTION ARGUMENT DEFINITIONS:
+  ! FUNCTION ARGUMENT DEFINITIONS:
   TYPE(RootFinderDataType), INTENT(INOUT)    :: RootFinderData ! Data used by root finding algorithm
 
-          ! FUNCTION PARAMETER DEFINITIONS:
-          ! na
+  ! FUNCTION PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! FUNCTION LOCAL VARIABLE DECLARATIONS:
-          ! na
+  ! FUNCTION LOCAL VARIABLE DECLARATIONS:
+  ! na
 
-          ! FLOW:
+  ! FLOW:
   RootFinderData%CurrentMethodType = iMethodBisection
   BisectionMethod = (RootFinderData%LowerPoint%X + RootFinderData%UpperPoint%X)/2.0
 
@@ -2330,55 +2330,55 @@ END FUNCTION BisectionMethod
 
 
 REAL(r64) FUNCTION FalsePositionMethod( RootFinderData )
-          ! FUNCTION INFORMATION:
-          !       AUTHOR         Dimitri Curtil (LBNL)
-          !       DATE WRITTEN   February 2006
-          !       MODIFIED
-          !       RE-ENGINEERED  na
+  ! FUNCTION INFORMATION:
+  !       AUTHOR         Dimitri Curtil (LBNL)
+  !       DATE WRITTEN   February 2006
+  !       MODIFIED
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS FUNCTION:
-          ! This function computes the next iterate using the false position method (aka regula falsi).
-          ! If new iterate does not lie within the lower and upper points then
-          ! the Bisection method is used instead.
-          !
-          ! Convergence rate is at best superlinear.
-          !
-          ! PRECONDITION:
-          ! Lower and upper points must be defined and distinct.
-          !
-          ! POSTCONDITION:
-          ! - LowerPoint%X < XCandidate < UpperPoint%X
-          ! - RootFinderData%CurrentMethodType update with current solution method.
-          !
+  ! PURPOSE OF THIS FUNCTION:
+  ! This function computes the next iterate using the false position method (aka regula falsi).
+  ! If new iterate does not lie within the lower and upper points then
+  ! the Bisection method is used instead.
+  !
+  ! Convergence rate is at best superlinear.
+  !
+  ! PRECONDITION:
+  ! Lower and upper points must be defined and distinct.
+  !
+  ! POSTCONDITION:
+  ! - LowerPoint%X < XCandidate < UpperPoint%X
+  ! - RootFinderData%CurrentMethodType update with current solution method.
+  !
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! FUNCTION ARGUMENT DEFINITIONS:
+  ! FUNCTION ARGUMENT DEFINITIONS:
   TYPE(RootFinderDataType), INTENT(INOUT)    :: RootFinderData ! Data used by root finding algorithm
 
-          ! FUNCTION PARAMETER DEFINITIONS:
-          ! na
+  ! FUNCTION PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! FUNCTION LOCAL VARIABLE DECLARATIONS:
+  ! FUNCTION LOCAL VARIABLE DECLARATIONS:
   REAL(r64)                     :: XCandidate
   REAL(r64)                     :: Num, Den
 
-          ! FLOW:
+  ! FLOW:
 
   Num = RootFinderData%UpperPoint%X - RootFinderData%LowerPoint%X
   Den = RootFinderData%UpperPoint%Y - RootFinderData%LowerPoint%Y
@@ -2404,55 +2404,55 @@ END FUNCTION FalsePositionMethod
 
 
 REAL(r64) FUNCTION SecantMethod( RootFinderData )
-          ! FUNCTION INFORMATION:
-          !       AUTHOR         Dimitri Curtil (LBNL)
-          !       DATE WRITTEN   February 2006
-          !       MODIFIED
-          !       RE-ENGINEERED  na
+  ! FUNCTION INFORMATION:
+  !       AUTHOR         Dimitri Curtil (LBNL)
+  !       DATE WRITTEN   February 2006
+  !       MODIFIED
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS FUNCTION:
-          ! This function computes the next iterate using the secant method.
-          ! If new iterate does not lie within the lower and upper points then
-          ! the false position method is used instead.
-          !
-          ! Convergence rate is at best superlinear.
-          !
-          ! PRECONDITION:
-          ! There must be at least 2 history points so that RootFinderData%Increment is defined.
-          ! See FUNCTION SecantFormula.
-          !
-          ! POSTCONDITION:
-          ! - LowerPoint%X < XCandidate < UpperPoint%X
-          ! - RootFinderData%CurrentMethodType update with current solution method.
-          !
+  ! PURPOSE OF THIS FUNCTION:
+  ! This function computes the next iterate using the secant method.
+  ! If new iterate does not lie within the lower and upper points then
+  ! the false position method is used instead.
+  !
+  ! Convergence rate is at best superlinear.
+  !
+  ! PRECONDITION:
+  ! There must be at least 2 history points so that RootFinderData%Increment is defined.
+  ! See FUNCTION SecantFormula.
+  !
+  ! POSTCONDITION:
+  ! - LowerPoint%X < XCandidate < UpperPoint%X
+  ! - RootFinderData%CurrentMethodType update with current solution method.
+  !
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! FUNCTION ARGUMENT DEFINITIONS:
+  ! FUNCTION ARGUMENT DEFINITIONS:
   TYPE(RootFinderDataType), INTENT(INOUT)    :: RootFinderData ! Data used by root finding algorithm
 
-          ! FUNCTION PARAMETER DEFINITIONS:
-          ! na
+  ! FUNCTION PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! FUNCTION LOCAL VARIABLE DECLARATIONS:
+  ! FUNCTION LOCAL VARIABLE DECLARATIONS:
   REAL(r64)                     :: XCandidate
 
-          ! FLOW:
+  ! FLOW:
 
   ! Recover with false position
   IF ( SecantFormula(RootFinderData, XCandidate) ) THEN
@@ -2475,55 +2475,55 @@ END FUNCTION SecantMethod
 
 
 LOGICAL FUNCTION SecantFormula( RootFinderData, XNext )
-          ! FUNCTION INFORMATION:
-          !       AUTHOR         Dimitri Curtil (LBNL)
-          !       DATE WRITTEN   April 2006
-          !       MODIFIED
-          !       RE-ENGINEERED  na
+  ! FUNCTION INFORMATION:
+  !       AUTHOR         Dimitri Curtil (LBNL)
+  !       DATE WRITTEN   April 2006
+  !       MODIFIED
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS FUNCTION:
-          ! This function computes the next iterate using the secant formula.
-          ! If the new iterate cannot be computed the function returns FALSE, else TRUE.
-          !
-          ! Convergence rate is at best superlinear.
-          !
-          ! PRECONDITION:
-          ! There must be at least 2 history points so that RootFinderData%Increment is defined.
-          !
-          ! POSTCONDITION:
-          ! XNext contains the result from applying the Secant formula.
-          ! If XNext could not be computed then leave XNext unchanged.
-          !
+  ! PURPOSE OF THIS FUNCTION:
+  ! This function computes the next iterate using the secant formula.
+  ! If the new iterate cannot be computed the function returns FALSE, else TRUE.
+  !
+  ! Convergence rate is at best superlinear.
+  !
+  ! PRECONDITION:
+  ! There must be at least 2 history points so that RootFinderData%Increment is defined.
+  !
+  ! POSTCONDITION:
+  ! XNext contains the result from applying the Secant formula.
+  ! If XNext could not be computed then leave XNext unchanged.
+  !
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! FUNCTION ARGUMENT DEFINITIONS:
+  ! FUNCTION ARGUMENT DEFINITIONS:
   TYPE(RootFinderDataType), INTENT(IN)       :: RootFinderData ! Data used by root finding algorithm
   REAL(r64), INTENT(OUT)                          :: XNext          ! Result from Secant formula if possible to compute
 
-          ! FUNCTION PARAMETER DEFINITIONS:
-          ! na
+  ! FUNCTION PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! FUNCTION LOCAL VARIABLE DECLARATIONS:
+  ! FUNCTION LOCAL VARIABLE DECLARATIONS:
   REAL(r64)                     :: Num
   REAL(r64)                     :: Den
 
-          ! FLOW:
+  ! FLOW:
 
   Num = RootFinderData%Increment%X
   Den = RootFinderData%Increment%Y
@@ -2542,58 +2542,58 @@ END FUNCTION SecantFormula
 
 
 REAL(r64) FUNCTION BrentMethod( RootFinderData )
-          ! FUNCTION INFORMATION:
-          !       AUTHOR         Dimitri Curtil (LBNL)
-          !       DATE WRITTEN   March 2006
-          !       MODIFIED
-          !       RE-ENGINEERED  na
+  ! FUNCTION INFORMATION:
+  !       AUTHOR         Dimitri Curtil (LBNL)
+  !       DATE WRITTEN   March 2006
+  !       MODIFIED
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS FUNCTION:
-          ! This function computes the next iterate using the Brent's method.
-          ! If new iterate does not lie within the lower and upper points then
-          ! the secant method is used instead.
-          !
-          ! Convergence rate is at best quadratic.
-          !
-          ! PRECONDITION:
-          ! Lower and upper points must be defined and distinct.
-          !
-          ! POSTCONDITION:
-          ! - LowerPoint%X < XCandidate < UpperPoint%X
-          ! - RootFinderData%CurrentMethodType update with current solution method.
-          !
+  ! PURPOSE OF THIS FUNCTION:
+  ! This function computes the next iterate using the Brent's method.
+  ! If new iterate does not lie within the lower and upper points then
+  ! the secant method is used instead.
+  !
+  ! Convergence rate is at best quadratic.
+  !
+  ! PRECONDITION:
+  ! Lower and upper points must be defined and distinct.
+  !
+  ! POSTCONDITION:
+  ! - LowerPoint%X < XCandidate < UpperPoint%X
+  ! - RootFinderData%CurrentMethodType update with current solution method.
+  !
 
-          ! METHODOLOGY EMPLOYED:
-          ! Inverse quadratic interpolation using the last 3 best iterates.
-          ! The next root estimate is x = B + P/Q whereby B is the current best estimate
-          ! of the root.
-          !
+  ! METHODOLOGY EMPLOYED:
+  ! Inverse quadratic interpolation using the last 3 best iterates.
+  ! The next root estimate is x = B + P/Q whereby B is the current best estimate
+  ! of the root.
+  !
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! FUNCTION ARGUMENT DEFINITIONS:
+  ! FUNCTION ARGUMENT DEFINITIONS:
   TYPE(RootFinderDataType), INTENT(INOUT)    :: RootFinderData ! Data used by root finding algorithm
 
-          ! FUNCTION PARAMETER DEFINITIONS:
-          ! na
+  ! FUNCTION PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! FUNCTION LOCAL VARIABLE DECLARATIONS:
+  ! FUNCTION LOCAL VARIABLE DECLARATIONS:
   REAL(r64)                     :: XCandidate
   REAL(r64)                     :: A, FA, B, FB, C, FC
   REAL(r64)                     :: R, S, T, P, Q
-          ! FLOW:
+  ! FLOW:
 
   ! Only attempt Brent's method if enough history points are available
   ! and if the root finder is converging (not diverging) since the previous
@@ -2615,7 +2615,7 @@ REAL(r64) FUNCTION BrentMethod( RootFinderData )
     IF (FC == 0.0) THEN
       BrentMethod = C
       RETURN
-    ! Should never happen if CheckRootFinderConvergence() is invoked prior to this subroutine
+      ! Should never happen if CheckRootFinderConvergence() is invoked prior to this subroutine
     ELSE IF (FA == 0.0) THEN
       BrentMethod = A
       RETURN
@@ -2656,119 +2656,119 @@ END FUNCTION BrentMethod
 
 
 SUBROUTINE WriteRootFinderTraceHeader( TraceFileUnit )
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Dimitri Curtil (LBNL)
-          !       DATE WRITTEN   March 2006
-          !       MODIFIED
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Dimitri Curtil (LBNL)
+  !       DATE WRITTEN   March 2006
+  !       MODIFIED
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine writes the header for the trace file to the specified
-          ! file unit using CSV formatting.
-          !
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine writes the header for the trace file to the specified
+  ! file unit using CSV formatting.
+  !
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   INTEGER, INTENT(IN)                  :: TraceFileUnit  ! Unit for trace file
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-          ! na
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! na
 
-          ! FLOW:
+  ! FLOW:
 
   WRITE(TraceFileUnit,'(20(A,A))',ADVANCE='No') &
-    'Status', ',', 'Method', ',', &
-    'CurrentPoint%X', ',', 'CurrentPoint%Y', ',', &
-    'XCandidate', ',', 'ConvergenceRate', ',', &
-    !'MinPoint%DefinedFlag', ',', &
-    'MinPoint%X', ',', 'MinPoint%Y', ',', &
-    !'LowerPoint%DefinedFlag', ',', &
-    'LowerPoint%X', ',', 'LowerPoint%Y', ',', &
-    !'UpperPoint%DefinedFlag', ',', &
-    'UpperPoint%X', ',', 'UpperPoint%Y', ',', &
-    !'MaxPoint%DefinedFlag', ',', &
-    'MaxPoint%X', ',', 'MaxPoint%Y', ',', &
-    !'History(1)%DefinedFlag', ',', &
-    'History(1)%X', ',', 'History(1)%Y', ',', &
-    !'History(2)%DefinedFlag', ',', &
-    'History(2)%X', ',', 'History(2)%Y', ',', &
-    !'History(3)%DefinedFlag', ',', &
-    'History(3)%X', ',', 'History(3)%Y', ','
+  'Status', ',', 'Method', ',', &
+  'CurrentPoint%X', ',', 'CurrentPoint%Y', ',', &
+  'XCandidate', ',', 'ConvergenceRate', ',', &
+  !'MinPoint%DefinedFlag', ',', &
+  'MinPoint%X', ',', 'MinPoint%Y', ',', &
+  !'LowerPoint%DefinedFlag', ',', &
+  'LowerPoint%X', ',', 'LowerPoint%Y', ',', &
+  !'UpperPoint%DefinedFlag', ',', &
+  'UpperPoint%X', ',', 'UpperPoint%Y', ',', &
+  !'MaxPoint%DefinedFlag', ',', &
+  'MaxPoint%X', ',', 'MaxPoint%Y', ',', &
+  !'History(1)%DefinedFlag', ',', &
+  'History(1)%X', ',', 'History(1)%Y', ',', &
+  !'History(2)%DefinedFlag', ',', &
+  'History(2)%X', ',', 'History(2)%Y', ',', &
+  !'History(3)%DefinedFlag', ',', &
+  'History(3)%X', ',', 'History(3)%Y', ','
 
   RETURN
 END SUBROUTINE WriteRootFinderTraceHeader
 
 
 SUBROUTINE WriteRootFinderTrace( TraceFileUnit, RootFinderData )
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Dimitri Curtil (LBNL)
-          !       DATE WRITTEN   March 2006
-          !       MODIFIED
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Dimitri Curtil (LBNL)
+  !       DATE WRITTEN   March 2006
+  !       MODIFIED
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine writes the current state of the root finder data to the trace file
-          ! unit using CSV formatting.
-          !
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine writes the current state of the root finder data to the trace file
+  ! unit using CSV formatting.
+  !
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE General, ONLY: TrimSigDigits
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   INTEGER, INTENT(IN)                  :: TraceFileUnit  ! Unit for trace file
   TYPE(RootFinderDataType), INTENT(IN) :: RootFinderData ! Data used by root finding algorithm
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-          ! na
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! na
 
-          ! FLOW:
+  ! FLOW:
 
   WRITE(TraceFileUnit,'(2(A,A))',ADVANCE='No') &
-    TRIM(TrimSigDigits(RootFinderData%StatusFlag)), ',', &
-    TRIM(TrimSigDigits(RootFinderData%CurrentMethodType)), ','
+  TRIM(TrimSigDigits(RootFinderData%StatusFlag)), ',', &
+  TRIM(TrimSigDigits(RootFinderData%CurrentMethodType)), ','
 
   ! Only show current point if defined.
   CALL WritePoint( TraceFileUnit, RootFinderData%CurrentPoint, .FALSE. )
 
   WRITE(TraceFileUnit,'(2(F20.10,A))',ADVANCE='No') &
-    RootFinderData%XCandidate, ',', &
-    RootFinderData%ConvergenceRate, ','
+  RootFinderData%XCandidate, ',', &
+  RootFinderData%ConvergenceRate, ','
 
   ! Always show min and max points.
   ! Only show lower and upper points if defined.
@@ -2786,110 +2786,110 @@ END SUBROUTINE WriteRootFinderTrace
 
 
 SUBROUTINE WritePoint( TraceFileUnit, PointData, ShowXValue )
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Dimitri Curtil (LBNL)
-          !       DATE WRITTEN   March 2006
-          !       MODIFIED
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Dimitri Curtil (LBNL)
+  !       DATE WRITTEN   March 2006
+  !       MODIFIED
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine writes the current point data to the trace file
-          ! unit using CSV formatting.
-          ! If not defined writes an empty string instead.
-          !
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine writes the current point data to the trace file
+  ! unit using CSV formatting.
+  ! If not defined writes an empty string instead.
+  !
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   INTEGER, INTENT(IN)                  :: TraceFileUnit  ! Unit for trace file
   TYPE(PointType), INTENT(IN)          :: PointData      ! Point data structure
   ! If set to TRUE, ten always show the X value even if not defined
   LOGICAL, INTENT(IN)                  :: ShowXValue
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! SUBROUTINE PARAMETER DEFINITIONS:
   CHARACTER(len=1)                     :: NoValue = ' '  ! String used whenever the value is not available
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-          ! na
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! na
 
-          ! FLOW:
+  ! FLOW:
 
-    IF ( PointData%DefinedFlag ) THEN
-      WRITE(TraceFileUnit,'(2(F20.10,A))',ADVANCE='No')  &
-        PointData%X, ',', &
-        PointData%Y, ','
+  IF ( PointData%DefinedFlag ) THEN
+    WRITE(TraceFileUnit,'(2(F20.10,A))',ADVANCE='No')  &
+    PointData%X, ',', &
+    PointData%Y, ','
+  ELSE
+    IF ( ShowXValue ) THEN
+      WRITE(TraceFileUnit,'(1(F20.10,A),1(A,A))',ADVANCE='No')  &
+      PointData%X, ',', &
+      NoValue, ','
     ELSE
-      IF ( ShowXValue ) THEN
-        WRITE(TraceFileUnit,'(1(F20.10,A),1(A,A))',ADVANCE='No')  &
-          PointData%X, ',', &
-          NoValue, ','
-      ELSE
-        WRITE(TraceFileUnit,'(2(A,A))',ADVANCE='No')  &
-          NoValue, ',', &
-          NoValue, ','
-      END IF
+      WRITE(TraceFileUnit,'(2(A,A))',ADVANCE='No')  &
+      NoValue, ',', &
+      NoValue, ','
     END IF
+  END IF
 
   RETURN
 END SUBROUTINE WritePoint
 
 
 SUBROUTINE DebugRootFinder( FileUnit, RootFinderData )
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Dimitri Curtil (LBNL)
-          !       DATE WRITTEN   April 2006
-          !       MODIFIED
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Dimitri Curtil (LBNL)
+  !       DATE WRITTEN   April 2006
+  !       MODIFIED
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine writes the current min/max range and lower/upper bracket to
-          ! the standard output file.
-          !
-          ! Used only for debugging.
-          !
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine writes the current min/max range and lower/upper bracket to
+  ! the standard output file.
+  !
+  ! Used only for debugging.
+  !
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   TYPE(RootFinderDataType), INTENT(IN) :: RootFinderData ! Data used by root finding algorithm
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! SUBROUTINE PARAMETER DEFINITIONS:
   INTEGER, INTENT(IN)                  :: FileUnit       ! File unit where to write debugging info
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-          ! na
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! na
 
-          ! FLOW:
+  ! FLOW:
 
   ! UNIT=0 should correspond to the standard output file (screen).
   WRITE(FileUnit,'(A)',ADVANCE='No') 'Current = '
@@ -2917,43 +2917,43 @@ END SUBROUTINE  DebugRootFinder
 
 
 SUBROUTINE WriteRootFinderStatus( FileUnit, RootFinderData )
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Dimitri Curtil (LBNL)
-          !       DATE WRITTEN   May 2006
-          !       MODIFIED
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Dimitri Curtil (LBNL)
+  !       DATE WRITTEN   May 2006
+  !       MODIFIED
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          !
+  ! PURPOSE OF THIS SUBROUTINE:
+  !
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   INTEGER, INTENT(IN)                     :: FileUnit   ! File unit where to write the status description
   TYPE(RootFinderDataType), INTENT(IN)    :: RootFinderData ! Data used by root finding algorithm
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-          ! na
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! na
 
-          ! FLOW:
+  ! FLOW:
 
   SELECT CASE ( RootFinderData%StatusFlag )
   CASE (iStatusOK)
@@ -2988,7 +2988,7 @@ END SUBROUTINE WriteRootFinderStatus
 
 !     NOTICE
 !
-!     Copyright © 1996-2012 The Board of Trustees of the University of Illinois
+!     Copyright ï¿½ 1996-2012 The Board of Trustees of the University of Illinois
 !     and The Regents of the University of California through Ernest Orlando Lawrence
 !     Berkeley National Laboratory.  All rights reserved.
 !

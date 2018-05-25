@@ -21,7 +21,7 @@ MODULE ReturnAirPathManager
   ! Use statements for data only modules
   USE DataPrecisionGlobals
   USE DataGlobals_HPSimIntegrated,     ONLY: BeginEnvrnFlag, BeginDayFlag, MaxNameLength !, &
-                             !ShowSevereError, ShowFatalError, ShowContinueError
+  !ShowSevereError, ShowFatalError, ShowContinueError
   USE DataZoneEquipment, ONLY: ReturnAirPath, NumReturnAirPaths, ZoneMixer_Type, ZoneReturnPlenum_Type
 
   ! Use statements for access to subroutines in other modules
@@ -44,21 +44,21 @@ MODULE ReturnAirPathManager
 
   PUBLIC SimReturnAirPath
 
-  CONTAINS
+CONTAINS
 
   SUBROUTINE SimReturnAirPath
 
-            ! SUBROUTINE INFORMATION:
-            !       AUTHOR:          Russ Taylor
-            !       DATE WRITTEN:    Nov 1997
+    ! SUBROUTINE INFORMATION:
+    !       AUTHOR:          Russ Taylor
+    !       DATE WRITTEN:    Nov 1997
 
-            ! PURPOSE OF THIS SUBROUTINE: This subroutine
+    ! PURPOSE OF THIS SUBROUTINE: This subroutine
 
-            ! METHODOLOGY EMPLOYED:
+    ! METHODOLOGY EMPLOYED:
 
-            ! REFERENCES:
+    ! REFERENCES:
 
-            ! USE STATEMENTS:
+    ! USE STATEMENTS:
 
     IMPLICIT NONE
 
@@ -82,17 +82,17 @@ MODULE ReturnAirPathManager
   END SUBROUTINE SimReturnAirPath
 
   SUBROUTINE GetReturnAirPathInput
-            ! SUBROUTINE INFORMATION:
-            !       AUTHOR:          Russ Taylor
-            !       DATE WRITTEN:    Nov 1997
+    ! SUBROUTINE INFORMATION:
+    !       AUTHOR:          Russ Taylor
+    !       DATE WRITTEN:    Nov 1997
 
-            ! PURPOSE OF THIS SUBROUTINE: This subroutine
+    ! PURPOSE OF THIS SUBROUTINE: This subroutine
 
-            ! METHODOLOGY EMPLOYED:
+    ! METHODOLOGY EMPLOYED:
 
-            ! REFERENCES:
+    ! REFERENCES:
 
-            ! USE STATEMENTS:
+    ! USE STATEMENTS:
 
     USE InputProcessor, ONLY: GetNumObjectsFound,GetObjectItem,VerifyName, SameString
     USE DataIPShortCuts
@@ -124,12 +124,12 @@ MODULE ReturnAirPathManager
       DO PathNum = 1,  NumReturnAirPaths
 
         CALL GetObjectItem(TRIM(cCurrentModuleObject),PathNum,cAlphaArgs,NumAlphas, &
-                           rNumericArgs,NumNums,IOSTAT)
+        rNumericArgs,NumNums,IOSTAT)
 
         IsNotOK=.false.
         IsBlank=.false.
         CALL VerifyName(cAlphaArgs(1),ReturnAirPath%Name,PathNum-1,IsNotOK,IsBlank,&
-                               TRIM(cCurrentModuleObject)//' Name')
+        TRIM(cCurrentModuleObject)//' Name')
         IF (IsNotOK) THEN
           ErrorsFound=.true.
           IF (IsBlank) cAlphaArgs(1)='xxxxx'
@@ -138,8 +138,8 @@ MODULE ReturnAirPathManager
         ReturnAirPath(PathNum)%NumOfComponents = NINT((NumAlphas - 2.) / 2.)
 
         ReturnAirPath(PathNum)%OutletNodeNum  = &
-               GetOnlySingleNode(cAlphaArgs(2),ErrorsFound,TRIM(cCurrentModuleObject),cAlphaArgs(1), &
-               NodeType_Air,NodeConnectionType_Outlet,1,ObjectIsParent)
+        GetOnlySingleNode(cAlphaArgs(2),ErrorsFound,TRIM(cCurrentModuleObject),cAlphaArgs(1), &
+        NodeType_Air,NodeConnectionType_Outlet,1,ObjectIsParent)
 
         ALLOCATE(ReturnAirPath(PathNum)%ComponentType(ReturnAirPath(PathNum)%NumOfComponents))
         ReturnAirPath(PathNum)%ComponentType=' '
@@ -154,138 +154,138 @@ MODULE ReturnAirPathManager
         DO CompNum = 1, ReturnAirPath(PathNum)%NumOfComponents
 
           IF ( ( SameString(cAlphaArgs(Counter) , 'AirLoopHVAC:ZoneMixer')) .OR. &
-               ( SameString(cAlphaArgs(Counter) , 'AirLoopHVAC:ReturnPlenum')) ) THEN
+          ( SameString(cAlphaArgs(Counter) , 'AirLoopHVAC:ReturnPlenum')) ) THEN
 
-            ReturnAirPath(PathNum)%ComponentType(CompNum) = cAlphaArgs(Counter)
-            ReturnAirPath(PathNum)%ComponentName(CompNum) = cAlphaArgs(Counter+1)
-            CALL ValidateComponent(ReturnAirPath(PathNum)%ComponentType(CompNum),  &
-                                   ReturnAirPath(PathNum)%ComponentName(CompNum),  &
-                                   IsNotOK,'AirLoopHVAC:ReturnPath')
-            IF (IsNotOK) THEN
-              CALL ShowContinueError('In AirLoopHVAC:ReturnPath ='//TRIM(ReturnAirPath(PathNum)%Name))
-              ErrorsFound=.true.
-            ENDIF
-            IF ( SameString(cAlphaArgs(Counter) , 'AirLoopHVAC:ZoneMixer')) &
-                              ReturnAirPath(PathNum)%ComponentType_Num(CompNum)=ZoneMixer_Type
-            IF (SameString(cAlphaArgs(Counter) , 'AirLoopHVAC:ReturnPlenum')) &
-                              ReturnAirPath(PathNum)%ComponentType_Num(CompNum)=ZoneReturnPlenum_Type
-          ELSE
-            CALL ShowSevereError('Unhandled component type in AirLoopHVAC:ReturnPath of '//TRIM(cAlphaArgs(Counter)))
-            CALL ShowContinueError('Occurs in AirLoopHVAC:ReturnPath = '//TRIM(ReturnAirPath(PathNum)%Name))
-            CALL ShowContinueError('Must be "AirLoopHVAC:ZoneMixer" or "AirLoopHVAC:ReturnPlenum"')
-            ErrorsFound = .TRUE.
+          ReturnAirPath(PathNum)%ComponentType(CompNum) = cAlphaArgs(Counter)
+          ReturnAirPath(PathNum)%ComponentName(CompNum) = cAlphaArgs(Counter+1)
+          CALL ValidateComponent(ReturnAirPath(PathNum)%ComponentType(CompNum),  &
+          ReturnAirPath(PathNum)%ComponentName(CompNum),  &
+          IsNotOK,'AirLoopHVAC:ReturnPath')
+          IF (IsNotOK) THEN
+            CALL ShowContinueError('In AirLoopHVAC:ReturnPath ='//TRIM(ReturnAirPath(PathNum)%Name))
+            ErrorsFound=.true.
           ENDIF
+          IF ( SameString(cAlphaArgs(Counter) , 'AirLoopHVAC:ZoneMixer')) &
+          ReturnAirPath(PathNum)%ComponentType_Num(CompNum)=ZoneMixer_Type
+          IF (SameString(cAlphaArgs(Counter) , 'AirLoopHVAC:ReturnPlenum')) &
+          ReturnAirPath(PathNum)%ComponentType_Num(CompNum)=ZoneReturnPlenum_Type
+        ELSE
+          CALL ShowSevereError('Unhandled component type in AirLoopHVAC:ReturnPath of '//TRIM(cAlphaArgs(Counter)))
+          CALL ShowContinueError('Occurs in AirLoopHVAC:ReturnPath = '//TRIM(ReturnAirPath(PathNum)%Name))
+          CALL ShowContinueError('Must be "AirLoopHVAC:ZoneMixer" or "AirLoopHVAC:ReturnPlenum"')
+          ErrorsFound = .TRUE.
+        ENDIF
 
-          Counter=Counter+2
-
-        END DO
-
-      END DO
-
-    ENDIF
-
-    IF (ErrorsFound) THEN
-      CALL ShowFatalError('Errors found getting AirLoopHVAC:ReturnPath.  Preceding condition(s) causes termination.')
-    ENDIF
-
-    RETURN
-  END SUBROUTINE GetReturnAirPathInput
-
-  SUBROUTINE InitReturnAirPath(ReturnAirPathNum)    !RS: Debugging: Extraneous subroutine! It doesn't do anything
-            ! SUBROUTINE INFORMATION:
-            !       AUTHOR:          Russ Taylor
-            !       DATE WRITTEN:    Nov 1997
-
-            ! PURPOSE OF THIS SUBROUTINE: This subroutine
-
-            ! METHODOLOGY EMPLOYED:
-
-            ! REFERENCES:
-
-            ! USE STATEMENTS:
-
-    IMPLICIT NONE
-
-    INTEGER :: ReturnAirPathNum !unused1208
-
-    RETURN
-  END SUBROUTINE InitReturnAirPath
-
-  SUBROUTINE CalcReturnAirPath(ReturnAirPathNum)
-            ! SUBROUTINE INFORMATION:
-            !       AUTHOR:          Russ Taylor
-            !       DATE WRITTEN:    Nov 1997
-
-            ! PURPOSE OF THIS SUBROUTINE: This subroutine
-
-            ! METHODOLOGY EMPLOYED:
-
-            ! REFERENCES:
-
-            ! USE STATEMENTS:
-
-    USE MixerComponent, ONLY: SimAirMixer
-    USE ZonePlenum, ONLY: SimAirZonePlenum
-    USE DataAirflowNetwork, ONLY: SimulateAirflowNetwork,AirflowNetworkFanActivated,AirflowNetworkControlMultizone
-    USE DataHVACGlobals, ONLY: TurnFansOn
-
-    IMPLICIT NONE
-
-    INTEGER :: ReturnAirPathNum
-    INTEGER :: ComponentNum
-
-      DO ComponentNum = 1, ReturnAirPath(ReturnAirPathNum)%NumOfComponents
-
-        SELECT CASE (ReturnAirPath(ReturnAirPathNum)%ComponentType_Num(ComponentNum))
-
-        CASE(ZoneMixer_Type) ! 'AirLoopHVAC:ZoneMixer'
-
-          if (.NOT. (AirflowNetworkFanActivated .AND. SimulateAirflowNetwork .GT. AirflowNetworkControlMultizone)) then
-            CALL SimAirMixer(ReturnAirPath(ReturnAirPathNum)%ComponentName(ComponentNum),  &
-                             CompIndex=ReturnAirPath(ReturnAirPathNum)%ComponentIndex(ComponentNum))
-          endif
-
-        CASE(ZoneReturnPlenum_Type) ! 'AirLoopHVAC:ReturnPlenum'
-
-          CALL SimAirZonePlenum(ReturnAirPath(ReturnAirPathNum)%ComponentName(ComponentNum),ZoneReturnPlenum_Type,  &
-                                ReturnAirPath(ReturnAirPathNum)%ComponentIndex(ComponentNum))
-
-        CASE DEFAULT
-          CALL ShowSevereError('Invalid AirLoopHVAC:ReturnPath Component='//  &
-                              TRIM(ReturnAirPath(ReturnAirPathNum)%ComponentType(ComponentNum)))
-          CALL ShowContinueError('Occurs in AirLoopHVAC:ReturnPath ='//TRIM(ReturnAirPath(ReturnAirPathNum)%Name))
-          CALL ShowFatalError('Preceding condition causes termination.')
-
-        END SELECT
+        Counter=Counter+2
 
       END DO
 
-    RETURN
-  END SUBROUTINE CalcReturnAirPath
+    END DO
 
-  SUBROUTINE ReportReturnAirPath(ReturnAirPathNum)  !RS: Debugging: Extraneous subroutine! It doesn't do anything
-            ! SUBROUTINE INFORMATION:
-            !       AUTHOR:          Russ Taylor
-            !       DATE WRITTEN:    Nov 1997
+  ENDIF
 
-            ! PURPOSE OF THIS SUBROUTINE: This subroutine
+  IF (ErrorsFound) THEN
+    CALL ShowFatalError('Errors found getting AirLoopHVAC:ReturnPath.  Preceding condition(s) causes termination.')
+  ENDIF
 
-            ! METHODOLOGY EMPLOYED:
+  RETURN
+END SUBROUTINE GetReturnAirPathInput
 
-            ! REFERENCES:
+SUBROUTINE InitReturnAirPath(ReturnAirPathNum)    !RS: Debugging: Extraneous subroutine! It doesn't do anything
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR:          Russ Taylor
+  !       DATE WRITTEN:    Nov 1997
 
-            ! USE STATEMENTS:
+  ! PURPOSE OF THIS SUBROUTINE: This subroutine
 
-    IMPLICIT NONE
+  ! METHODOLOGY EMPLOYED:
 
-    INTEGER :: ReturnAirPathNum !unused1208
+  ! REFERENCES:
 
-    RETURN
-  END SUBROUTINE ReportReturnAirPath
+  ! USE STATEMENTS:
+
+  IMPLICIT NONE
+
+  INTEGER :: ReturnAirPathNum !unused1208
+
+  RETURN
+END SUBROUTINE InitReturnAirPath
+
+SUBROUTINE CalcReturnAirPath(ReturnAirPathNum)
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR:          Russ Taylor
+  !       DATE WRITTEN:    Nov 1997
+
+  ! PURPOSE OF THIS SUBROUTINE: This subroutine
+
+  ! METHODOLOGY EMPLOYED:
+
+  ! REFERENCES:
+
+  ! USE STATEMENTS:
+
+  USE MixerComponent, ONLY: SimAirMixer
+  USE ZonePlenum, ONLY: SimAirZonePlenum
+  USE DataAirflowNetwork, ONLY: SimulateAirflowNetwork,AirflowNetworkFanActivated,AirflowNetworkControlMultizone
+  USE DataHVACGlobals, ONLY: TurnFansOn
+
+  IMPLICIT NONE
+
+  INTEGER :: ReturnAirPathNum
+  INTEGER :: ComponentNum
+
+  DO ComponentNum = 1, ReturnAirPath(ReturnAirPathNum)%NumOfComponents
+
+    SELECT CASE (ReturnAirPath(ReturnAirPathNum)%ComponentType_Num(ComponentNum))
+
+    CASE(ZoneMixer_Type) ! 'AirLoopHVAC:ZoneMixer'
+
+      if (.NOT. (AirflowNetworkFanActivated .AND. SimulateAirflowNetwork .GT. AirflowNetworkControlMultizone)) then
+        CALL SimAirMixer(ReturnAirPath(ReturnAirPathNum)%ComponentName(ComponentNum),  &
+        CompIndex=ReturnAirPath(ReturnAirPathNum)%ComponentIndex(ComponentNum))
+      endif
+
+    CASE(ZoneReturnPlenum_Type) ! 'AirLoopHVAC:ReturnPlenum'
+
+      CALL SimAirZonePlenum(ReturnAirPath(ReturnAirPathNum)%ComponentName(ComponentNum),ZoneReturnPlenum_Type,  &
+      ReturnAirPath(ReturnAirPathNum)%ComponentIndex(ComponentNum))
+
+    CASE DEFAULT
+      CALL ShowSevereError('Invalid AirLoopHVAC:ReturnPath Component='//  &
+      TRIM(ReturnAirPath(ReturnAirPathNum)%ComponentType(ComponentNum)))
+      CALL ShowContinueError('Occurs in AirLoopHVAC:ReturnPath ='//TRIM(ReturnAirPath(ReturnAirPathNum)%Name))
+      CALL ShowFatalError('Preceding condition causes termination.')
+
+    END SELECT
+
+  END DO
+
+  RETURN
+END SUBROUTINE CalcReturnAirPath
+
+SUBROUTINE ReportReturnAirPath(ReturnAirPathNum)  !RS: Debugging: Extraneous subroutine! It doesn't do anything
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR:          Russ Taylor
+  !       DATE WRITTEN:    Nov 1997
+
+  ! PURPOSE OF THIS SUBROUTINE: This subroutine
+
+  ! METHODOLOGY EMPLOYED:
+
+  ! REFERENCES:
+
+  ! USE STATEMENTS:
+
+  IMPLICIT NONE
+
+  INTEGER :: ReturnAirPathNum !unused1208
+
+  RETURN
+END SUBROUTINE ReportReturnAirPath
 
 !     NOTICE
 !
-!     Copyright © 1996-2012 The Board of Trustees of the University of Illinois
+!     Copyright ï¿½ 1996-2012 The Board of Trustees of the University of Illinois
 !     and The Regents of the University of California through Ernest Orlando Lawrence
 !     Berkeley National Laboratory.  All rights reserved.
 !

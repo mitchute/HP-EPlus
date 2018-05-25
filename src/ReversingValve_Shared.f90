@@ -13,13 +13,13 @@
 ! This represents a reversing valve in a heat pump system
 ! A description of the component is found at:
 ! http://en.wikipedia.org/wiki/Reversing_valve
-! From that website: 
+! From that website:
 !  - It changes the direction of refrigerant flow
 
 ! ************************************** !
 ! -- SIMULATION DATA RESPONSIBILITIES -- !
 ! -------------------------------------- !
-! This module takes the suction side properties and calculates heat transfer and pressure drop through the valve 
+! This module takes the suction side properties and calculates heat transfer and pressure drop through the valve
 
 ! ************************************** !
 ! -- INPUT FILES/OUTPUT FILES (none) --- !
@@ -58,77 +58,77 @@
 !
 MODULE ReversingValveMod
 
-IMPLICIT NONE
+  IMPLICIT NONE
 
-!------------------------------------------------------------------------------
-!
-!The reversing valve model from York empirical data
-!Reference:
-!Damasceno G D S, Lee W N T, Rooke S P., Goldschmidt V W. 
-!"Performance of a heat pump reversing valves and comparison through 
-!characterising parameters." ASHRAE Transactions, 1988, Vol 94, Part 1, 
-!pp. 304-317
-!
-!Written by IPSENG IU
-!July 2007
-!
-!------------------------------------------------------------------------------
+  !------------------------------------------------------------------------------
+  !
+  !The reversing valve model from York empirical data
+  !Reference:
+  !Damasceno G D S, Lee W N T, Rooke S P., Goldschmidt V W.
+  !"Performance of a heat pump reversing valves and comparison through
+  !characterising parameters." ASHRAE Transactions, 1988, Vol 94, Part 1,
+  !pp. 304-317
+  !
+  !Written by IPSENG IU
+  !July 2007
+  !
+  !------------------------------------------------------------------------------
 
-PUBLIC SuctionHeatTransfer
-PUBLIC SuctionPressureDrop
+  PUBLIC SuctionHeatTransfer
+  PUBLIC SuctionPressureDrop
 
 CONTAINS
 
-!------------------------------------------------------------------------------
+  !------------------------------------------------------------------------------
 
-SUBROUTINE SuctionHeatTransfer(mdot,Tdis,Tsuc,hsi,hso)
+  SUBROUTINE SuctionHeatTransfer(mdot,Tdis,Tsuc,hsi,hso)
 
-!Calculate heat gain at suction side
+    !Calculate heat gain at suction side
 
-IMPLICIT NONE
+    IMPLICIT NONE
 
-REAL, INTENT(IN) :: mdot !refrigerant mass flow rate, kg/s
-REAL, INTENT(IN) :: Tdis !Discharge temperature, C
-REAL, INTENT(IN) :: Tsuc !Suction temperature, C
-REAL, INTENT(IN) :: hsi !Suction inlet enthalpy, kJ/kg
-REAL, INTENT(OUT) :: hso !Suction outlet enthalpy, kJ/kg
+    REAL, INTENT(IN) :: mdot !refrigerant mass flow rate, kg/s
+    REAL, INTENT(IN) :: Tdis !Discharge temperature, C
+    REAL, INTENT(IN) :: Tsuc !Suction temperature, C
+    REAL, INTENT(IN) :: hsi !Suction inlet enthalpy, kJ/kg
+    REAL, INTENT(OUT) :: hso !Suction outlet enthalpy, kJ/kg
 
-REAL :: UA !Overall heat transfer coefficient, kW/K
+    REAL :: UA !Overall heat transfer coefficient, kW/K
 
-UA = 0.1541*mdot - 0.002    !RS Comment: What are the values from?
-IF (UA .LT. 0) THEN
-    UA=0
-END IF
+    UA = 0.1541*mdot - 0.002    !RS Comment: What are the values from?
+    IF (UA .LT. 0) THEN
+      UA=0
+    END IF
 
-hso=UA*(Tdis-Tsuc)/mdot+hsi
+    hso=UA*(Tdis-Tsuc)/mdot+hsi
 
-hso = hsi   !RS: Comment: Added by John Gall (1/9/14) for the cooling-only system
-!RS: This may not be necessary; it may be possible to just not call these routines (1/10/14)
+    hso = hsi   !RS: Comment: Added by John Gall (1/9/14) for the cooling-only system
+    !RS: This may not be necessary; it may be possible to just not call these routines (1/10/14)
 
-END SUBROUTINE SuctionHeatTransfer
+  END SUBROUTINE SuctionHeatTransfer
 
-!------------------------------------------------------------------------------
+  !------------------------------------------------------------------------------
 
-SUBROUTINE SuctionPressureDrop(mdot,DP)
+  SUBROUTINE SuctionPressureDrop(mdot,DP)
 
-!Calculate suction side pressure drop
+    !Calculate suction side pressure drop
 
-IMPLICIT NONE
+    IMPLICIT NONE
 
-REAL, INTENT(IN) :: mdot !Refrigerant mass flow rate, kg/s
-REAL, INTENT(OUT) :: DP !Pressure drop kPa
+    REAL, INTENT(IN) :: mdot !Refrigerant mass flow rate, kg/s
+    REAL, INTENT(OUT) :: DP !Pressure drop kPa
 
-DP = 327.69*mdot + 3.9633   !RS Comment: What are the values from?
+    DP = 327.69*mdot + 3.9633   !RS Comment: What are the values from?
 
-IF (DP .LT. 0) THEN
-    DP = 0
-END IF
+    IF (DP .LT. 0) THEN
+      DP = 0
+    END IF
 
-DP = 0  !RS: Comment: Added by John Gall (1/9/14) for the cooling-only system
-!RS: This may not be necessary; it may be possible to just not call these routines (1/10/14)
+    DP = 0  !RS: Comment: Added by John Gall (1/9/14) for the cooling-only system
+    !RS: This may not be necessary; it may be possible to just not call these routines (1/10/14)
 
-END SUBROUTINE SuctionPressureDrop
+  END SUBROUTINE SuctionPressureDrop
 
-!------------------------------------------------------------------------------
+  !------------------------------------------------------------------------------
 
 END MODULE ReversingValveMod

@@ -1,61 +1,61 @@
 MODULE HVACDuct
 
-          ! Module containing the routines dealing with the Duct component
-          ! in forced air air conditioning systems
+  ! Module containing the routines dealing with the Duct component
+  ! in forced air air conditioning systems
 
-          ! MODULE INFORMATION:
-          !       AUTHOR         Fred Buhl
-          !       DATE WRITTEN   17May2005
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! MODULE INFORMATION:
+  !       AUTHOR         Fred Buhl
+  !       DATE WRITTEN   17May2005
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS MODULE:
-          ! To encapsulate the data and routines required to model duct
-          ! components in the EnergyPlus HVAC simulation
+  ! PURPOSE OF THIS MODULE:
+  ! To encapsulate the data and routines required to model duct
+  ! components in the EnergyPlus HVAC simulation
 
-          ! METHODOLOGY EMPLOYED:
-          ! At this point ducts are passive elements in the loop that just pass inlet node
-          ! conditions to the outlet node. The function of a duct component is to allow the
-          ! definition of a bypass branch: a branch must contain at least 1 component.
+  ! METHODOLOGY EMPLOYED:
+  ! At this point ducts are passive elements in the loop that just pass inlet node
+  ! conditions to the outlet node. The function of a duct component is to allow the
+  ! definition of a bypass branch: a branch must contain at least 1 component.
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! OTHER NOTES:
-          ! na
+  ! OTHER NOTES:
+  ! na
 
-          ! USE STATEMENTS:
-          ! <use statements for data only modules>
+  ! USE STATEMENTS:
+  ! <use statements for data only modules>
   USE DataPrecisionGlobals
   USE DataGlobals_HPSimIntegrated, ONLY: MaxNameLength, BeginEnvrnFlag !, ShowWarningError, ShowSevereError, ShowFatalError, ShowContinueError
   USE DataInterfaces, ONLY: SetupOutputVariable
   USE DataHVACGlobals
   USE DataLoopNode
 
-          ! <use statements for access to subroutines in other modules>
+  ! <use statements for access to subroutines in other modules>
 
   IMPLICIT NONE ! Enforce explicit typing of all variables
 
   PRIVATE ! Everything private unless explicitly made public
 
-          ! MODULE PARAMETER DEFINITIONS:
-          ! na
+  ! MODULE PARAMETER DEFINITIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
+  ! DERIVED TYPE DEFINITIONS:
   TYPE DuctData
     CHARACTER(len=MaxNameLength)           :: Name = ' '        ! duct unique name
     INTEGER                                :: InletNodeNum = 0  ! inlet node number
     INTEGER                                :: OutletNodeNum = 0 ! outlet node number
   END TYPE DuctData
 
-          ! MODULE VARIABLE DECLARATIONS:
+  ! MODULE VARIABLE DECLARATIONS:
   INTEGER                                    :: NumDucts = 0
   TYPE (DuctData), ALLOCATABLE, DIMENSION(:) :: Duct
   LOGICAL, ALLOCATABLE, DIMENSION(:) :: CheckEquipName
 
-          ! SUBROUTINE SPECIFICATIONS FOR MODULE HVACDuct:
+  ! SUBROUTINE SPECIFICATIONS FOR MODULE HVACDuct:
 
-          ! <name Public routines, optionally name Private routines within this module>
+  ! <name Public routines, optionally name Private routines within this module>
 
   PUBLIC  SimDuct
   PRIVATE GetDuctInput
@@ -65,407 +65,406 @@ MODULE HVACDuct
 
 CONTAINS
 
-SUBROUTINE SimDuct(CompName,FirstHVACIteration,CompIndex)
+  SUBROUTINE SimDuct(CompName,FirstHVACIteration,CompIndex)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Fred Buhl
-          !       DATE WRITTEN   17May2005
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+    ! SUBROUTINE INFORMATION:
+    !       AUTHOR         Fred Buhl
+    !       DATE WRITTEN   17May2005
+    !       MODIFIED       na
+    !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Manage the simulation of a duct component
+    ! PURPOSE OF THIS SUBROUTINE:
+    ! Manage the simulation of a duct component
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+    ! METHODOLOGY EMPLOYED:
+    ! na
 
-          ! REFERENCES:
-          ! na
+    ! REFERENCES:
+    ! na
 
-          ! USE STATEMENTS:
-  USE InputProcessor, ONLY: FindItemInList
-  USE General, ONLY:        TrimSigDigits
+    ! USE STATEMENTS:
+    USE InputProcessor, ONLY: FindItemInList
+    USE General, ONLY:        TrimSigDigits
 
-  IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
+    IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-  CHARACTER(len=*), INTENT (IN)    :: CompName            ! name of the duct component
-  LOGICAL,          INTENT (IN)    :: FirstHVACIteration  ! TRUE if 1st HVAC simulation of system timestep !unused1208
-  INTEGER,          INTENT (INOUT) :: CompIndex           ! index of duct component
+    ! SUBROUTINE ARGUMENT DEFINITIONS:
+    CHARACTER(len=*), INTENT (IN)    :: CompName            ! name of the duct component
+    LOGICAL,          INTENT (IN)    :: FirstHVACIteration  ! TRUE if 1st HVAC simulation of system timestep !unused1208
+    INTEGER,          INTENT (INOUT) :: CompIndex           ! index of duct component
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+    ! SUBROUTINE PARAMETER DEFINITIONS:
+    ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+    ! INTERFACE BLOCK SPECIFICATIONS:
+    ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+    ! DERIVED TYPE DEFINITIONS:
+    ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-  LOGICAL,SAVE      :: GetInputFlag = .true.  ! First time, input is "gotten"
-  INTEGER      :: DuctNum                     ! index of duct being simulated
+    ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+    LOGICAL,SAVE      :: GetInputFlag = .true.  ! First time, input is "gotten"
+    INTEGER      :: DuctNum                     ! index of duct being simulated
 
-  IF (GetInputFlag) THEN
-    CALL GetDuctInput
-    GetInputFlag=.false.
-  ENDIF
-
-  ! Get the duct component index
-  IF (CompIndex == 0) THEN
-    DuctNum = FindItemInList(CompName,Duct%Name,NumDucts)
-    IF (DuctNum == 0) THEN
-      CALL ShowFatalError('SimDuct: Component not found='//TRIM(CompName))
+    IF (GetInputFlag) THEN
+      CALL GetDuctInput
+      GetInputFlag=.false.
     ENDIF
-    CompIndex=DuctNum
-  ELSE
-    DuctNum=CompIndex
-    IF (DuctNum > NumDucts .or. DuctNum < 1) THEN
-      CALL ShowFatalError('SimDuct:  Invalid CompIndex passed='//  &
-                          TRIM(TrimSigDigits(DuctNum))// &
-                          ', Number of Components='//TRIM(TrimSigDigits(NumDucts))//  &
-                          ', Entered Component name='//TRIM(CompName))
-    ENDIF
-    IF (CheckEquipName(DuctNum)) THEN
-      IF (CompName /= Duct(DuctNum)%Name) THEN
-        CALL ShowFatalError('SimDuct: Invalid CompIndex passed='//  &
-                            TRIM(TrimSigDigits(DuctNum))// &
-                            ', Component name='//TRIM(CompName)//', stored Component Name for that index='//  &
-                            TRIM(Duct(DuctNum)%Name))
+
+    ! Get the duct component index
+    IF (CompIndex == 0) THEN
+      DuctNum = FindItemInList(CompName,Duct%Name,NumDucts)
+      IF (DuctNum == 0) THEN
+        CALL ShowFatalError('SimDuct: Component not found='//TRIM(CompName))
       ENDIF
-      CheckEquipName(DuctNum)=.false.
+      CompIndex=DuctNum
+    ELSE
+      DuctNum=CompIndex
+      IF (DuctNum > NumDucts .or. DuctNum < 1) THEN
+        CALL ShowFatalError('SimDuct:  Invalid CompIndex passed='//  &
+        TRIM(TrimSigDigits(DuctNum))// &
+        ', Number of Components='//TRIM(TrimSigDigits(NumDucts))//  &
+        ', Entered Component name='//TRIM(CompName))
+      ENDIF
+      IF (CheckEquipName(DuctNum)) THEN
+        IF (CompName /= Duct(DuctNum)%Name) THEN
+          CALL ShowFatalError('SimDuct: Invalid CompIndex passed='//  &
+          TRIM(TrimSigDigits(DuctNum))// &
+          ', Component name='//TRIM(CompName)//', stored Component Name for that index='//  &
+          TRIM(Duct(DuctNum)%Name))
+        ENDIF
+        CheckEquipName(DuctNum)=.false.
+      ENDIF
     ENDIF
-  ENDIF
 
-  CALL InitDuct(DuctNum)
+    CALL InitDuct(DuctNum)
 
-  CALL CalcDuct(DuctNum)
+    CALL CalcDuct(DuctNum)
 
-  CALL UpdateDuct(DuctNum)
+    CALL UpdateDuct(DuctNum)
 
-  CALL ReportDuct(DuctNum)
+    CALL ReportDuct(DuctNum)
 
-  RETURN
+    RETURN
 
-END SUBROUTINE SimDuct
+  END SUBROUTINE SimDuct
 
-SUBROUTINE GetDuctInput
+  SUBROUTINE GetDuctInput
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Fred Buhl
-          !       DATE WRITTEN   17May2005
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+    ! SUBROUTINE INFORMATION:
+    !       AUTHOR         Fred Buhl
+    !       DATE WRITTEN   17May2005
+    !       MODIFIED       na
+    !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Obtains input data for ducts and stores it in duct data structures.
+    ! PURPOSE OF THIS SUBROUTINE:
+    ! Obtains input data for ducts and stores it in duct data structures.
 
-          ! METHODOLOGY EMPLOYED:
-          ! Uses InputProcessor "Get" routines to obtain data.
+    ! METHODOLOGY EMPLOYED:
+    ! Uses InputProcessor "Get" routines to obtain data.
 
-          ! REFERENCES:
-          ! na
+    ! REFERENCES:
+    ! na
 
-          ! USE STATEMENTS:
-  USE InputProcessor, ONLY: GetNumObjectsFound, GetObjectItem, VerifyName
-  USE NodeInputManager, ONLY: GetOnlySingleNode
-  USE BranchNodeConnections, ONLY: TestCompSet
-  USE DataIPShortCuts
+    ! USE STATEMENTS:
+    USE InputProcessor, ONLY: GetNumObjectsFound, GetObjectItem, VerifyName
+    USE NodeInputManager, ONLY: GetOnlySingleNode
+    USE BranchNodeConnections, ONLY: TestCompSet
+    USE DataIPShortCuts
 
-  IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
+    IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-          ! na
+    ! SUBROUTINE ARGUMENT DEFINITIONS:
+    ! na
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+    ! SUBROUTINE PARAMETER DEFINITIONS:
+    ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+    ! INTERFACE BLOCK SPECIFICATIONS:
+    ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+    ! DERIVED TYPE DEFINITIONS:
+    ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-  INTEGER                        :: DuctNum    ! duct index
-  CHARACTER(len=*), PARAMETER    :: RoutineName='GetDuctInput:'
-  INTEGER                        :: NumAlphas  ! Number of Alphas for each GetObjectItem call
-  INTEGER                        :: NumNumbers ! Number of Numbers for each GetObjectItem call
-  INTEGER                        :: IOStatus   ! Used in GetObjectItem
-  LOGICAL                        :: ErrorsFound=.false.  ! Set to true if errors in input, fatal at end of routine
-  LOGICAL                        :: IsNotOK              ! Flag to verify name
-  LOGICAL                        :: IsBlank              ! Flag for blank name
+    ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+    INTEGER                        :: DuctNum    ! duct index
+    CHARACTER(len=*), PARAMETER    :: RoutineName='GetDuctInput:'
+    INTEGER                        :: NumAlphas  ! Number of Alphas for each GetObjectItem call
+    INTEGER                        :: NumNumbers ! Number of Numbers for each GetObjectItem call
+    INTEGER                        :: IOStatus   ! Used in GetObjectItem
+    LOGICAL                        :: ErrorsFound=.false.  ! Set to true if errors in input, fatal at end of routine
+    LOGICAL                        :: IsNotOK              ! Flag to verify name
+    LOGICAL                        :: IsBlank              ! Flag for blank name
 
-  cCurrentModuleObject='Duct'
-  NumDucts = GetNumObjectsFound(TRIM(cCurrentModuleObject))
-  ALLOCATE(Duct(NumDucts))
-  ALLOCATE(CheckEquipName(NumDucts))
-  CheckEquipName=.true.
+    cCurrentModuleObject='Duct'
+    NumDucts = GetNumObjectsFound(TRIM(cCurrentModuleObject))
+    ALLOCATE(Duct(NumDucts))
+    ALLOCATE(CheckEquipName(NumDucts))
+    CheckEquipName=.true.
 
-  DO DuctNum=1,NumDucts
-    CALL GetObjectItem(TRIM(cCurrentModuleObject),DuctNum,cAlphaArgs,NumAlphas,rNumericArgs,NumNumbers,IOStatus,  &
-                       NumBlank=lNumericFieldBlanks,AlphaBlank=lAlphaFieldBlanks, &
-                       AlphaFieldNames=cAlphaFieldNames,NumericFieldNames=cNumericFieldNames)
-    IsNotOK=.FALSE.
-    IsBlank=.FALSE.
-    CALL VerifyName(cAlphaArgs(1),Duct%Name,DuctNum-1,IsNotOK,IsBlank,TRIM(cCurrentModuleObject)//' Name')
-    IF (IsNotOK) THEN
-      ErrorsFound=.true.
-      IF (IsBlank) cAlphaArgs(1)='xxxxx'
+    DO DuctNum=1,NumDucts
+      CALL GetObjectItem(TRIM(cCurrentModuleObject),DuctNum,cAlphaArgs,NumAlphas,rNumericArgs,NumNumbers,IOStatus,  &
+      NumBlank=lNumericFieldBlanks,AlphaBlank=lAlphaFieldBlanks, &
+      AlphaFieldNames=cAlphaFieldNames,NumericFieldNames=cNumericFieldNames)
+      IsNotOK=.FALSE.
+      IsBlank=.FALSE.
+      CALL VerifyName(cAlphaArgs(1),Duct%Name,DuctNum-1,IsNotOK,IsBlank,TRIM(cCurrentModuleObject)//' Name')
+      IF (IsNotOK) THEN
+        ErrorsFound=.true.
+        IF (IsBlank) cAlphaArgs(1)='xxxxx'
+      ENDIF
+      Duct(DuctNum)%Name = cAlphaArgs(1)
+      Duct(DuctNum)%InletNodeNum = &
+      GetOnlySingleNode(cAlphaArgs(2),ErrorsFound,TRIM(cCurrentModuleObject),cAlphaArgs(1), &
+      NodeType_Air,NodeConnectionType_Inlet,1,ObjectIsNotParent)
+      Duct(DuctNum)%OutletNodeNum = &
+      GetOnlySingleNode(cAlphaArgs(3),ErrorsFound,TRIM(cCurrentModuleObject),cAlphaArgs(1), &
+      NodeType_Air,NodeConnectionType_Outlet,1,ObjectIsNotParent)
+      CALL TestCompSet(TRIM(cCurrentModuleObject),cAlphaArgs(1),cAlphaArgs(2),cAlphaArgs(3),'Air Nodes')
+    ENDDO
+
+    ! No output variables
+
+    IF (ErrorsFound) THEN
+      CALL ShowFatalError(RoutineName//' Errors found in input')
     ENDIF
-    Duct(DuctNum)%Name = cAlphaArgs(1)
-    Duct(DuctNum)%InletNodeNum = &
-               GetOnlySingleNode(cAlphaArgs(2),ErrorsFound,TRIM(cCurrentModuleObject),cAlphaArgs(1), &
-               NodeType_Air,NodeConnectionType_Inlet,1,ObjectIsNotParent)
-    Duct(DuctNum)%OutletNodeNum = &
-               GetOnlySingleNode(cAlphaArgs(3),ErrorsFound,TRIM(cCurrentModuleObject),cAlphaArgs(1), &
-               NodeType_Air,NodeConnectionType_Outlet,1,ObjectIsNotParent)
-    CALL TestCompSet(TRIM(cCurrentModuleObject),cAlphaArgs(1),cAlphaArgs(2),cAlphaArgs(3),'Air Nodes')
-  ENDDO
 
-  ! No output variables
+    RETURN
 
-  IF (ErrorsFound) THEN
-    CALL ShowFatalError(RoutineName//' Errors found in input')
-  ENDIF
+  END SUBROUTINE GetDuctInput
 
-  RETURN
+  SUBROUTINE InitDuct(DuctNum)
 
-END SUBROUTINE GetDuctInput
+    ! SUBROUTINE INFORMATION:
+    !       AUTHOR         Fred Buhl
+    !       DATE WRITTEN   17May2005
+    !       MODIFIED       na
+    !       RE-ENGINEERED  na
 
-SUBROUTINE InitDuct(DuctNum)
+    ! PURPOSE OF THIS SUBROUTINE:
+    ! This subroutine is for initializations of the Duct Components
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Fred Buhl
-          !       DATE WRITTEN   17May2005
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+    ! METHODOLOGY EMPLOYED:
+    ! Uses the status flags to trigger initializations
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine is for initializations of the Duct Components
+    ! REFERENCES:
+    ! na
 
-          ! METHODOLOGY EMPLOYED:
-          ! Uses the status flags to trigger initializations
+    ! USE STATEMENTS:
+    ! na
 
-          ! REFERENCES:
-          ! na
+    IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! USE STATEMENTS:
-          ! na
+    ! SUBROUTINE ARGUMENT DEFINITIONS:
+    INTEGER, INTENT (IN) :: DuctNum ! number of the current duct being simulated
 
-  IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
+    ! SUBROUTINE PARAMETER DEFINITIONS:
+    ! na
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-  INTEGER, INTENT (IN) :: DuctNum ! number of the current duct being simulated
+    ! INTERFACE BLOCK SPECIFICATIONS
+    ! na
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+    ! DERIVED TYPE DEFINITIONS
+    ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+    ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+    LOGICAL,SAVE        :: MyOneTimeFlag = .true.
+    LOGICAL, ALLOCATABLE,Save, DIMENSION(:) :: MyEnvrnFlag
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+    ! do one time initializations
+    IF (MyOneTimeFlag) THEN
+      ! initialize the environment and sizing flags
+      ALLOCATE(MyEnvrnFlag(NumDucts))
+      MyEnvrnFlag = .TRUE.
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-  LOGICAL,SAVE        :: MyOneTimeFlag = .true.
-  LOGICAL, ALLOCATABLE,Save, DIMENSION(:) :: MyEnvrnFlag
+      MyOneTimeFlag = .false.
 
-  ! do one time initializations
-  IF (MyOneTimeFlag) THEN
-    ! initialize the environment and sizing flags
-    ALLOCATE(MyEnvrnFlag(NumDucts))
-    MyEnvrnFlag = .TRUE.
+    END IF
 
-    MyOneTimeFlag = .false.
+    ! Do the Begin Environment initializations
+    IF (BeginEnvrnFlag .and. MyEnvrnFlag(DuctNum)) THEN
 
-  END IF
+    END IF
 
-  ! Do the Begin Environment initializations
-  IF (BeginEnvrnFlag .and. MyEnvrnFlag(DuctNum)) THEN
 
-  END IF
+    IF (.not. BeginEnvrnFlag) THEN
+      MyEnvrnFlag(DuctNum)=.true.
+    ENDIF
 
+    ! do these initializations every HVAC time step
 
-  IF (.not. BeginEnvrnFlag) THEN
-    MyEnvrnFlag(DuctNum)=.true.
-  ENDIF
+    RETURN
 
-  ! do these initializations every HVAC time step
+  END SUBROUTINE InitDuct
 
-  RETURN
+  SUBROUTINE CalcDuct(DuctNum)    !RS: Debugging: Extraneous subroutine! It doesn't do anything
 
-END SUBROUTINE InitDuct
+    ! SUBROUTINE INFORMATION:
+    !       AUTHOR         Fred Buhl
+    !       DATE WRITTEN   17May2005
+    !       MODIFIED       na
+    !       RE-ENGINEERED  na
 
-SUBROUTINE CalcDuct(DuctNum)    !RS: Debugging: Extraneous subroutine! It doesn't do anything
+    ! PURPOSE OF THIS SUBROUTINE:
+    ! na
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Fred Buhl
-          !       DATE WRITTEN   17May2005
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+    ! METHODOLOGY EMPLOYED:
+    ! na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! na
+    ! REFERENCES:
+    ! na
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+    ! USE STATEMENTS:
+    ! na
 
-          ! REFERENCES:
-          ! na
+    IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! USE STATEMENTS:
-          ! na
+    ! SUBROUTINE ARGUMENT DEFINITIONS:
+    INTEGER, INTENT (IN) :: DuctNum ! number of the current duct being simulated !unused1208
 
-  IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
+    ! SUBROUTINE PARAMETER DEFINITIONS:
+    ! na
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-  INTEGER, INTENT (IN) :: DuctNum ! number of the current duct being simulated !unused1208
+    ! INTERFACE BLOCK SPECIFICATIONS:
+    ! na
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+    ! DERIVED TYPE DEFINITIONS:
+    ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+    ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+    ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+    RETURN
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-          ! na
+  END SUBROUTINE CalcDuct
 
-  RETURN
+  SUBROUTINE UpdateDuct(DuctNum)
 
-END SUBROUTINE CalcDuct
+    ! SUBROUTINE INFORMATION:
+    !       AUTHOR         Fred Buhl
+    !       DATE WRITTEN   17May2005
+    !       MODIFIED       na
+    !       RE-ENGINEERED  na
 
-SUBROUTINE UpdateDuct(DuctNum)
+    ! PURPOSE OF THIS SUBROUTINE:
+    ! Moves duct output to the outlet nodes
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Fred Buhl
-          !       DATE WRITTEN   17May2005
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+    ! METHODOLOGY EMPLOYED:
+    ! na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Moves duct output to the outlet nodes
+    ! REFERENCES:
+    ! na
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+    ! USE STATEMENTS:
+    USE DataContaminantBalance, ONLY: Contaminant
 
-          ! REFERENCES:
-          ! na
+    IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! USE STATEMENTS:
-  USE DataContaminantBalance, ONLY: Contaminant
+    ! SUBROUTINE ARGUMENT DEFINITIONS:
+    ! na
 
-  IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
+    ! SUBROUTINE PARAMETER DEFINITIONS:
+    INTEGER, INTENT (IN) :: DuctNum ! number of the current duct being simulated
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-          ! na
+    ! INTERFACE BLOCK SPECIFICATIONS:
+    ! na
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-  INTEGER, INTENT (IN) :: DuctNum ! number of the current duct being simulated
+    ! DERIVED TYPE DEFINITIONS:
+    ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+    ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+    INTEGER             :: InNode ! inlet node number
+    INTEGER             :: OutNode ! outlet node number
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+    InNode =Duct(DuctNum)%InletNodeNum
+    OutNode = Duct(DuctNum)%OutletNodeNum
+    ! Set the outlet air node conditions of the duct
+    Node(OutNode)%MassFlowRate        = Node(InNode)%MassFlowRate
+    Node(OutNode)%Temp                = Node(InNode)%Temp
+    Node(OutNode)%HumRat              = Node(InNode)%HumRat
+    Node(OutNode)%Enthalpy            = Node(InNode)%Enthalpy
+    Node(OutNode)%Quality             = Node(InNode)%Quality
+    Node(OutNode)%Press               = Node(InNode)%Press
+    Node(OutNode)%MassFlowRateMin     = Node(InNode)%MassFlowRateMin
+    Node(OutNode)%MassFlowRateMax     = Node(InNode)%MassFlowRateMax
+    Node(OutNode)%MassFlowRateMinAvail= Node(InNode)%MassFlowRateMinAvail
+    Node(OutNode)%MassFlowRateMaxAvail= Node(InNode)%MassFlowRateMaxAvail
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-  INTEGER             :: InNode ! inlet node number
-  INTEGER             :: OutNode ! outlet node number
+    IF (Contaminant%CO2Simulation) Then
+      Node(OutNode)%CO2 = Node(InNode)%CO2
+    End If
 
-  InNode =Duct(DuctNum)%InletNodeNum
-  OutNode = Duct(DuctNum)%OutletNodeNum
-  ! Set the outlet air node conditions of the duct
-  Node(OutNode)%MassFlowRate        = Node(InNode)%MassFlowRate
-  Node(OutNode)%Temp                = Node(InNode)%Temp
-  Node(OutNode)%HumRat              = Node(InNode)%HumRat
-  Node(OutNode)%Enthalpy            = Node(InNode)%Enthalpy
-  Node(OutNode)%Quality             = Node(InNode)%Quality
-  Node(OutNode)%Press               = Node(InNode)%Press
-  Node(OutNode)%MassFlowRateMin     = Node(InNode)%MassFlowRateMin
-  Node(OutNode)%MassFlowRateMax     = Node(InNode)%MassFlowRateMax
-  Node(OutNode)%MassFlowRateMinAvail= Node(InNode)%MassFlowRateMinAvail
-  Node(OutNode)%MassFlowRateMaxAvail= Node(InNode)%MassFlowRateMaxAvail
+    IF (Contaminant%GenericContamSimulation) Then
+      Node(OutNode)%GenContam = Node(InNode)%GenContam
+    End If
 
-  IF (Contaminant%CO2Simulation) Then
-    Node(OutNode)%CO2 = Node(InNode)%CO2
-  End If
+    RETURN
 
-  IF (Contaminant%GenericContamSimulation) Then
-    Node(OutNode)%GenContam = Node(InNode)%GenContam
-  End If
+  END SUBROUTINE UpdateDuct
 
-  RETURN
+  SUBROUTINE ReportDuct(DuctNum)  !RS: Debugging: Extraneous subroutine! It doesn't do anything
 
-END SUBROUTINE UpdateDuct
+    ! SUBROUTINE INFORMATION:
+    !       AUTHOR         Fred Buhl
+    !       DATE WRITTEN   17May2005
+    !       MODIFIED       na
+    !       RE-ENGINEERED  na
 
-SUBROUTINE ReportDuct(DuctNum)  !RS: Debugging: Extraneous subroutine! It doesn't do anything
+    ! PURPOSE OF THIS SUBROUTINE:
+    ! Fill remaining report variables
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Fred Buhl
-          !       DATE WRITTEN   17May2005
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+    ! METHODOLOGY EMPLOYED:
+    ! na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Fill remaining report variables
+    ! REFERENCES:
+    ! na
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+    ! USE STATEMENTS:
+    ! na
 
-          ! REFERENCES:
-          ! na
+    IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! USE STATEMENTS:
-          ! na
+    ! SUBROUTINE ARGUMENT DEFINITIONS:
+    INTEGER, INTENT (IN) :: DuctNum ! number of the current duct being simulated !unused1208
 
-  IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
+    ! SUBROUTINE PARAMETER DEFINITIONS:
+    ! na
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-  INTEGER, INTENT (IN) :: DuctNum ! number of the current duct being simulated !unused1208
+    ! INTERFACE BLOCK SPECIFICATIONS:
+    ! na
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+    ! DERIVED TYPE DEFINITIONS:
+    ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+    ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+    ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+    RETURN
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-          ! na
+  END SUBROUTINE ReportDuct
 
-  RETURN
-
-END SUBROUTINE ReportDuct
-
-!     NOTICE
-!
-!     Copyright © 1996-2012 The Board of Trustees of the University of Illinois
-!     and The Regents of the University of California through Ernest Orlando Lawrence
-!     Berkeley National Laboratory.  All rights reserved.
-!
-!     Portions of the EnergyPlus software package have been developed and copyrighted
-!     by other individuals, companies and institutions.  These portions have been
-!     incorporated into the EnergyPlus software package under license.   For a complete
-!     list of contributors, see "Notice" located in EnergyPlus.f90.
-!
-!     NOTICE: The U.S. Government is granted for itself and others acting on its
-!     behalf a paid-up, nonexclusive, irrevocable, worldwide license in this data to
-!     reproduce, prepare derivative works, and perform publicly and display publicly.
-!     Beginning five (5) years after permission to assert copyright is granted,
-!     subject to two possible five year renewals, the U.S. Government is granted for
-!     itself and others acting on its behalf a paid-up, non-exclusive, irrevocable
-!     worldwide license in this data to reproduce, prepare derivative works,
-!     distribute copies to the public, perform publicly and display publicly, and to
-!     permit others to do so.
-!
-!     TRADEMARKS: EnergyPlus is a trademark of the US Department of Energy.
-!
+  !     NOTICE
+  !
+  !     Copyright ï¿½ 1996-2012 The Board of Trustees of the University of Illinois
+  !     and The Regents of the University of California through Ernest Orlando Lawrence
+  !     Berkeley National Laboratory.  All rights reserved.
+  !
+  !     Portions of the EnergyPlus software package have been developed and copyrighted
+  !     by other individuals, companies and institutions.  These portions have been
+  !     incorporated into the EnergyPlus software package under license.   For a complete
+  !     list of contributors, see "Notice" located in EnergyPlus.f90.
+  !
+  !     NOTICE: The U.S. Government is granted for itself and others acting on its
+  !     behalf a paid-up, nonexclusive, irrevocable, worldwide license in this data to
+  !     reproduce, prepare derivative works, and perform publicly and display publicly.
+  !     Beginning five (5) years after permission to assert copyright is granted,
+  !     subject to two possible five year renewals, the U.S. Government is granted for
+  !     itself and others acting on its behalf a paid-up, non-exclusive, irrevocable
+  !     worldwide license in this data to reproduce, prepare derivative works,
+  !     distribute copies to the public, perform publicly and display publicly, and to
+  !     permit others to do so.
+  !
+  !     TRADEMARKS: EnergyPlus is a trademark of the US Department of Energy.
+  !
 
 END MODULE HVACDuct
-

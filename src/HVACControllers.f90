@@ -106,18 +106,18 @@ MODULE HVACControllers
 
   ! USE STATEMENTS:
   ! Use statements for data only modules
-USE DataPrecisionGlobals
-USE DataLoopNode
-USE DataGlobals_HPSimIntegrated
-USE DataHVACGlobals, ONLY: SmallWaterVolFlow, SetPointErrorFlag
-USE DataHVACControllers
-USE DataRootFinder
-USE DataInterfaces
+  USE DataPrecisionGlobals
+  USE DataLoopNode
+  USE DataGlobals_HPSimIntegrated
+  USE DataHVACGlobals, ONLY: SmallWaterVolFlow, SetPointErrorFlag
+  USE DataHVACControllers
+  USE DataRootFinder
+  USE DataInterfaces
 
-IMPLICIT NONE         ! Enforce explicit typing of all variables
-PRIVATE
+  IMPLICIT NONE         ! Enforce explicit typing of all variables
+  PRIVATE
 
-! MODULE PARAMETER DEFINITIONS
+  ! MODULE PARAMETER DEFINITIONS
   ! Number of significant digits to display in error messages for floating-point numbers
   REAL(r64), PARAMETER    ::  SomeFloatingPoint  = 1.0d0
   INTEGER, PARAMETER ::  NumSigDigits   = PRECISION(SomeFloatingPoint)
@@ -133,19 +133,19 @@ PRIVATE
   INTEGER, PARAMETER :: CoilType_Heating=2
 
   CHARACTER(LEN=*), PARAMETER, DIMENSION(0:4) :: ControlVariableTypes =  &
-                     (/'No control variable           ',  &
-                       'Temperature                   ',  &
-                       'Humidity ratio                ',  &
-                       'Temperature and humidity ratio',  &
-                       'Flow rate                     '/)
+  (/'No control variable           ',  &
+  'Temperature                   ',  &
+  'Humidity ratio                ',  &
+  'Temperature and humidity ratio',  &
+  'Flow rate                     '/)
 
 
   INTEGER, PARAMETER :: ControllerSimple_Type        = 1
   CHARACTER(LEN=*), PARAMETER, DIMENSION(1:1) :: ControllerTypes =  &
-                     (/'Controller:WaterCoil'/)
+  (/'Controller:WaterCoil'/)
 
 
-! DERIVED TYPE DEFINITIONS
+  ! DERIVED TYPE DEFINITIONS
   TYPE SolutionTrackerType
     LOGICAL      :: DefinedFlag   = .TRUE.    ! Flag set to TRUE when tracker is up-to-date. FALSE otherwise.
     REAL(r64)    :: ActuatedValue = 0.0d0       ! Actuated value
@@ -187,10 +187,10 @@ PRIVATE
     ! Operational limits at min/max avail values for actuated variable and the corresponding sensed values
     ! --------------------
     REAL(r64)    :: MaxAvailActuated = 0.0d0 ! kg/s, The maximum actuated variable currently available.
-                                           ! Reset by simulation at each HVAC iteration
+    ! Reset by simulation at each HVAC iteration
     REAL(r64)    :: MaxAvailSensed   = 0.0d0 ! Sensed value at maximum available actuated variable
     REAL(r64)    :: MinAvailActuated = 0.0d0 ! kg/s, The minimum actuated variable currently available.
-                                           ! Reset by simulation at each HVAC iteration
+    ! Reset by simulation at each HVAC iteration
     REAL(r64)    :: MinAvailSensed   = 0.0d0 ! Sensed value at maximum available actuated variable
 
     ! --------------------
@@ -216,7 +216,7 @@ PRIVATE
     ! --------------------
     INTEGER      :: SensedNode = 0    ! The sensed node number from the grid
     LOGICAL      :: IsSetPointDefinedFlag = .FALSE. ! If TRUE indicates that the setpoint has been defined and can
-                                                    ! be used to compute DeltaSensed
+    ! be used to compute DeltaSensed
     REAL(r64)    :: SetPointValue = 0.0d0 ! Desired setpoint; set in the SetPoint Manager or computed in Init() routine
     REAL(r64)    :: SensedValue = 0.0d0 ! The sensed control variable of any type
     REAL(r64)    :: DeltaSensed = 0.0d0 ! Difference of sensed to setpoint value for calculating proportional gain
@@ -249,7 +249,7 @@ PRIVATE
   ! Type describing an air loop's runtime statistics over the course of the simulation
   TYPE AirLoopStatsType
     INTEGER      :: TraceFileUnit                 ! File unit for trace file for all controllers on each air loop.
-                                                  ! Used only if > 0. Same size as NumPrimaryAirSys
+    ! Used only if > 0. Same size as NumPrimaryAirSys
     LOGICAL      :: FirstTraceFlag = .TRUE.       ! To detect first trace to air loop trace file
     INTEGER      :: NumCalls = 0                  ! Number of times air loop is simulated (number of calls to SimAirLoop)
     INTEGER      :: NumFailedWarmRestarts = 0     ! Number of times speculative warm restart was attempted and failed
@@ -259,46 +259,46 @@ PRIVATE
     INTEGER      :: TotIterations  = 0            ! Total number of iterations required to solve the controllers on this air loop
     INTEGER      :: MaxIterations  = 0            ! Maximum number of iterations required to solve the controllers on this air loop
     TYPE (ControllerStatsType), DIMENSION(:), ALLOCATABLE :: ControllerStats  ! Array of statistics for each controller
-                                                                              ! on this air loop
+    ! on this air loop
   END TYPE AirLoopStatsType
 
 
-! MODULE VARIABLE DECLARATIONS:
+  ! MODULE VARIABLE DECLARATIONS:
   INTEGER                                               :: NumControllers  = 0 ! The number of controllers found in the Input
   TYPE (ControllerPropsType), ALLOCATABLE, DIMENSION(:) :: ControllerProps
   TYPE (RootFinderDataType), ALLOCATABLE, DIMENSION(:)  :: RootFinders
   INTEGER                                               :: NumAirLoopStats = 0 ! Same size as NumPrimaryAirSys if controllers
-                                                                               ! are defined, 0 otherwise.
+  ! are defined, 0 otherwise.
   TYPE (AirLoopStatsType), ALLOCATABLE, DIMENSION(:)    :: AirLoopStats ! Statistics array to analyze computational profile for
-                                                                               ! all controllers per air loop
+  ! all controllers per air loop
   LOGICAL, ALLOCATABLE, DIMENSION(:) :: CheckEquipName
 
   ! Flag set to make sure you get input once
   LOGICAL                :: GetControllerInputFlag = .TRUE.
 
-! SUBROUTINE Specifications for the Module
-          ! Driver/Manager Routines
+  ! SUBROUTINE Specifications for the Module
+  ! Driver/Manager Routines
   PUBLIC  ManageControllers
 
-          ! Get Input routines for module
+  ! Get Input routines for module
   PRIVATE GetControllerInput
 
-          ! Initialization routines for module
+  ! Initialization routines for module
   PRIVATE InitController
   PRIVATE SizeController
   PRIVATE ResetController
 
-          ! Algorithms for the module
+  ! Algorithms for the module
   PRIVATE LimitController
   PRIVATE ExitCalcController
 
-          ! Update routine to check convergence and update nodes
+  ! Update routine to check convergence and update nodes
   PRIVATE UpdateController
 
-          ! Reporting routines for module
+  ! Reporting routines for module
   PRIVATE ReportController
 
-          ! Algorithms for the Simple Controller
+  ! Algorithms for the Simple Controller
   PRIVATE FindRootSimpleController
   PRIVATE CalcSimpleController
   PRIVATE CheckSimpleController
@@ -306,23 +306,23 @@ PRIVATE
   PRIVATE CheckMaxActiveController
   PRIVATE SaveSimpleController
 
-          ! Statistics routines
+  ! Statistics routines
   PUBLIC  TrackAirLoopControllers
   PRIVATE TrackAirLoopController
   PUBLIC  DumpAirLoopStatistics
   PRIVATE WriteAirLoopStatistics
 
-          ! Trace routines for all controllers on each air loop
+  ! Trace routines for all controllers on each air loop
   PUBLIC  TraceAirLoopControllers
   PRIVATE SetupAirLoopControllersTracer
   PRIVATE TraceIterationStamp
   PRIVATE TraceAirLoopController
 
-          ! Trace routines for each individual controller
+  ! Trace routines for each individual controller
   PRIVATE TraceIndividualController
   PRIVATE SetupIndividualControllerTracer
 
-          ! Misc routines
+  ! Misc routines
   PUBLIC  CreateHVACTimeString
   PUBLIC  MakeHVACTimeIntervalString
   PUBLIC  CreateHVACStepFullString
@@ -331,132 +331,132 @@ PRIVATE
 
 CONTAINS
 
-! MODULE SUBROUTINES:
-!*************************************************************************
+  ! MODULE SUBROUTINES:
+  !*************************************************************************
 
-SUBROUTINE ManageControllers( &
+  SUBROUTINE ManageControllers( &
     ControllerName, ControllerIndex, &
     FirstHVACIteration, AirLoopNum, AirLoopPass, &
     Operation, IsConvergedFlag, IsUpToDateFlag, AllowWarmRestartFlag )
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Richard Liesen
-          !       DATE WRITTEN   July 1998
-          !       MODIFIED       Dimitri Curtil, February 2006
-          !                      - Added air loop information
-          !                      - Added tracing to csv files
-          !                      - Added primitive operations to replace mixed
-          !                        bag of ResetController, FirstCallConvergenceTest, ...
-          !       RE-ENGINEERED  na
+    ! SUBROUTINE INFORMATION:
+    !       AUTHOR         Richard Liesen
+    !       DATE WRITTEN   July 1998
+    !       MODIFIED       Dimitri Curtil, February 2006
+    !                      - Added air loop information
+    !                      - Added tracing to csv files
+    !                      - Added primitive operations to replace mixed
+    !                        bag of ResetController, FirstCallConvergenceTest, ...
+    !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine manages Controller component simulation.
+    ! PURPOSE OF THIS SUBROUTINE:
+    ! This subroutine manages Controller component simulation.
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+    ! METHODOLOGY EMPLOYED:
+    ! na
 
-          ! REFERENCES:
-          ! na
+    ! REFERENCES:
+    ! na
 
-          ! USE STATEMENTS:
-  USE DataSystemVariables
-  USE InputProcessor, ONLY: FindItemInList
-  USE General,        ONLY: TrimSigDigits
-  USE DataPlant,      ONLY: PlantLoop, FlowLocked
+    ! USE STATEMENTS:
+    USE DataSystemVariables
+    USE InputProcessor, ONLY: FindItemInList
+    USE General,        ONLY: TrimSigDigits
+    USE DataPlant,      ONLY: PlantLoop, FlowLocked
 
-  IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
+    IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-  CHARACTER(LEN=*), INTENT(IN)    :: ControllerName
-  INTEGER, INTENT(INOUT)          :: ControllerIndex
-  ! TRUE if first full HVAC iteration in an HVAC time step
-  LOGICAL, INTENT(IN)             :: FirstHVACIteration
-  ! Current air loop num 1...NumPrimaryAirSys
-  INTEGER, INTENT(IN)             :: AirLoopNum !unused1208
-  ! Current pass counter in SimAirLoop()
-  INTEGER, INTENT(IN)             :: AirLoopPass
-  ! Operation to execute
-  INTEGER, INTENT(IN)             :: Operation
-  ! TRUE if controller is converged
-  LOGICAL, INTENT(OUT)            :: IsConvergedFlag
-  ! TRUE if air loop is up-to-date meaning that the current node values are consistent (air loop evaluated)
-  ! Only used within the Calc routines
-  LOGICAL, INTENT(INOUT)          :: IsUpToDateFlag
-  ! TRUE if speculative warm restart is supported by this controller
-  LOGICAL, INTENT(OUT), OPTIONAL  :: AllowWarmRestartFlag
+    ! SUBROUTINE ARGUMENT DEFINITIONS:
+    CHARACTER(LEN=*), INTENT(IN)    :: ControllerName
+    INTEGER, INTENT(INOUT)          :: ControllerIndex
+    ! TRUE if first full HVAC iteration in an HVAC time step
+    LOGICAL, INTENT(IN)             :: FirstHVACIteration
+    ! Current air loop num 1...NumPrimaryAirSys
+    INTEGER, INTENT(IN)             :: AirLoopNum !unused1208
+    ! Current pass counter in SimAirLoop()
+    INTEGER, INTENT(IN)             :: AirLoopPass
+    ! Operation to execute
+    INTEGER, INTENT(IN)             :: Operation
+    ! TRUE if controller is converged
+    LOGICAL, INTENT(OUT)            :: IsConvergedFlag
+    ! TRUE if air loop is up-to-date meaning that the current node values are consistent (air loop evaluated)
+    ! Only used within the Calc routines
+    LOGICAL, INTENT(INOUT)          :: IsUpToDateFlag
+    ! TRUE if speculative warm restart is supported by this controller
+    LOGICAL, INTENT(OUT), OPTIONAL  :: AllowWarmRestartFlag
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+    ! SUBROUTINE PARAMETER DEFINITIONS:
+    ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+    ! INTERFACE BLOCK SPECIFICATIONS
+    ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+    ! DERIVED TYPE DEFINITIONS
+    ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-  ! The Controller that you are currently loading input into
-  INTEGER                      :: ControlNum
-  INTEGER                      :: ControllerType
+    ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+    ! The Controller that you are currently loading input into
+    INTEGER                      :: ControlNum
+    INTEGER                      :: ControllerType
 
-          ! FLOW:
+    ! FLOW:
 
-  ! Obtains and Allocates Controller related parameters from input file
-  IF (GetControllerInputFlag) THEN  !First time subroutine has been entered
-    CALL GetControllerInput
-    GetControllerInputFlag = .FALSE.
-  END IF
+    ! Obtains and Allocates Controller related parameters from input file
+    IF (GetControllerInputFlag) THEN  !First time subroutine has been entered
+      CALL GetControllerInput
+      GetControllerInputFlag = .FALSE.
+    END IF
 
-  IF (ControllerIndex == 0) THEN
-    ControlNum = FindItemInList(ControllerName, ControllerProps%ControllerName, NumControllers)
-    IF (ControlNum == 0) THEN
-      CALL ShowFatalError( &
+    IF (ControllerIndex == 0) THEN
+      ControlNum = FindItemInList(ControllerName, ControllerProps%ControllerName, NumControllers)
+      IF (ControlNum == 0) THEN
+        CALL ShowFatalError( &
         'ManageControllers: Invalid controller='//TRIM(ControllerName)// &
         '. The only valid controller type'//  &
         ' for an AirLoopHVAC is Controller:WaterCoil.' &
-      )
-    ENDIF
-    ControllerIndex = ControlNum
-  ELSE
-    ControlNum = ControllerIndex
-    IF (ControlNum > NumControllers .OR. ControlNum < 1) THEN
-      CALL ShowFatalError( &
+        )
+      ENDIF
+      ControllerIndex = ControlNum
+    ELSE
+      ControlNum = ControllerIndex
+      IF (ControlNum > NumControllers .OR. ControlNum < 1) THEN
+        CALL ShowFatalError( &
         'ManageControllers: Invalid ControllerIndex passed='// &
         TRIM(TrimSigDigits(ControlNum))// &
         ', Number of controllers='//TRIM(TrimSigDigits(NumControllers))//  &
         ', Controller name='//TRIM(ControllerName) &
-      )
-    ENDIF
-    IF (CheckEquipName(ControlNum)) THEN
-      IF (ControllerName /= ControllerProps(ControlNum)%ControllerName) THEN
-        CALL ShowFatalError( &
+        )
+      ENDIF
+      IF (CheckEquipName(ControlNum)) THEN
+        IF (ControllerName /= ControllerProps(ControlNum)%ControllerName) THEN
+          CALL ShowFatalError( &
           'ManageControllers: Invalid ControllerIndex passed='// &
           TRIM(TrimSigDigits(ControlNum))// &
           ', Controller name='//TRIM(ControllerName)// &
           ', stored Controller Name for that index='//  &
           TRIM(ControllerProps(ControlNum)%ControllerName) &
-        )
+          )
+        ENDIF
+        CheckEquipName(ControlNum)=.false.
       ENDIF
-      CheckEquipName(ControlNum)=.false.
     ENDIF
-  ENDIF
-  ! Find the correct ControllerNumber with the AirLoop & CompNum from AirLoop Derived Type
-  !ControlNum = AirLoopEquip(AirLoopNum)%ComponentOfTypeNum(CompNum)
+    ! Find the correct ControllerNumber with the AirLoop & CompNum from AirLoop Derived Type
+    !ControlNum = AirLoopEquip(AirLoopNum)%ComponentOfTypeNum(CompNum)
 
-  ! detect if plant is locked and flow cannot change
-  IF (ControllerProps(ControlNum)%ActuatedNodePlantLoopNum > 0) THEN
-  
-    IF (PlantLoop(ControllerProps(ControlNum)%ActuatedNodePlantLoopNum)% &
-       LoopSide(ControllerProps(ControlNum)%ActuatedNodePlantLoopSide)%Flowlock == FlowLocked) THEN
-    ! plant is rigid so controller cannot change anything. 
-           ! Update the current Controller to the outlet nodes
+    ! detect if plant is locked and flow cannot change
+    IF (ControllerProps(ControlNum)%ActuatedNodePlantLoopNum > 0) THEN
+
+      IF (PlantLoop(ControllerProps(ControlNum)%ActuatedNodePlantLoopNum)% &
+      LoopSide(ControllerProps(ControlNum)%ActuatedNodePlantLoopSide)%Flowlock == FlowLocked) THEN
+      ! plant is rigid so controller cannot change anything.
+      ! Update the current Controller to the outlet nodes
       CALL UpdateController(ControlNum)
 
       IsConvergedFlag = .TRUE.
       RETURN
     ENDIF
 
-  ENDIF 
+  ENDIF
 
   ! Detect if speculative warm restart is supported by this computer
   IF ( PRESENT(AllowWarmRestartFlag) ) THEN
@@ -477,81 +477,81 @@ SUBROUTINE ManageControllers( &
   ! determine ControllerProps(ControlNum)%MaxActuated .
   ! Plant upgrades for V7 added init to these cases because MassFlowRateMaxAvail is better controlled
   ControllerOp : SELECT CASE (Operation)
-    CASE (iControllerOpColdStart)
-      ! If a iControllerOpColdStart call, reset the actuator inlet flows
-      CALL ResetController(ControlNum, FirstHVACIteration, .FALSE., IsConvergedFlag)
-  !    CALL InitController(ControlNum, FirstHVACIteration, IsConvergedFlag)
-      ! Update the current Controller to the outlet nodes
-      CALL UpdateController(ControlNum)
+  CASE (iControllerOpColdStart)
+    ! If a iControllerOpColdStart call, reset the actuator inlet flows
+    CALL ResetController(ControlNum, FirstHVACIteration, .FALSE., IsConvergedFlag)
+    !    CALL InitController(ControlNum, FirstHVACIteration, IsConvergedFlag)
+    ! Update the current Controller to the outlet nodes
+    CALL UpdateController(ControlNum)
 
-      ! Report the current Controller
-      CALL ReportController(ControlNum)
-
-
-    CASE (iControllerOpWarmRestart)
-      ! If a iControllerOpWarmRestart call, set the actuator inlet flows to previous solution
-      CALL ResetController(ControlNum, FirstHVACIteration,.TRUE., IsConvergedFlag)
-   !   CALL InitController(ControlNum, FirstHVACIteration, IsConvergedFlag)
-      ! Update the current Controller to the outlet nodes
-      CALL UpdateController(ControlNum)
-
-      ! Report the current Controller
-      CALL ReportController(ControlNum)
+    ! Report the current Controller
+    CALL ReportController(ControlNum)
 
 
-    CASE (iControllerOpIterate)
-      ! With the correct ControlNum Initialize all Controller related parameters
-      CALL InitController(ControlNum, FirstHVACIteration, IsConvergedFlag)
+  CASE (iControllerOpWarmRestart)
+    ! If a iControllerOpWarmRestart call, set the actuator inlet flows to previous solution
+    CALL ResetController(ControlNum, FirstHVACIteration,.TRUE., IsConvergedFlag)
+    !   CALL InitController(ControlNum, FirstHVACIteration, IsConvergedFlag)
+    ! Update the current Controller to the outlet nodes
+    CALL UpdateController(ControlNum)
 
-      ! No initialization needed: should have been done before
-      ! Simulate the correct Controller with the current ControlNum
-      ControllerType = ControllerProps(ControlNum)%ControllerType_Num
-
-      ControllerCalc: SELECT CASE (ControllerType)
-      CASE (ControllerSimple_Type)  ! 'Controller:WaterCoil'
-          CALL CalcSimpleController(ControlNum, FirstHVACIteration, IsConvergedFlag, IsUpToDateFlag, ControllerName)
-        CASE DEFAULT
-          CALL ShowFatalError( &
-            'Invalid controller type in ManageControllers='// &
-            TRIM(ControllerProps(ControlNum)%ControllerType) &
-          )
-      END SELECT ControllerCalc
-
-      ! Update the current Controller to the outlet nodes
-      CALL UpdateController(ControlNum)
-
-      ! Report the current Controller
-      CALL ReportController(ControlNum)
+    ! Report the current Controller
+    CALL ReportController(ControlNum)
 
 
-    CASE (iControllerOpEnd)
-      ! With the correct ControlNum Initialize all Controller related parameters
-      CALL InitController(ControlNum, FirstHVACIteration, IsConvergedFlag)
+  CASE (iControllerOpIterate)
+    ! With the correct ControlNum Initialize all Controller related parameters
+    CALL InitController(ControlNum, FirstHVACIteration, IsConvergedFlag)
 
-      ! No initialization needed: should have been done before
-      ! Check convergence for the correct Controller with the current ControlNum
-      ControllerType = ControllerProps(ControlNum)%ControllerType_Num
+    ! No initialization needed: should have been done before
+    ! Simulate the correct Controller with the current ControlNum
+    ControllerType = ControllerProps(ControlNum)%ControllerType_Num
 
-      ControllerCheck: SELECT CASE (ControllerType)
-        CASE (ControllerSimple_Type)  ! 'Controller:WaterCoil'
-          CALL CheckSimpleController(ControlNum, IsConvergedFlag)
-          CALL SaveSimpleController(ControlNum, FirstHVACIteration, IsConvergedFlag)
+    ControllerCalc: SELECT CASE (ControllerType)
+    CASE (ControllerSimple_Type)  ! 'Controller:WaterCoil'
+      CALL CalcSimpleController(ControlNum, FirstHVACIteration, IsConvergedFlag, IsUpToDateFlag, ControllerName)
+    CASE DEFAULT
+      CALL ShowFatalError( &
+      'Invalid controller type in ManageControllers='// &
+      TRIM(ControllerProps(ControlNum)%ControllerType) &
+      )
+    END SELECT ControllerCalc
 
-        CASE DEFAULT
-          CALL ShowFatalError( &
-            'Invalid controller type in ManageControllers='// &
-            TRIM(ControllerProps(ControlNum)%ControllerType) &
-          )
-      END SELECT ControllerCheck
+    ! Update the current Controller to the outlet nodes
+    CALL UpdateController(ControlNum)
 
-      ! Report the current Controller
-      CALL ReportController(ControlNum)
+    ! Report the current Controller
+    CALL ReportController(ControlNum)
+
+
+  CASE (iControllerOpEnd)
+    ! With the correct ControlNum Initialize all Controller related parameters
+    CALL InitController(ControlNum, FirstHVACIteration, IsConvergedFlag)
+
+    ! No initialization needed: should have been done before
+    ! Check convergence for the correct Controller with the current ControlNum
+    ControllerType = ControllerProps(ControlNum)%ControllerType_Num
+
+    ControllerCheck: SELECT CASE (ControllerType)
+    CASE (ControllerSimple_Type)  ! 'Controller:WaterCoil'
+      CALL CheckSimpleController(ControlNum, IsConvergedFlag)
+      CALL SaveSimpleController(ControlNum, FirstHVACIteration, IsConvergedFlag)
 
     CASE DEFAULT
       CALL ShowFatalError( &
-        'ManageControllers: Invalid Operation passed='//TRIM(TrimSigDigits(Operation))// &
-        ', Controller name='//TRIM(ControllerName) &
+      'Invalid controller type in ManageControllers='// &
+      TRIM(ControllerProps(ControlNum)%ControllerType) &
       )
+    END SELECT ControllerCheck
+
+    ! Report the current Controller
+    CALL ReportController(ControlNum)
+
+  CASE DEFAULT
+    CALL ShowFatalError( &
+    'ManageControllers: Invalid Operation passed='//TRIM(TrimSigDigits(Operation))// &
+    ', Controller name='//TRIM(ControllerName) &
+    )
   END SELECT ControllerOp
 
 
@@ -561,11 +561,11 @@ SUBROUTINE ManageControllers( &
   ! define the environment variable TRACE_CONTROLLER=YES or TRACE_CONTROLLER=Y
   IF ( TraceHVACControllerEnvFlag ) THEN
     CALL TraceIndividualController( &
-      ControlNum, &
-      FirstHVACIteration, &
-      AirLoopPass, &
-      Operation, &
-      IsConvergedFlag )
+    ControlNum, &
+    FirstHVACIteration, &
+    AirLoopPass, &
+    Operation, &
+    IsConvergedFlag )
   END IF
 
   RETURN
@@ -576,61 +576,61 @@ END SUBROUTINE ManageControllers
 !******************************************************************************
 SUBROUTINE GetControllerInput
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Richard Liesen
-          !       DATE WRITTEN   July 1998
-          !       MODIFIED       February 2006, Dimitri Curtil
-          !                      - Added processing for air loop controller stats
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Richard Liesen
+  !       DATE WRITTEN   July 1998
+  !       MODIFIED       February 2006, Dimitri Curtil
+  !                      - Added processing for air loop controller stats
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine is the main routine to call other input routines and Get routines
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine is the main routine to call other input routines and Get routines
 
-          ! METHODOLOGY EMPLOYED:
-          ! Uses the status flags to trigger events.
+  ! METHODOLOGY EMPLOYED:
+  ! Uses the status flags to trigger events.
 
-          ! REFERENCES:
-          ! Gets the object:
-          ! Controller:WaterCoil,
-          !   \min-fields 9
-          !   A1 , \field Name
-          !        \type alpha
-          !        \required-field
-          !        \reference AirLoopControllers
-          !   A2 , \field Control Variable
-          !        \type choice
-          !        \key Temperature
-          !        \key HumidityRatio
-          !        \key TemperatureAndHumidityRatio
-          !        \key Flow
-          !        \note TemperatureAndHumidityRatio requires a SetpointManager:SingleZone:Humidity:Maximum object
-          !   A3 , \field Action
-          !        \type choice
-          !        \key Normal
-          !        \key Reverse
-          !   A4 , \field Actuator Variable
-          !        \type choice
-          !        \key Flow
-          !   A5 , \field Sensor Node Name
-          !        \type alpha
-          !   A6 , \field Actuator Node Name
-          !        \type alpha
-          !   N1 , \field Controller Convergence Tolerance
-          !        \units deltaC
-          !        \type real
-          !        \default Autosize
-          !        \autosizable
-          !   N2 , \field Maximum Actuated Flow
-          !        \type real
-          !        \units m3/s
-          !        \autosizable
-          !   N3 ; \field Minimum Actuated Flow
-          !        \type real
-          !        \default 0.0000001
-          !        \units m3/s
+  ! REFERENCES:
+  ! Gets the object:
+  ! Controller:WaterCoil,
+  !   \min-fields 9
+  !   A1 , \field Name
+  !        \type alpha
+  !        \required-field
+  !        \reference AirLoopControllers
+  !   A2 , \field Control Variable
+  !        \type choice
+  !        \key Temperature
+  !        \key HumidityRatio
+  !        \key TemperatureAndHumidityRatio
+  !        \key Flow
+  !        \note TemperatureAndHumidityRatio requires a SetpointManager:SingleZone:Humidity:Maximum object
+  !   A3 , \field Action
+  !        \type choice
+  !        \key Normal
+  !        \key Reverse
+  !   A4 , \field Actuator Variable
+  !        \type choice
+  !        \key Flow
+  !   A5 , \field Sensor Node Name
+  !        \type alpha
+  !   A6 , \field Actuator Node Name
+  !        \type alpha
+  !   N1 , \field Controller Convergence Tolerance
+  !        \units deltaC
+  !        \type real
+  !        \default Autosize
+  !        \autosizable
+  !   N2 , \field Maximum Actuated Flow
+  !        \type real
+  !        \units m3/s
+  !        \autosizable
+  !   N3 ; \field Minimum Actuated Flow
+  !        \type real
+  !        \default 0.0000001
+  !        \units m3/s
 
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataSystemVariables, ONLY : TrackAirLoopEnvFlag, TraceAirLoopEnvFlag, TraceHVACControllerEnvFlag
   USE InputProcessor,      ONLY : GetNumObjectsFound, GetObjectItem, VerifyName, GetObjectDefMaxArgs, SameString, MakeUPPERCase
   USE NodeInputManager,    ONLY : GetOnlySingleNode
@@ -641,19 +641,19 @@ SUBROUTINE GetControllerInput
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-          ! na
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! SUBROUTINE PARAMETER DEFINITIONS:
   CHARACTER(len=*), PARAMETER :: RoutineName='HVACControllers: GetControllerInput: ' ! include trailing blank space
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER       :: Num      ! The Controller that you are currently loading input into
   INTEGER       :: NumSimpleControllers
   INTEGER       :: NumAlphas
@@ -723,8 +723,8 @@ SUBROUTINE GetControllerInput
   IF (NumSimpleControllers .GT. 0) THEN
     DO Num = 1, NumSimpleControllers
       CALL GetObjectItem(TRIM(CurrentModuleObject),Num,AlphArray,NumAlphas,NumArray,NumNums,IOSTAT, &
-                         NumBlank=lNumericBlanks,AlphaBlank=lAlphaBlanks, &
-                         AlphaFieldNames=cAlphaFields,NumericFieldNames=cNumericFields)
+      NumBlank=lNumericBlanks,AlphaBlank=lAlphaBlanks, &
+      AlphaFieldNames=cAlphaFields,NumericFieldNames=cNumericFields)
 
       IsNotOK = .FALSE.
       IsBlank = .FALSE.
@@ -736,20 +736,20 @@ SUBROUTINE GetControllerInput
       ControllerProps(Num)%ControllerName = AlphArray(1)
       ControllerProps(Num)%ControllerType = TRIM(CurrentModuleObject)
       SELECT CASE (AlphArray(2))
-        CASE ('TEMPERATURE')
-          ControllerProps(Num)%ControlVar  = iTemperature
-        CASE ('HUMIDITYRATIO')
-          ControllerProps(Num)%ControlVar  = iHumidityRatio
-        CASE ('TEMPERATUREANDHUMIDITYRATIO')
-          ControllerProps(Num)%ControlVar  = iTemperatureAndHumidityRatio
-!        CASE ('FLOW')
-!          ControllerProps(Num)%ControlVar  = iFlow
-        CASE DEFAULT
-          CALL ShowSevereError(RoutineName//TRIM(CurrentModuleObject)//'="'//  &
-             TRIM(AlphArray(1))//'".')
-          CALL ShowSevereError('...Invalid '//TRIM(cAlphaFields(2))//'="'//TRIM(AlphArray(2))//  &
-             '", must be Temperature, HumidityRatio, or TemperatureAndHumidityRatio.')
-          ErrorsFound=.true.
+      CASE ('TEMPERATURE')
+        ControllerProps(Num)%ControlVar  = iTemperature
+      CASE ('HUMIDITYRATIO')
+        ControllerProps(Num)%ControlVar  = iHumidityRatio
+      CASE ('TEMPERATUREANDHUMIDITYRATIO')
+        ControllerProps(Num)%ControlVar  = iTemperatureAndHumidityRatio
+        !        CASE ('FLOW')
+        !          ControllerProps(Num)%ControlVar  = iFlow
+      CASE DEFAULT
+        CALL ShowSevereError(RoutineName//TRIM(CurrentModuleObject)//'="'//  &
+        TRIM(AlphArray(1))//'".')
+        CALL ShowSevereError('...Invalid '//TRIM(cAlphaFields(2))//'="'//TRIM(AlphArray(2))//  &
+        '", must be Temperature, HumidityRatio, or TemperatureAndHumidityRatio.')
+        ErrorsFound=.true.
       END SELECT
       IF (SameString(AlphArray(3) , 'Normal')) THEN
         ControllerProps(Num)%Action = iNormalAction
@@ -759,46 +759,46 @@ SUBROUTINE GetControllerInput
         ControllerProps(Num)%Action = 0
       ELSE
         CALL ShowSevereError(RoutineName//TRIM(CurrentModuleObject)//'="'//  &
-           TRIM(AlphArray(1))//'".')
+        TRIM(AlphArray(1))//'".')
         CALL ShowSevereError('...Invalid '//TRIM(cAlphaFields(3))//'="'//TRIM(AlphArray(3))//  &
-           '", must be "Normal", "Reverse" or blank.')
+        '", must be "Normal", "Reverse" or blank.')
         ErrorsFound=.true.
       ENDIF
       IF (AlphArray(4) == 'FLOW') THEN
         ControllerProps(Num)%ActuatorVar = iFlow
       ELSE
         CALL ShowSevereError(RoutineName//TRIM(CurrentModuleObject)//'="'//  &
-           TRIM(AlphArray(1))//'".')
+        TRIM(AlphArray(1))//'".')
         CALL ShowContinueError('...Invalid '//TRIM(cAlphaFields(4))//'="'//TRIM(AlphArray(4))//  &
-           '", only FLOW is allowed.')
+        '", only FLOW is allowed.')
         ErrorsFound=.true.
       ENDIF
       ControllerProps(Num)%SensedNode    = &
-           GetOnlySingleNode(AlphArray(5),ErrorsFound,CurrentModuleObject,AlphArray(1),  &
-                        NodeType_Unknown,NodeConnectionType_Sensor,1,ObjectIsNotParent)
+      GetOnlySingleNode(AlphArray(5),ErrorsFound,CurrentModuleObject,AlphArray(1),  &
+      NodeType_Unknown,NodeConnectionType_Sensor,1,ObjectIsNotParent)
       ControllerProps(Num)%ActuatedNode  = &
-           GetOnlySingleNode(AlphArray(6),ErrorsFound,CurrentModuleObject,AlphArray(1),  &
-                        NodeType_Unknown,NodeConnectionType_Actuator,1,ObjectIsNotParent)
+      GetOnlySingleNode(AlphArray(6),ErrorsFound,CurrentModuleObject,AlphArray(1),  &
+      NodeType_Unknown,NodeConnectionType_Actuator,1,ObjectIsNotParent)
       ControllerProps(Num)%Offset             = NumArray(1)
       ControllerProps(Num)%MaxVolFlowActuated = NumArray(2)
       ControllerProps(Num)%MinVolFlowActuated = NumArray(3)
 
       IF (.not. CheckForControllerWaterCoil(CurrentModuleObject,AlphArray(1))) THEN
         CALL ShowSevereError(RoutineName//TRIM(CurrentModuleObject)//'="'//  &
-           TRIM(AlphArray(1))//'" not found on any AirLoopHVAC:ControllerList.')
+        TRIM(AlphArray(1))//'" not found on any AirLoopHVAC:ControllerList.')
         ErrorsFound = .TRUE.
       ENDIF
 
     END DO
   END IF
 
- ! check that actuator nodes are matched by a water coil inlet node
+  ! check that actuator nodes are matched by a water coil inlet node
   DO Num = 1, NumSimpleControllers
     CALL CheckActuatorNode(ControllerProps(Num)%ActuatedNode, iNodeType, ActuatorNodeNotFound)
     IF (ActuatorNodeNotFound) THEN
       ErrorsFound=.true.
       CALL ShowSevereError(RoutineName//TRIM(CurrentModuleObject)//'="'//  &
-         TRIM(ControllerProps(Num)%ControllerName)//'":')
+      TRIM(ControllerProps(Num)%ControllerName)//'":')
       CALL ShowContinueError('...the actuator node must also be a water inlet node of a water coil')
     ELSE  ! Node found, check type and action
       IF (iNodeType == CoilType_Cooling) THEN
@@ -806,7 +806,7 @@ SUBROUTINE GetControllerInput
           ControllerProps(Num)%Action = iReverseAction
         ELSEIF (ControllerProps(Num)%Action == iNormalAction) THEN
           CALL ShowWarningError(RoutineName//TRIM(CurrentModuleObject)//'="'//  &
-             TRIM(ControllerProps(Num)%ControllerName)//'":')
+          TRIM(ControllerProps(Num)%ControllerName)//'":')
           CALL ShowContinueError('...Normal action has been specified for a cooling coil - should be Reverse.')
           CALL ShowContinueError('...overriding user input action with Reverse Action.')
           ControllerProps(Num)%Action = iReverseAction
@@ -816,7 +816,7 @@ SUBROUTINE GetControllerInput
           ControllerProps(Num)%Action = iNormalAction
         ELSEIF (ControllerProps(Num)%Action == iReverseAction) THEN
           CALL ShowWarningError(RoutineName//TRIM(CurrentModuleObject)//'="'//  &
-             TRIM(ControllerProps(Num)%ControllerName)//'":')
+          TRIM(ControllerProps(Num)%ControllerName)//'":')
           CALL ShowContinueError('...Reverse action has been specified for a heating coil - should be Normal.')
           CALL ShowContinueError('...overriding user input action with Normal Action.')
           ControllerProps(Num)%Action = iNormalAction
@@ -853,47 +853,47 @@ END SUBROUTINE GetControllerInput
 
 SUBROUTINE ResetController(ControlNum, FirstHVACIteration, DoWarmRestartFlag, IsConvergedFlag)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Fred Buhl
-          !       DATE WRITTEN   April 2004
-          !       MODIFIED       Dimitri Curtil (LBNL), Feb 2006
-          !                      - Added capability for speculative warm restart
-          !                      Brent Griffith (NREL), Feb 2010
-          !                      - use SetActuatedBranchFlowRate in Plant Utilities (honor hardware min > 0.0)
-          !                      - add FirstHVACIteration logic, don't reset if false,
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Fred Buhl
+  !       DATE WRITTEN   April 2004
+  !       MODIFIED       Dimitri Curtil (LBNL), Feb 2006
+  !                      - Added capability for speculative warm restart
+  !                      Brent Griffith (NREL), Feb 2010
+  !                      - use SetActuatedBranchFlowRate in Plant Utilities (honor hardware min > 0.0)
+  !                      - add FirstHVACIteration logic, don't reset if false,
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine resets the actuator inlet flows.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine resets the actuator inlet flows.
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE PlantUtilities, ONLY : SetActuatedBranchFlowRate
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
 
   INTEGER, INTENT(IN)       :: ControlNum
   LOGICAL, INTENT(IN)       :: FirstHVACIteration
   LOGICAL, INTENT(IN)       :: DoWarmRestartFlag
   LOGICAL, INTENT(OUT)      :: IsConvergedFlag
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER             :: ActuatedNode
   INTEGER             :: SensedNode
   REAL(r64)           :: NoFlowResetValue
@@ -902,17 +902,17 @@ SUBROUTINE ResetController(ControlNum, FirstHVACIteration, DoWarmRestartFlag, Is
   SensedNode   = ControllerProps(ControlNum)%SensedNode
 
   ! Set again in ReportController() to ControllerProps(ControlNum)%NextActuatedValue
-!  IF (FirstHVACIteration) THEN
-!DSU3    Node(ActuatedNode)%MassFlowRate = 0.0d0
-    NoFlowResetValue = 0.0d0
-    CALL SetActuatedBranchFlowRate(NoFlowResetValue,  &
-                         ControllerProps(ControlNum)%ActuatedNode ,      &
-                         ControllerProps(ControlNum)%ActuatedNodePlantLoopNum, &
-                         ControllerProps(ControlNum)%ActuatedNodePlantLoopSide, &
-                         ControllerProps(ControlNum)%ActuatedNodePlantLoopBranchNum, &
-                         .TRUE.)
+  !  IF (FirstHVACIteration) THEN
+  !DSU3    Node(ActuatedNode)%MassFlowRate = 0.0d0
+  NoFlowResetValue = 0.0d0
+  CALL SetActuatedBranchFlowRate(NoFlowResetValue,  &
+  ControllerProps(ControlNum)%ActuatedNode ,      &
+  ControllerProps(ControlNum)%ActuatedNodePlantLoopNum, &
+  ControllerProps(ControlNum)%ActuatedNodePlantLoopSide, &
+  ControllerProps(ControlNum)%ActuatedNodePlantLoopBranchNum, &
+  .TRUE.)
 
-!  ENDIF
+  !  ENDIF
 
   ! Reset iteration counter and internal variables
   ControllerProps(ControlNum)%NumCalcCalls = 0
@@ -974,51 +974,51 @@ END SUBROUTINE ResetController
 
 SUBROUTINE InitController(ControlNum,FirstHVACIteration,IsConvergedFlag)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Richard J. Liesen
-          !       DATE WRITTEN   July 1998
-          !       MODIFIED       Shirey/Raustad (FSEC), Jan 2004
-          !       MODIFIED       Dimitri Curtil (LBNL), Feb 2006
-          !                      - Moved first call convergence test code to ResetController()
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Richard J. Liesen
+  !       DATE WRITTEN   July 1998
+  !       MODIFIED       Shirey/Raustad (FSEC), Jan 2004
+  !       MODIFIED       Dimitri Curtil (LBNL), Feb 2006
+  !                      - Moved first call convergence test code to ResetController()
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine is for  initializations of the Controller Components.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine is for  initializations of the Controller Components.
 
-          ! METHODOLOGY EMPLOYED:
-          ! Uses the status flags to trigger events.
+  ! METHODOLOGY EMPLOYED:
+  ! Uses the status flags to trigger events.
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE Psychrometrics,   ONLY: PsyTdpFnWPb
   USE FluidProperties,  ONLY: GetDensityGlycol
   USE DataEnvironment,  ONLY: OutBaroPress
   USE DataHVACGlobals,  ONLY: DoSetPointTest
   USE RootFinder,       ONLY: SetupRootFinder
   USE EMSManager,       ONLY: iTemperatureSetpoint, CheckIfNodeSetpointManagedByEMS , &
-                              iHumidityRatioSetpoint, iHumidityRatioMaxSetpoint, iMassFlowRateSetpoint
+  iHumidityRatioSetpoint, iHumidityRatioMaxSetpoint, iMassFlowRateSetpoint
   USE DataPlant,        ONLY: PlantLoop, ScanPlantLoopsForNodeNum
   USE PlantUtilities,   ONLY: SetActuatedBranchFlowRate
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   INTEGER, INTENT(IN)      :: ControlNum
   LOGICAL, INTENT(INOUT)   :: IsConvergedFlag
   LOGICAL, INTENT(IN)      :: FirstHVACIteration ! TRUE if first full HVAC iteration in an HVAC timestep
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER             :: ActuatedNode
   INTEGER             :: SensedNode
   INTEGER             :: ControllerIndex
@@ -1052,420 +1052,420 @@ SUBROUTINE InitController(ControlNum,FirstHVACIteration,IsConvergedFlag)
     DO ControllerIndex=1,NumControllers
       SensedNode = ControllerProps(ControllerIndex)%SensedNode
       SELECT CASE(ControllerProps(ControllerIndex)%ControlVar)
-        CASE(iTemperature) ! 'Temperature'
-          IF (Node(SensedNode)%TempSetPoint == SensedNodeFlagValue) THEN
-            IF (.NOT. AnyEnergyManagementSystemInModel) THEN
-              CALL ShowSevereError('HVACControllers: Missing temperature setpoint for controller type='//  &
-                                    TRIM(ControllerProps(ControllerIndex)%ControllerType)//' Name="'// &
-                                    TRIM(ControllerProps(ControllerIndex)%ControllerName) // '"')
-              CALL ShowContinueError('Node Referenced (by Controller)='//TRIM(NodeID(SensedNode)))
-              CALL ShowContinueError('  use a Setpoint Manager with Control Variable = "Temperature" to establish '//  &
-                                     'a setpoint at the controller sensed node.')
-              SetPointErrorFlag = .TRUE.
-            ELSE
-              ! call to check node is actuated by EMS
-              CALL CheckIfNodeSetpointManagedByEMS(SensedNode,iTemperatureSetpoint, SetpointErrorFlag)
-              IF (SetpointErrorFlag) THEN
-                CALL ShowSevereError ('HVACControllers: Missing temperature setpoint for controller type='//  &
-                                    TRIM(ControllerProps(ControllerIndex)%ControllerType)//' Name="'// &
-                                    TRIM(ControllerProps(ControllerIndex)%ControllerName) // '"')
-                CALL ShowContinueError('Node Referenced (by Controller)='//TRIM(NodeID(SensedNode)))
-                CALL ShowContinueError('  use a Setpoint Manager with Control Variable = "Temperature" to establish '//  &
-                                     'a setpoint at the controller sensed node.')
-                CALL ShowContinueError('Or add EMS Actuator to provide temperature setpoint at this node')
-              ENDIF
-            ENDIF
+      CASE(iTemperature) ! 'Temperature'
+        IF (Node(SensedNode)%TempSetPoint == SensedNodeFlagValue) THEN
+          IF (.NOT. AnyEnergyManagementSystemInModel) THEN
+            CALL ShowSevereError('HVACControllers: Missing temperature setpoint for controller type='//  &
+            TRIM(ControllerProps(ControllerIndex)%ControllerType)//' Name="'// &
+            TRIM(ControllerProps(ControllerIndex)%ControllerName) // '"')
+            CALL ShowContinueError('Node Referenced (by Controller)='//TRIM(NodeID(SensedNode)))
+            CALL ShowContinueError('  use a Setpoint Manager with Control Variable = "Temperature" to establish '//  &
+            'a setpoint at the controller sensed node.')
+            SetPointErrorFlag = .TRUE.
           ELSE
-!           Warn if humidity setpoint is detected (only for cooling coils) and control varible is TEMP.
-            IF (Node(SensedNode)%HumRatMax /= SensedNodeFlagValue .AND.   &
-                           ControllerProps(ControllerIndex)%Action==iReverseAction) THEN
-              CALL ShowWarningError('HVACControllers: controller type='//TRIM(ControllerProps(ControllerIndex)%ControllerType)// &
-                                    ' Name="'//      &
-                                    TRIM(ControllerProps(ControllerIndex)%ControllerName) // '"'//     &
-                                    ' has detected a maximum humidity ratio setpoint at the control node.')
-              CALL ShowContinueError('Node referenced (by controller)='//TRIM(NodeID(SensedNode)))
-              CALL ShowContinueError('  set the controller control variable to TemperatureAndHumidityRatio' &
-                                     //' if humidity control is desired.')
-!              SetPointErrorFlag = .TRUE.
-            END IF
-          END IF
-        CASE(iHumidityRatio)  ! 'HumidityRatio'
-          IF (Node(SensedNode)%HumRatSetPoint == SensedNodeFlagValue) THEN
-            IF (.NOT. AnyEnergyManagementSystemInModel) THEN
-              CALL ShowSevereError('HVACControllers: Missing humidity ratio setpoint for controller type=' // &
-                                    TRIM(ControllerProps(ControllerIndex)%ControllerType)//' Name="'//      &
-                                    TRIM(ControllerProps(ControllerIndex)%ControllerName) // '"')
-              CALL ShowContinueError('Node referenced (by controller)='//TRIM(NodeID(SensedNode)))
-              CALL ShowContinueError('  use a SetpointManager with the field Control Variable = "HumidityRatio" to establish '//  &
-                                     'a setpoint at the controller sensed node.')
-              SetPointErrorFlag = .TRUE.
-            ELSE
-              CALL CheckIfNodeSetpointManagedByEMS(SensedNode,iHumidityRatioSetpoint, SetpointErrorFlag)
-              IF (SetpointErrorFlag) THEN
-                CALL ShowSevereError('HVACControllers: Missing humidity ratio setpoint for controller type=' // &
-                                      TRIM(ControllerProps(ControllerIndex)%ControllerType)//' Name="'//      &
-                                      TRIM(ControllerProps(ControllerIndex)%ControllerName) // '"')
-                CALL ShowContinueError('Node referenced (by controller)='//TRIM(NodeID(SensedNode)))
-                CALL ShowContinueError('  use a SetpointManager with the field Control Variable = '//  &
-                   '"HumidityRatio" to establish a setpoint at the controller sensed node.')
-                CALL ShowContinueError('Or add EMS Actuator to provide Humidity Ratio setpoint at this node')
-
-              ENDIF
-            ENDIF
-          END IF
-        CASE(iTemperatureAndHumidityRatio) ! 'TemperatureAndHumidityRatio'
-          IF (Node(SensedNode)%TempSetPoint == SensedNodeFlagValue) THEN
-            IF (.NOT. AnyEnergyManagementSystemInModel) THEN
-              CALL ShowSevereError('HVACControllers: Missing temperature setpoint for controller type='//  &
-                                    TRIM(ControllerProps(ControllerIndex)%ControllerType)//' Name="'// &
-                                    TRIM(ControllerProps(ControllerIndex)%ControllerName) // '"')
+            ! call to check node is actuated by EMS
+            CALL CheckIfNodeSetpointManagedByEMS(SensedNode,iTemperatureSetpoint, SetpointErrorFlag)
+            IF (SetpointErrorFlag) THEN
+              CALL ShowSevereError ('HVACControllers: Missing temperature setpoint for controller type='//  &
+              TRIM(ControllerProps(ControllerIndex)%ControllerType)//' Name="'// &
+              TRIM(ControllerProps(ControllerIndex)%ControllerName) // '"')
               CALL ShowContinueError('Node Referenced (by Controller)='//TRIM(NodeID(SensedNode)))
               CALL ShowContinueError('  use a Setpoint Manager with Control Variable = "Temperature" to establish '//  &
-                                     'a setpoint at the controller sensed node.')
-              SetPointErrorFlag = .TRUE.
-            ELSE
-              ! call to check node is actuated by EMS
-              CALL CheckIfNodeSetpointManagedByEMS(SensedNode,iTemperatureSetpoint, SetpointErrorFlag)
-              IF (SetpointErrorFlag) THEN
-                CALL ShowSevereError ('HVACControllers: Missing temperature setpoint for controller type='//  &
-                                    TRIM(ControllerProps(ControllerIndex)%ControllerType)//' Name="'// &
-                                    TRIM(ControllerProps(ControllerIndex)%ControllerName) // '"')
-                CALL ShowContinueError('Node Referenced (by Controller)='//TRIM(NodeID(SensedNode)))
-                CALL ShowContinueError('  use a Setpoint Manager with Control Variable = "Temperature" to establish '//  &
-                                     'a setpoint at the controller sensed node.')
-                CALL ShowContinueError('Or add EMS Actuator to provide temperature setpoint at this node')
-              ENDIF
+              'a setpoint at the controller sensed node.')
+              CALL ShowContinueError('Or add EMS Actuator to provide temperature setpoint at this node')
             ENDIF
-          END IF
-          IF (Node(SensedNode)%HumRatMax == SensedNodeFlagValue) THEN
-            IF (.NOT. AnyEnergyManagementSystemInModel) THEN
-              CALL ShowSevereError('HVACControllers: Missing maximum humidity ratio setpoint for controller type=' // &
-                                    TRIM(ControllerProps(ControllerIndex)%ControllerType)//' Name="'//      &
-                                    TRIM(ControllerProps(ControllerIndex)%ControllerName) // '"')
-              CALL ShowContinueError('Node Referenced (by Controller)='//TRIM(NodeID(SensedNode)))
-              CALL ShowContinueError('  use a SetpointManager with the field Control Variable = '//  &
-                 '"MaximumHumidityRatio" to establish a setpoint at the controller sensed node.')
-              SetPointErrorFlag = .TRUE.
-            ELSE
-              ! call to check node is actuated by EMS
-              CALL CheckIfNodeSetpointManagedByEMS(SensedNode,iHumidityRatioMaxSetpoint, SetpointErrorFlag)
-              IF (SetpointErrorFlag) THEN
-                CALL ShowSevereError('HVACControllers: Missing maximum humidity ratio setpoint for controller type=' // &
-                                      TRIM(ControllerProps(ControllerIndex)%ControllerType)//' Name="'//      &
-                                      TRIM(ControllerProps(ControllerIndex)%ControllerName) // '"')
-                CALL ShowContinueError('Node Referenced (by Controller)='//TRIM(NodeID(SensedNode)))
-                CALL ShowContinueError('  use a SetpointManager with the field Control Variable = '//  &
-                   '"MaximumHumidityRatio" to establish a setpoint at the controller sensed node.')
-                CALL ShowContinueError('Or add EMS Actuator to provide maximum Humidity Ratio setpoint at this node')
-              ENDIF
-            ENDIF
-          END IF
-        CASE(iFlow) ! 'Flow'
-          IF (Node(SensedNode)%MassFlowRateSetPoint == SensedNodeFlagValue) THEN
-            IF (.NOT. AnyEnergyManagementSystemInModel) THEN
-              CALL ShowSevereError('HVACControllers: Missing mass flow rate setpoint for controller type=' // &
-                                    TRIM(ControllerProps(ControllerIndex)%ControllerType)//' Name="'//      &
-                                    TRIM(ControllerProps(ControllerIndex)%ControllerName) // '"')
-              CALL ShowContinueError('Node Referenced (in Controller)='//TRIM(NodeID(SensedNode)))
-              CALL ShowContinueError('  use a SetpointManager with the field Control Variable = "MassFlowRate" to establish '//  &
-                                     'a setpoint at the controller sensed node.')
-              SetPointErrorFlag = .TRUE.
-            ELSE
-              ! call to check node is actuated by EMS
-              CALL CheckIfNodeSetpointManagedByEMS(SensedNode,iMassFlowRateSetpoint, SetpointErrorFlag)
-              IF (SetpointErrorFlag) THEN
-                CALL ShowSevereError('HVACControllers: Missing mass flow rate setpoint for controller type=' // &
-                                      TRIM(ControllerProps(ControllerIndex)%ControllerType)//' Name="'//      &
-                                      TRIM(ControllerProps(ControllerIndex)%ControllerName) // '"')
-                CALL ShowContinueError('Node Referenced (in Controller)='//TRIM(NodeID(SensedNode)))
-                CALL ShowContinueError('  use a SetpointManager with the field Control Variable = "MassFlowRate" to establish '//  &
-                                       'a setpoint at the controller sensed node.')
-                CALL ShowContinueError('Or add EMS Actuator to provide Mass Flow Rate setpoint at this node')
-              ENDIF
-            ENDIF
-          END IF
-      END SELECT
-    END DO
-
-    MySetPointCheckFlag = .FALSE.
-  END IF
-
-  IF (ALLOCATED(PlantLoop) .AND. MyPlantIndexsFlag(ControlNum)) THEN
-    CALL  ScanPlantLoopsForNodeNum(ControllerProps(ControlNum)%ControllerName, &
-                                   ControllerProps(ControlNum)%ActuatedNode, &
-                                   ControllerProps(ControlNum)%ActuatedNodePlantLoopNum, &
-                                   ControllerProps(ControlNum)%ActuatedNodePlantLoopSide, &
-                                   ControllerProps(ControlNum)%ActuatedNodePlantLoopBranchNum)
-    MyPlantIndexsFlag(ControlNum) = .FALSE.
-
-  ENDIF
-
-  IF ( .NOT. SysSizingCalc .AND. MySizeFlag(ControlNum)) THEN
-
-    CALL SizeController(ControlNum)
-
-    !Check to make sure that the Minimum Flow rate is less than the max.
-    IF (ControllerProps(ControlNum)%MaxVolFlowActuated == 0.0) THEN
-      ControllerProps(ControlNum)%MinVolFlowActuated = 0.0
-    ELSE IF (ControllerProps(ControlNum)%MinVolFlowActuated .GE. ControllerProps(ControlNum)%MaxVolFlowActuated) THEN
-      CALL ShowFatalError( &
-        'Controller:WaterCoil, Minimum control flow is > or = Maximum control flow; '// &
-        TRIM(ControllerProps(ControlNum)%ControllerName) &
-      )
-    END IF
-
-    ! Setup root finder after sizing calculation
-    SelectAction: SELECT CASE ( ControllerProps(ControlNum)%Action )
-      CASE ( iNormalAction )
-        CALL SetupRootFinder(                 &
-          RootFinders(ControlNum),            &
-          iSlopeIncreasing,                   & ! Slope type
-          iMethodBrent,                       & ! Method type
-          constant_zero,                      & ! TolX: no relative tolerance for X variables
-          1.0d-6,                             & ! ATolX: absolute tolerance for X variables
-          ControllerProps(ControlNum)%Offset  & ! ATolY: absolute tolerance for Y variables
-        )
-
-      CASE ( iReverseAction )
-        CALL SetupRootFinder(                 &
-          RootFinders(ControlNum),            &
-          iSlopeDecreasing,                   & ! Slope type
-          iMethodBrent,                       & ! Method type
-          constant_zero,                      & ! TolX: no relative tolerance for X variables
-          1.0d-6,                             & ! ATolX: absolute tolerance for X variables
-          ControllerProps(ControlNum)%Offset  & ! ATolY: absolute tolerance for Y variables
-        )
-      CASE DEFAULT
-        CALL ShowFatalError( &
-          'InitController: Invalid controller action. '// &
-          'Valid choices are "Normal" or "Reverse"' &
-        )
-    END SELECT SelectAction
-
-    MySizeFlag(ControlNum) = .FALSE.
-  END IF
-
-  ! Set the sensed and actuated node numbers
-  ActuatedNode = ControllerProps(ControlNum)%ActuatedNode
-  SensedNode   = ControllerProps(ControlNum)%SensedNode
-
-  ! Do the Begin Environment initializations
-  IF (BeginEnvrnFlag .AND. MyEnvrnFlag(ControlNum)) THEN
-
-    rho = GetDensityGlycol( PlantLoop(ControllerProps(ControlNum)%ActuatedNodePlantLoopNum)%FluidName,  &
-                               InitConvTemp, &
-                               PlantLoop(ControllerProps(ControlNum)%ActuatedNodePlantLoopNum)%FluidIndex,&
-                               'InitController')
-
-    ControllerProps(ControlNum)%MinActuated = rho*ControllerProps(ControlNum)%MinVolFlowActuated
-    ControllerProps(ControlNum)%MaxActuated = rho*ControllerProps(ControlNum)%MaxVolFlowActuated
-
-    ! Turn off scheme to reuse previous solution obtained at last SimAirLoop() call
-    ControllerProps(ControlNum)%ReusePreviousSolutionFlag      = .FALSE.
-    ! Reset solution trackers
-    ControllerProps(ControlNum)%SolutionTrackers%DefinedFlag   = .FALSE.
-    ControllerProps(ControlNum)%SolutionTrackers%Mode          = iModeNone
-    ControllerProps(ControlNum)%SolutionTrackers%ActuatedValue = 0.0
-
-    MyEnvrnFlag(ControlNum) = .FALSE.
-  END IF
-
-  IF (.NOT. BeginEnvrnFlag) THEN
-    MyEnvrnFlag(ControlNum)=.TRUE.
-  ENDIF
-
-
-  IF (FirstHVACIteration) THEN
-    Call SetActuatedBranchFlowRate(ControllerProps(ControlNum)%NextActuatedValue, &
-                                       ActuatedNode, &
-                                       ControllerProps(ControlNum)%ActuatedNodePlantLoopNum,&
-                                       ControllerProps(ControlNum)%ActuatedNodePlantLoopSide, &
-                                       ControllerProps(ControlNum)%ActuatedNodePlantLoopBranchNum, &
-                                       .FALSE.)
-!    Node(ActuatedNode)%MassFlowRateMaxAvail = ControllerProps(ControlNum)%MaxActuated
-!    Node(ActuatedNode)%MassFlowRateMinAvail = MAX( &
-!      ControllerProps(ControlNum)%MinActuated, &
-!      Node(ActuatedNode)%MassFlowRateMin &
-!    )
-  ELSE
-    Call SetActuatedBranchFlowRate(ControllerProps(ControlNum)%NextActuatedValue, &
-                                       ActuatedNode, &
-                                       ControllerProps(ControlNum)%ActuatedNodePlantLoopNum,&
-                                       ControllerProps(ControlNum)%ActuatedNodePlantLoopSide, &
-                                       ControllerProps(ControlNum)%ActuatedNodePlantLoopBranchNum, &
-                                       .FALSE. )
-  END IF  ! End of FirstHVACIteration Conditional If
-
-
-
-  ! Do the following initializations (every time step): This should be the info from
-  ! the previous components outlets or the node data in this section.
-  ! Load the node data in this section for the component simulation
-  IsConvergedFlag = .FALSE.
-
-  SELECT CASE(ControllerProps(ControlNum)%ControlVar)
-    CASE (iTemperature)  ! 'Temperature'
-      ControllerProps(ControlNum)%SensedValue = Node(SensedNode)%Temp
-      ! Done once per HVAC step
-      IF ( .NOT.ControllerProps(ControlNum)%IsSetPointDefinedFlag ) THEN
-        ControllerProps(ControlNum)%SetPointValue = Node(SensedNode)%TempSetPoint
-        ControllerProps(ControlNum)%IsSetPointDefinedFlag = .TRUE.
-      END IF
-
-    CASE (iTemperatureAndHumidityRatio)  ! 'TemperatureAndHumidityRatio'
-      ControllerProps(ControlNum)%SensedValue = Node(SensedNode)%Temp
-      ! Done once per HVAC step
-      !
-      ! WARNING: The scheme for computing the setpoint for the dual temperature and humidity ratio
-      !          control strategy breaks down whenever the sensed node temperature is modified by
-      !          a controller fired after the current one. Indeed the final sensed node temperature
-      !          is likely to have changed in the meantime if the other controller is active,
-      !          thereby invalidating the setpoint calculation for the other controller performed
-      !          earlier on the air loop.
-      !
-      IF ( .NOT.ControllerProps(ControlNum)%IsSetPointDefinedFlag ) THEN
-        ! NOTE: For TEMPANDHUMRAT control the computed value ControllerProps(ControlNum)%SetPointValue
-        !       depends on:
-        !       - Node(SensedNode)%HumRatMax
-        !       - Node(SensedNode)%Temp
-        !       - Node(SensedNode)%HumRat
-        IF (Node(SensedNode)%HumRatMax .GT. 0) THEN
-          ! Setpoint can only be computed when the sensed node temperature is evaluated at the max
-          ! actuated value for the dual humidity ratio / temperature strategy.
-          ! See routine CalcSimpleController() for the sequence of operations.
-          IF (ControllerProps(ControlNum)%NextActuatedValue == RootFinders(ControlNum)%MaxPoint%X) THEN
-            ! Calculate the approach temperature (difference between SA dry-bulb temp and SA dew point temp)
-            ApproachTemp = Node(SensedNode)%Temp - PsyTdpFnWPb(Node(SensedNode)%HumRat,OutBaroPress)
-            ! Calculate the dew point temperature at the SA humidity ratio setpoint
-            DesiredDewPoint = PsyTdpFnWPb(Node(SensedNode)%HumRatMax,OutBaroPress)
-            ! Adjust the calculated dew point temperature by the approach temp
-            HumidityControlTempSetPoint = DesiredDewPoint + ApproachTemp
-            ! NOTE: The next line introduces a potential discontinuity into the residual function
-            !       which could prevent the root finder from finding the root it if were done at each
-            !       controller iteration. For this reason we perform the setpoint calculation only
-            !       once when the air loop has been evaluated with the max actuated value.
-            !       See routine CalcSimpleController() for the sequence of operations.
-            ControllerProps(ControlNum)%SetPointValue = MIN( &
-              Node(SensedNode)%TempSetPoint, &   ! Pure temperature setpoint
-              HumidityControlTempSetPoint &      ! Temperature setpoint to achieve the humidity ratio setpoint
-            )
-            ! Overwrite the "pure" temperature setpoint with the actual setpoint that takes into
-            ! account the humidity ratio setpoint.
-            !
-            ! NOTE: Check that this does not create side-effects somewhere else in the code.
-            Node(SensedNode)%TempSetPoint = ControllerProps(ControlNum)%SetPointValue
-            ! Finally indicate thate the setpoint has been computed
-            ControllerProps(ControlNum)%IsSetPointDefinedFlag = .TRUE.
-          END IF
+          ENDIF
         ELSE
-          ! Pure temperature setpoint control strategy
-          ControllerProps(ControlNum)%SetPointValue = Node(SensedNode)%TempSetPoint
-          ! Finally indicate thate the setpoint has been computed
-          ControllerProps(ControlNum)%IsSetPointDefinedFlag = .TRUE.
+          !           Warn if humidity setpoint is detected (only for cooling coils) and control varible is TEMP.
+          IF (Node(SensedNode)%HumRatMax /= SensedNodeFlagValue .AND.   &
+          ControllerProps(ControllerIndex)%Action==iReverseAction) THEN
+          CALL ShowWarningError('HVACControllers: controller type='//TRIM(ControllerProps(ControllerIndex)%ControllerType)// &
+          ' Name="'//      &
+          TRIM(ControllerProps(ControllerIndex)%ControllerName) // '"'//     &
+          ' has detected a maximum humidity ratio setpoint at the control node.')
+          CALL ShowContinueError('Node referenced (by controller)='//TRIM(NodeID(SensedNode)))
+          CALL ShowContinueError('  set the controller control variable to TemperatureAndHumidityRatio' &
+          //' if humidity control is desired.')
+          !              SetPointErrorFlag = .TRUE.
         END IF
       END IF
-
     CASE(iHumidityRatio)  ! 'HumidityRatio'
-      ControllerProps(ControlNum)%SensedValue = Node(SensedNode)%HumRat
-      ! Done once per HVAC step
-      IF ( .NOT.ControllerProps(ControlNum)%IsSetPointDefinedFlag ) THEN
-        ControllerProps(ControlNum)%SetPointValue = Node(SensedNode)%HumRatSetPoint
-        ControllerProps(ControlNum)%IsSetPointDefinedFlag = .TRUE.
+      IF (Node(SensedNode)%HumRatSetPoint == SensedNodeFlagValue) THEN
+        IF (.NOT. AnyEnergyManagementSystemInModel) THEN
+          CALL ShowSevereError('HVACControllers: Missing humidity ratio setpoint for controller type=' // &
+          TRIM(ControllerProps(ControllerIndex)%ControllerType)//' Name="'//      &
+          TRIM(ControllerProps(ControllerIndex)%ControllerName) // '"')
+          CALL ShowContinueError('Node referenced (by controller)='//TRIM(NodeID(SensedNode)))
+          CALL ShowContinueError('  use a SetpointManager with the field Control Variable = "HumidityRatio" to establish '//  &
+          'a setpoint at the controller sensed node.')
+          SetPointErrorFlag = .TRUE.
+        ELSE
+          CALL CheckIfNodeSetpointManagedByEMS(SensedNode,iHumidityRatioSetpoint, SetpointErrorFlag)
+          IF (SetpointErrorFlag) THEN
+            CALL ShowSevereError('HVACControllers: Missing humidity ratio setpoint for controller type=' // &
+            TRIM(ControllerProps(ControllerIndex)%ControllerType)//' Name="'//      &
+            TRIM(ControllerProps(ControllerIndex)%ControllerName) // '"')
+            CALL ShowContinueError('Node referenced (by controller)='//TRIM(NodeID(SensedNode)))
+            CALL ShowContinueError('  use a SetpointManager with the field Control Variable = '//  &
+            '"HumidityRatio" to establish a setpoint at the controller sensed node.')
+            CALL ShowContinueError('Or add EMS Actuator to provide Humidity Ratio setpoint at this node')
+
+          ENDIF
+        ENDIF
       END IF
-
-    CASE(iFlow)   ! 'Flow'
-      ControllerProps(ControlNum)%SensedValue = Node(SensedNode)%MassFlowRate
-      ! Done once per HVAC step
-      IF ( .NOT.ControllerProps(ControlNum)%IsSetPointDefinedFlag ) THEN
-        ControllerProps(ControlNum)%SetPointValue = Node(SensedNode)%MassFlowRateSetPoint
-        ControllerProps(ControlNum)%IsSetPointDefinedFlag = .TRUE.
+    CASE(iTemperatureAndHumidityRatio) ! 'TemperatureAndHumidityRatio'
+      IF (Node(SensedNode)%TempSetPoint == SensedNodeFlagValue) THEN
+        IF (.NOT. AnyEnergyManagementSystemInModel) THEN
+          CALL ShowSevereError('HVACControllers: Missing temperature setpoint for controller type='//  &
+          TRIM(ControllerProps(ControllerIndex)%ControllerType)//' Name="'// &
+          TRIM(ControllerProps(ControllerIndex)%ControllerName) // '"')
+          CALL ShowContinueError('Node Referenced (by Controller)='//TRIM(NodeID(SensedNode)))
+          CALL ShowContinueError('  use a Setpoint Manager with Control Variable = "Temperature" to establish '//  &
+          'a setpoint at the controller sensed node.')
+          SetPointErrorFlag = .TRUE.
+        ELSE
+          ! call to check node is actuated by EMS
+          CALL CheckIfNodeSetpointManagedByEMS(SensedNode,iTemperatureSetpoint, SetpointErrorFlag)
+          IF (SetpointErrorFlag) THEN
+            CALL ShowSevereError ('HVACControllers: Missing temperature setpoint for controller type='//  &
+            TRIM(ControllerProps(ControllerIndex)%ControllerType)//' Name="'// &
+            TRIM(ControllerProps(ControllerIndex)%ControllerName) // '"')
+            CALL ShowContinueError('Node Referenced (by Controller)='//TRIM(NodeID(SensedNode)))
+            CALL ShowContinueError('  use a Setpoint Manager with Control Variable = "Temperature" to establish '//  &
+            'a setpoint at the controller sensed node.')
+            CALL ShowContinueError('Or add EMS Actuator to provide temperature setpoint at this node')
+          ENDIF
+        ENDIF
       END IF
+      IF (Node(SensedNode)%HumRatMax == SensedNodeFlagValue) THEN
+        IF (.NOT. AnyEnergyManagementSystemInModel) THEN
+          CALL ShowSevereError('HVACControllers: Missing maximum humidity ratio setpoint for controller type=' // &
+          TRIM(ControllerProps(ControllerIndex)%ControllerType)//' Name="'//      &
+          TRIM(ControllerProps(ControllerIndex)%ControllerName) // '"')
+          CALL ShowContinueError('Node Referenced (by Controller)='//TRIM(NodeID(SensedNode)))
+          CALL ShowContinueError('  use a SetpointManager with the field Control Variable = '//  &
+          '"MaximumHumidityRatio" to establish a setpoint at the controller sensed node.')
+          SetPointErrorFlag = .TRUE.
+        ELSE
+          ! call to check node is actuated by EMS
+          CALL CheckIfNodeSetpointManagedByEMS(SensedNode,iHumidityRatioMaxSetpoint, SetpointErrorFlag)
+          IF (SetpointErrorFlag) THEN
+            CALL ShowSevereError('HVACControllers: Missing maximum humidity ratio setpoint for controller type=' // &
+            TRIM(ControllerProps(ControllerIndex)%ControllerType)//' Name="'//      &
+            TRIM(ControllerProps(ControllerIndex)%ControllerName) // '"')
+            CALL ShowContinueError('Node Referenced (by Controller)='//TRIM(NodeID(SensedNode)))
+            CALL ShowContinueError('  use a SetpointManager with the field Control Variable = '//  &
+            '"MaximumHumidityRatio" to establish a setpoint at the controller sensed node.')
+            CALL ShowContinueError('Or add EMS Actuator to provide maximum Humidity Ratio setpoint at this node')
+          ENDIF
+        ENDIF
+      END IF
+    CASE(iFlow) ! 'Flow'
+      IF (Node(SensedNode)%MassFlowRateSetPoint == SensedNodeFlagValue) THEN
+        IF (.NOT. AnyEnergyManagementSystemInModel) THEN
+          CALL ShowSevereError('HVACControllers: Missing mass flow rate setpoint for controller type=' // &
+          TRIM(ControllerProps(ControllerIndex)%ControllerType)//' Name="'//      &
+          TRIM(ControllerProps(ControllerIndex)%ControllerName) // '"')
+          CALL ShowContinueError('Node Referenced (in Controller)='//TRIM(NodeID(SensedNode)))
+          CALL ShowContinueError('  use a SetpointManager with the field Control Variable = "MassFlowRate" to establish '//  &
+          'a setpoint at the controller sensed node.')
+          SetPointErrorFlag = .TRUE.
+        ELSE
+          ! call to check node is actuated by EMS
+          CALL CheckIfNodeSetpointManagedByEMS(SensedNode,iMassFlowRateSetpoint, SetpointErrorFlag)
+          IF (SetpointErrorFlag) THEN
+            CALL ShowSevereError('HVACControllers: Missing mass flow rate setpoint for controller type=' // &
+            TRIM(ControllerProps(ControllerIndex)%ControllerType)//' Name="'//      &
+            TRIM(ControllerProps(ControllerIndex)%ControllerName) // '"')
+            CALL ShowContinueError('Node Referenced (in Controller)='//TRIM(NodeID(SensedNode)))
+            CALL ShowContinueError('  use a SetpointManager with the field Control Variable = "MassFlowRate" to establish '//  &
+            'a setpoint at the controller sensed node.')
+            CALL ShowContinueError('Or add EMS Actuator to provide Mass Flow Rate setpoint at this node')
+          ENDIF
+        ENDIF
+      END IF
+    END SELECT
+  END DO
 
-    CASE DEFAULT
-      CALL ShowFatalError( &
-        'Invalid Controller Variable Type='// &
-        TRIM(ControlVariableTypes(ControllerProps(ControlNum)%ControlVar)) &
-      )
-  END SELECT
+  MySetPointCheckFlag = .FALSE.
+END IF
 
-  SELECT CASE(ControllerProps(ControlNum)%ActuatorVar)
-    CASE(iFlow)  ! 'Flow'
-      ! At the beginning of every time step the value is reset to the User Input
-      ! The interface managers can reset the Max or Min to available values during the time step
-      ! and these will then be the new setpoint limits for the controller to work within.
-      ControllerProps(ControlNum)%ActuatedValue = Node(ActuatedNode)%MassFlowRate
-      ! Compute the currently available min and max bounds for controller.
-      ! Done only once per HVAC step, as it would not make any sense to modify the min/max
-      ! bounds during successive iterations of the root finder.
-      IF ( ControllerProps(ControlNum)%NumCalcCalls == 0 ) THEN
-        ControllerProps(ControlNum)%MinAvailActuated  = MAX( &
-          Node(ActuatedNode)%MassFlowRateMinAvail, &
-          ControllerProps(ControlNum)%MinActuated)
-        ControllerProps(ControlNum)%MaxAvailActuated  = MIN( &
-          Node(ActuatedNode)%MassFlowRateMaxAvail, &
-          ControllerProps(ControlNum)%MaxActuated)
-       END IF
+IF (ALLOCATED(PlantLoop) .AND. MyPlantIndexsFlag(ControlNum)) THEN
+  CALL  ScanPlantLoopsForNodeNum(ControllerProps(ControlNum)%ControllerName, &
+  ControllerProps(ControlNum)%ActuatedNode, &
+  ControllerProps(ControlNum)%ActuatedNodePlantLoopNum, &
+  ControllerProps(ControlNum)%ActuatedNodePlantLoopSide, &
+  ControllerProps(ControlNum)%ActuatedNodePlantLoopBranchNum)
+  MyPlantIndexsFlag(ControlNum) = .FALSE.
 
-    CASE DEFAULT
-      CALL ShowFatalError( &
-        'Invalid Actuator Variable Type='// &
-        TRIM(ControlVariableTypes(ControllerProps(ControlNum)%ActuatorVar)) &
-      )
-  END SELECT
+ENDIF
 
-  ! Compute residual for control function using desired setpoint value and current sensed value
+IF ( .NOT. SysSizingCalc .AND. MySizeFlag(ControlNum)) THEN
+
+  CALL SizeController(ControlNum)
+
+  !Check to make sure that the Minimum Flow rate is less than the max.
+  IF (ControllerProps(ControlNum)%MaxVolFlowActuated == 0.0) THEN
+    ControllerProps(ControlNum)%MinVolFlowActuated = 0.0
+  ELSE IF (ControllerProps(ControlNum)%MinVolFlowActuated .GE. ControllerProps(ControlNum)%MaxVolFlowActuated) THEN
+    CALL ShowFatalError( &
+    'Controller:WaterCoil, Minimum control flow is > or = Maximum control flow; '// &
+    TRIM(ControllerProps(ControlNum)%ControllerName) &
+    )
+  END IF
+
+  ! Setup root finder after sizing calculation
+  SelectAction: SELECT CASE ( ControllerProps(ControlNum)%Action )
+  CASE ( iNormalAction )
+    CALL SetupRootFinder(                 &
+    RootFinders(ControlNum),            &
+    iSlopeIncreasing,                   & ! Slope type
+    iMethodBrent,                       & ! Method type
+    constant_zero,                      & ! TolX: no relative tolerance for X variables
+    1.0d-6,                             & ! ATolX: absolute tolerance for X variables
+    ControllerProps(ControlNum)%Offset  & ! ATolY: absolute tolerance for Y variables
+    )
+
+  CASE ( iReverseAction )
+    CALL SetupRootFinder(                 &
+    RootFinders(ControlNum),            &
+    iSlopeDecreasing,                   & ! Slope type
+    iMethodBrent,                       & ! Method type
+    constant_zero,                      & ! TolX: no relative tolerance for X variables
+    1.0d-6,                             & ! ATolX: absolute tolerance for X variables
+    ControllerProps(ControlNum)%Offset  & ! ATolY: absolute tolerance for Y variables
+    )
+  CASE DEFAULT
+    CALL ShowFatalError( &
+    'InitController: Invalid controller action. '// &
+    'Valid choices are "Normal" or "Reverse"' &
+    )
+  END SELECT SelectAction
+
+  MySizeFlag(ControlNum) = .FALSE.
+END IF
+
+! Set the sensed and actuated node numbers
+ActuatedNode = ControllerProps(ControlNum)%ActuatedNode
+SensedNode   = ControllerProps(ControlNum)%SensedNode
+
+! Do the Begin Environment initializations
+IF (BeginEnvrnFlag .AND. MyEnvrnFlag(ControlNum)) THEN
+
+  rho = GetDensityGlycol( PlantLoop(ControllerProps(ControlNum)%ActuatedNodePlantLoopNum)%FluidName,  &
+  InitConvTemp, &
+  PlantLoop(ControllerProps(ControlNum)%ActuatedNodePlantLoopNum)%FluidIndex,&
+  'InitController')
+
+  ControllerProps(ControlNum)%MinActuated = rho*ControllerProps(ControlNum)%MinVolFlowActuated
+  ControllerProps(ControlNum)%MaxActuated = rho*ControllerProps(ControlNum)%MaxVolFlowActuated
+
+  ! Turn off scheme to reuse previous solution obtained at last SimAirLoop() call
+  ControllerProps(ControlNum)%ReusePreviousSolutionFlag      = .FALSE.
+  ! Reset solution trackers
+  ControllerProps(ControlNum)%SolutionTrackers%DefinedFlag   = .FALSE.
+  ControllerProps(ControlNum)%SolutionTrackers%Mode          = iModeNone
+  ControllerProps(ControlNum)%SolutionTrackers%ActuatedValue = 0.0
+
+  MyEnvrnFlag(ControlNum) = .FALSE.
+END IF
+
+IF (.NOT. BeginEnvrnFlag) THEN
+  MyEnvrnFlag(ControlNum)=.TRUE.
+ENDIF
+
+
+IF (FirstHVACIteration) THEN
+  Call SetActuatedBranchFlowRate(ControllerProps(ControlNum)%NextActuatedValue, &
+  ActuatedNode, &
+  ControllerProps(ControlNum)%ActuatedNodePlantLoopNum,&
+  ControllerProps(ControlNum)%ActuatedNodePlantLoopSide, &
+  ControllerProps(ControlNum)%ActuatedNodePlantLoopBranchNum, &
+  .FALSE.)
+  !    Node(ActuatedNode)%MassFlowRateMaxAvail = ControllerProps(ControlNum)%MaxActuated
+  !    Node(ActuatedNode)%MassFlowRateMinAvail = MAX( &
+  !      ControllerProps(ControlNum)%MinActuated, &
+  !      Node(ActuatedNode)%MassFlowRateMin &
+  !    )
+ELSE
+  Call SetActuatedBranchFlowRate(ControllerProps(ControlNum)%NextActuatedValue, &
+  ActuatedNode, &
+  ControllerProps(ControlNum)%ActuatedNodePlantLoopNum,&
+  ControllerProps(ControlNum)%ActuatedNodePlantLoopSide, &
+  ControllerProps(ControlNum)%ActuatedNodePlantLoopBranchNum, &
+  .FALSE. )
+END IF  ! End of FirstHVACIteration Conditional If
+
+
+
+! Do the following initializations (every time step): This should be the info from
+! the previous components outlets or the node data in this section.
+! Load the node data in this section for the component simulation
+IsConvergedFlag = .FALSE.
+
+SELECT CASE(ControllerProps(ControlNum)%ControlVar)
+CASE (iTemperature)  ! 'Temperature'
+  ControllerProps(ControlNum)%SensedValue = Node(SensedNode)%Temp
+  ! Done once per HVAC step
+  IF ( .NOT.ControllerProps(ControlNum)%IsSetPointDefinedFlag ) THEN
+    ControllerProps(ControlNum)%SetPointValue = Node(SensedNode)%TempSetPoint
+    ControllerProps(ControlNum)%IsSetPointDefinedFlag = .TRUE.
+  END IF
+
+CASE (iTemperatureAndHumidityRatio)  ! 'TemperatureAndHumidityRatio'
+  ControllerProps(ControlNum)%SensedValue = Node(SensedNode)%Temp
+  ! Done once per HVAC step
   !
-  ! NOTE: The delta sensed value might be wrong if the setpoint has not yet been computed.
-  !       Make sure not to use it until the setpoint has been computed.
-  IF ( ControllerProps(ControlNum)%IsSetPointDefinedFlag ) THEN
-    ControllerProps(ControlNum)%DeltaSensed = ControllerProps(ControlNum)%SensedValue &
-                                              - ControllerProps(ControlNum)%SetPointValue
-  ELSE
-    ControllerProps(ControlNum)%DeltaSensed = 0.0d0
-  ENDIF
+  ! WARNING: The scheme for computing the setpoint for the dual temperature and humidity ratio
+  !          control strategy breaks down whenever the sensed node temperature is modified by
+  !          a controller fired after the current one. Indeed the final sensed node temperature
+  !          is likely to have changed in the meantime if the other controller is active,
+  !          thereby invalidating the setpoint calculation for the other controller performed
+  !          earlier on the air loop.
+  !
+  IF ( .NOT.ControllerProps(ControlNum)%IsSetPointDefinedFlag ) THEN
+    ! NOTE: For TEMPANDHUMRAT control the computed value ControllerProps(ControlNum)%SetPointValue
+    !       depends on:
+    !       - Node(SensedNode)%HumRatMax
+    !       - Node(SensedNode)%Temp
+    !       - Node(SensedNode)%HumRat
+    IF (Node(SensedNode)%HumRatMax .GT. 0) THEN
+      ! Setpoint can only be computed when the sensed node temperature is evaluated at the max
+      ! actuated value for the dual humidity ratio / temperature strategy.
+      ! See routine CalcSimpleController() for the sequence of operations.
+      IF (ControllerProps(ControlNum)%NextActuatedValue == RootFinders(ControlNum)%MaxPoint%X) THEN
+        ! Calculate the approach temperature (difference between SA dry-bulb temp and SA dew point temp)
+        ApproachTemp = Node(SensedNode)%Temp - PsyTdpFnWPb(Node(SensedNode)%HumRat,OutBaroPress)
+        ! Calculate the dew point temperature at the SA humidity ratio setpoint
+        DesiredDewPoint = PsyTdpFnWPb(Node(SensedNode)%HumRatMax,OutBaroPress)
+        ! Adjust the calculated dew point temperature by the approach temp
+        HumidityControlTempSetPoint = DesiredDewPoint + ApproachTemp
+        ! NOTE: The next line introduces a potential discontinuity into the residual function
+        !       which could prevent the root finder from finding the root it if were done at each
+        !       controller iteration. For this reason we perform the setpoint calculation only
+        !       once when the air loop has been evaluated with the max actuated value.
+        !       See routine CalcSimpleController() for the sequence of operations.
+        ControllerProps(ControlNum)%SetPointValue = MIN( &
+        Node(SensedNode)%TempSetPoint, &   ! Pure temperature setpoint
+        HumidityControlTempSetPoint &      ! Temperature setpoint to achieve the humidity ratio setpoint
+        )
+        ! Overwrite the "pure" temperature setpoint with the actual setpoint that takes into
+        ! account the humidity ratio setpoint.
+        !
+        ! NOTE: Check that this does not create side-effects somewhere else in the code.
+        Node(SensedNode)%TempSetPoint = ControllerProps(ControlNum)%SetPointValue
+        ! Finally indicate thate the setpoint has been computed
+        ControllerProps(ControlNum)%IsSetPointDefinedFlag = .TRUE.
+      END IF
+    ELSE
+      ! Pure temperature setpoint control strategy
+      ControllerProps(ControlNum)%SetPointValue = Node(SensedNode)%TempSetPoint
+      ! Finally indicate thate the setpoint has been computed
+      ControllerProps(ControlNum)%IsSetPointDefinedFlag = .TRUE.
+    END IF
+  END IF
 
-  RETURN
+CASE(iHumidityRatio)  ! 'HumidityRatio'
+  ControllerProps(ControlNum)%SensedValue = Node(SensedNode)%HumRat
+  ! Done once per HVAC step
+  IF ( .NOT.ControllerProps(ControlNum)%IsSetPointDefinedFlag ) THEN
+    ControllerProps(ControlNum)%SetPointValue = Node(SensedNode)%HumRatSetPoint
+    ControllerProps(ControlNum)%IsSetPointDefinedFlag = .TRUE.
+  END IF
+
+CASE(iFlow)   ! 'Flow'
+  ControllerProps(ControlNum)%SensedValue = Node(SensedNode)%MassFlowRate
+  ! Done once per HVAC step
+  IF ( .NOT.ControllerProps(ControlNum)%IsSetPointDefinedFlag ) THEN
+    ControllerProps(ControlNum)%SetPointValue = Node(SensedNode)%MassFlowRateSetPoint
+    ControllerProps(ControlNum)%IsSetPointDefinedFlag = .TRUE.
+  END IF
+
+CASE DEFAULT
+  CALL ShowFatalError( &
+  'Invalid Controller Variable Type='// &
+  TRIM(ControlVariableTypes(ControllerProps(ControlNum)%ControlVar)) &
+  )
+END SELECT
+
+SELECT CASE(ControllerProps(ControlNum)%ActuatorVar)
+CASE(iFlow)  ! 'Flow'
+  ! At the beginning of every time step the value is reset to the User Input
+  ! The interface managers can reset the Max or Min to available values during the time step
+  ! and these will then be the new setpoint limits for the controller to work within.
+  ControllerProps(ControlNum)%ActuatedValue = Node(ActuatedNode)%MassFlowRate
+  ! Compute the currently available min and max bounds for controller.
+  ! Done only once per HVAC step, as it would not make any sense to modify the min/max
+  ! bounds during successive iterations of the root finder.
+  IF ( ControllerProps(ControlNum)%NumCalcCalls == 0 ) THEN
+    ControllerProps(ControlNum)%MinAvailActuated  = MAX( &
+    Node(ActuatedNode)%MassFlowRateMinAvail, &
+    ControllerProps(ControlNum)%MinActuated)
+    ControllerProps(ControlNum)%MaxAvailActuated  = MIN( &
+    Node(ActuatedNode)%MassFlowRateMaxAvail, &
+    ControllerProps(ControlNum)%MaxActuated)
+  END IF
+
+CASE DEFAULT
+  CALL ShowFatalError( &
+  'Invalid Actuator Variable Type='// &
+  TRIM(ControlVariableTypes(ControllerProps(ControlNum)%ActuatorVar)) &
+  )
+END SELECT
+
+! Compute residual for control function using desired setpoint value and current sensed value
+!
+! NOTE: The delta sensed value might be wrong if the setpoint has not yet been computed.
+!       Make sure not to use it until the setpoint has been computed.
+IF ( ControllerProps(ControlNum)%IsSetPointDefinedFlag ) THEN
+  ControllerProps(ControlNum)%DeltaSensed = ControllerProps(ControlNum)%SensedValue &
+  - ControllerProps(ControlNum)%SetPointValue
+ELSE
+  ControllerProps(ControlNum)%DeltaSensed = 0.0d0
+ENDIF
+
+RETURN
 END SUBROUTINE InitController
 
 
 SUBROUTINE SizeController(ControlNum)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Fred Buhl
-          !       DATE WRITTEN   November 2001
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Fred Buhl
+  !       DATE WRITTEN   November 2001
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine is for sizing Controller Components for which max flow rates have not been
-          ! specified in the input.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine is for sizing Controller Components for which max flow rates have not been
+  ! specified in the input.
 
-          ! METHODOLOGY EMPLOYED:
-          ! Obtains flow rates from the actuated node. Should have been set by the water coils.
+  ! METHODOLOGY EMPLOYED:
+  ! Obtains flow rates from the actuated node. Should have been set by the water coils.
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataSizing
   USE DataConvergParams, ONLY: HVACEnergyToler, HVACTemperatureToler
   USE ReportSizingManager, ONLY: ReportSizingOutput
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   INTEGER, INTENT(IN) :: ControlNum
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER :: ActuatedNode              ! node number of actuated node
   INTEGER :: WaterCompNum
 
@@ -1482,7 +1482,7 @@ SUBROUTINE SizeController(ControlNum)
       ControllerProps(ControlNum)%MaxVolFlowActuated = 0.0d0
     END IF
     CALL ReportSizingOutput(ControllerProps(ControlNum)%ControllerType, ControllerProps(ControlNum)%ControllerName, &
-                            'Maximum Actuated Flow [m3/s]', ControllerProps(ControlNum)%MaxVolFlowActuated)
+    'Maximum Actuated Flow [m3/s]', ControllerProps(ControlNum)%MaxVolFlowActuated)
   END IF
 
   IF (ControllerProps(ControlNum)%Offset == AutoSize) THEN
@@ -1494,71 +1494,71 @@ SUBROUTINE SizeController(ControlNum)
     !   with a temperature tolerance that won't exceed the loop energy error tolerance (10 W).
     ! Finally we need to take into account the fact that somebody might change the energy tolerance.
     ControllerProps(ControlNum)%Offset = &
-      ( 0.001d0 / (2100.d0 * MAX(ControllerProps(ControlNum)%MaxVolFlowActuated,SmallWaterVolFlow)) ) &
-        * (HVACEnergyToler/10.0d0)
+    ( 0.001d0 / (2100.d0 * MAX(ControllerProps(ControlNum)%MaxVolFlowActuated,SmallWaterVolFlow)) ) &
+    * (HVACEnergyToler/10.0d0)
     ! do not let the controller tolerance exceed 1/10 of the loop temperature tolerance.
     ControllerProps(ControlNum)%Offset =  MIN(0.1d0*HVACTemperatureToler, ControllerProps(ControlNum)%Offset)
     CALL ReportSizingOutput( &
-      ControllerProps(ControlNum)%ControllerType, ControllerProps(ControlNum)%ControllerName, &
-      'Controller Convergence Tolerance', ControllerProps(ControlNum)%Offset )
+    ControllerProps(ControlNum)%ControllerType, ControllerProps(ControlNum)%ControllerName, &
+    'Controller Convergence Tolerance', ControllerProps(ControlNum)%Offset )
   END IF
 
   RETURN
 END SUBROUTINE SizeController
 
- ! End Initialization Section of the Module
+! End Initialization Section of the Module
 !******************************************************************************
 
 
- ! Begin Algorithm Section of the Module
+! Begin Algorithm Section of the Module
 !******************************************************************************
 
 SUBROUTINE CalcSimpleController(ControlNum, FirstHVACIteration, IsConvergedFlag, IsUpToDateFlag, ControllerName)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Dimitri Curtil
-          !       DATE WRITTEN   May 2006
-          !       MODIFIED       Dimitri Curtil (LBNL), May 2006
-          !                      - Added IsPointFlagDefinedFlag to control when the setpoiont should be
-          !                        computed depending on the control strategy. This was needed to
-          !                        trigger the setpoint calculation for the dual temperature and
-          !                        humidity ratio control strategy only once the air loop has been
-          !                        evaluated with the max actuated flow.
-          !                        See the routine InitController() for more details on the setpoint
-          !                        calculation.
-          !       MODIFIED       Dimitri Curtil (LBNL), March 2006
-          !                      - Added IsUpToDateFlag to detect whether or not the air loop
-          !                        has been evaluated prior the first iteration, which allows
-          !                        to use the current node values as the first iterate for the root
-          !                        finder (for COLD RESTART ONLY).
-          !       MODIFIED       Dimitri Curtil (LBNL), Feb 2006
-          !                      - Added mode detection capability.
-          !                      - Now trying min actuated variable first to
-          !                        detect min-constrained cases in 1 iteration.
-          !                      - Trying max actuated variable second.
-          !                        Checks for max-constrained here instead of in
-          !                        NormActuatedCalc mode.
-          !                      - Checking for inactive mode as soon as min and max
-          !                        support points are known instead of in NormActuatedCalc
-          !                        mode.
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Dimitri Curtil
+  !       DATE WRITTEN   May 2006
+  !       MODIFIED       Dimitri Curtil (LBNL), May 2006
+  !                      - Added IsPointFlagDefinedFlag to control when the setpoiont should be
+  !                        computed depending on the control strategy. This was needed to
+  !                        trigger the setpoint calculation for the dual temperature and
+  !                        humidity ratio control strategy only once the air loop has been
+  !                        evaluated with the max actuated flow.
+  !                        See the routine InitController() for more details on the setpoint
+  !                        calculation.
+  !       MODIFIED       Dimitri Curtil (LBNL), March 2006
+  !                      - Added IsUpToDateFlag to detect whether or not the air loop
+  !                        has been evaluated prior the first iteration, which allows
+  !                        to use the current node values as the first iterate for the root
+  !                        finder (for COLD RESTART ONLY).
+  !       MODIFIED       Dimitri Curtil (LBNL), Feb 2006
+  !                      - Added mode detection capability.
+  !                      - Now trying min actuated variable first to
+  !                        detect min-constrained cases in 1 iteration.
+  !                      - Trying max actuated variable second.
+  !                        Checks for max-constrained here instead of in
+  !                        NormActuatedCalc mode.
+  !                      - Checking for inactive mode as soon as min and max
+  !                        support points are known instead of in NormActuatedCalc
+  !                        mode.
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine needs a description.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine needs a description.
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE General,        ONLY : TrimSigDigits
   USE RootFinder,     ONLY : InitializeRootFinder, CheckRootFinderCandidate
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   INTEGER, INTENT(IN)             :: ControlNum
   LOGICAL, INTENT(IN)             :: FirstHVACIteration
   ! Set to TRUE if current controller is converged; FALSE if more iteration are needed.
@@ -1570,16 +1570,16 @@ SUBROUTINE CalcSimpleController(ControlNum, FirstHVACIteration, IsConvergedFlag,
   LOGICAL, INTENT(INOUT)          :: IsUpToDateFlag
   CHARACTER(len=*), INTENT(IN)    :: ControllerName ! used when errors occur
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER             :: ActuatedNode
   INTEGER             :: SensedNode
 
@@ -1596,11 +1596,11 @@ SUBROUTINE CalcSimpleController(ControlNum, FirstHVACIteration, IsConvergedFlag,
   ! by looking at the component mass flow rate at the sensed node.
   IF (Node(SensedNode)%MassFlowRate == 0.0d0) THEN
     CALL ExitCalcController( &
-      ControlNum, &
-      constant_zero, &
-      iModeOff, &
-      IsConvergedFlag, &
-      IsUpToDateFlag &
+    ControlNum, &
+    constant_zero, &
+    iModeOff, &
+    IsConvergedFlag, &
+    IsUpToDateFlag &
     )
     RETURN
   END IF
@@ -1610,22 +1610,22 @@ SUBROUTINE CalcSimpleController(ControlNum, FirstHVACIteration, IsConvergedFlag,
   IF ( ControllerProps(ControlNum)%NumCalcCalls == 1 ) THEN
     ! Set min/max boundaries for root finder on first iteration
     CALL InitializeRootFinder(                           &
-      RootFinders(ControlNum),                      & !
-      ControllerProps(ControlNum)%MinAvailActuated, & ! XMin
-      ControllerProps(ControlNum)%MaxAvailActuated  & ! XMax
+    RootFinders(ControlNum),                      & !
+    ControllerProps(ControlNum)%MinAvailActuated, & ! XMin
+    ControllerProps(ControlNum)%MaxAvailActuated  & ! XMax
     )
 
     ControllerProps(ControlNum)%ReuseIntermediateSolutionFlag = &
-      ! Only allow to reuse initial evaluation if the air loop is up-to-date.
-      ! Set in SolveAirLoopControllers()
-      IsUpToDateFlag .AND.                                    &
-      ! Only reuse initial evaluation if setpoint is already available for the current controller
-      !
-      ! Note that in the case of dual temperature and humidity ratio control strategy since the
-      ! setpoint at a later iteration, the initial solution cannot be reused.
-      ControllerProps(ControlNum)%IsSetPointDefinedFlag .AND. &
-      ! Make sure that the initial candidate value lies within range
-      CheckRootFinderCandidate( RootFinders(ControlNum), ControllerProps(ControlNum)%ActuatedValue )
+    ! Only allow to reuse initial evaluation if the air loop is up-to-date.
+    ! Set in SolveAirLoopControllers()
+    IsUpToDateFlag .AND.                                    &
+    ! Only reuse initial evaluation if setpoint is already available for the current controller
+    !
+    ! Note that in the case of dual temperature and humidity ratio control strategy since the
+    ! setpoint at a later iteration, the initial solution cannot be reused.
+    ControllerProps(ControlNum)%IsSetPointDefinedFlag .AND. &
+    ! Make sure that the initial candidate value lies within range
+    CheckRootFinderCandidate( RootFinders(ControlNum), ControllerProps(ControlNum)%ActuatedValue )
 
     IF ( ControllerProps(ControlNum)%ReuseIntermediateSolutionFlag ) THEN
 
@@ -1656,11 +1656,11 @@ SUBROUTINE CalcSimpleController(ControlNum, FirstHVACIteration, IsConvergedFlag,
         ! Should never happen
         CALL ShowSevereError('CalcSimpleController: HVAC controller failed at '//TRIM(CreateHVACStepFullString()))
         CALL ShowContinueError( &
-          ' Controller name='//TRIM(ControllerProps(ControlNum)%ControllerName) &
+        ' Controller name='//TRIM(ControllerProps(ControlNum)%ControllerName) &
         )
         CALL ShowContinueError( &
-          ' Unrecognized control variable type='// &
-          TRIM(TrimSigDigits(ControllerProps(ControlNum)%ControlVar)) &
+        ' Unrecognized control variable type='// &
+        TRIM(TrimSigDigits(ControllerProps(ControlNum)%ControlVar)) &
         )
         CALL ShowFatalError('Preceding error causes program termination.')
       END SELECT SelectController
@@ -1668,19 +1668,19 @@ SUBROUTINE CalcSimpleController(ControlNum, FirstHVACIteration, IsConvergedFlag,
     END IF
 
 
-  ! Process current iterate and compute next candidate if needed
-  ! We assume that after the first controller iteration:
-  ! - the setpoint is defined
-  ! - the min and max available bounds are defined
-  !
-  ! NOTE: Not explicitly checked but the air mass flow rate must remain constant across successive
-  !       controller iterations to ensure that the root finder converges.
+    ! Process current iterate and compute next candidate if needed
+    ! We assume that after the first controller iteration:
+    ! - the setpoint is defined
+    ! - the min and max available bounds are defined
+    !
+    ! NOTE: Not explicitly checked but the air mass flow rate must remain constant across successive
+    !       controller iterations to ensure that the root finder converges.
   ELSE
     ! Check that the setpoint is defined
     IF ( .NOT.ControllerProps(ControlNum)%IsSetPointDefinedFlag ) THEN
       CALL ShowSevereError('CalcSimpleController: Root finder failed at '//TRIM(CreateHVACStepFullString()))
       CALL ShowContinueError( &
-        ' Controller name="'//TRIM(ControllerName)//'"' &
+      ' Controller name="'//TRIM(ControllerName)//'"' &
       )
       CALL ShowContinueError(' Setpoint is not available/defined.')
       CALL ShowFatalError('Preceding error causes program termination.')
@@ -1692,25 +1692,25 @@ SUBROUTINE CalcSimpleController(ControlNum, FirstHVACIteration, IsConvergedFlag,
     IF ( RootFinders(ControlNum)%MinPoint%X /= ControllerProps(ControlNum)%MinAvailActuated ) THEN
       CALL ShowSevereError('CalcSimpleController: Root finder failed at '//TRIM(CreateHVACStepFullString()))
       CALL ShowContinueError( &
-        ' Controller name="'//TRIM(ControllerName)//'"' &
+      ' Controller name="'//TRIM(ControllerName)//'"' &
       )
       CALL ShowContinueError(' Minimum bound must remain invariant during successive iterations.')
       CALL ShowContinueError(' Minimum root finder point='//  &
-         trim(TrimSigDigits(RootFinders(ControlNum)%MinPoint%X,NumSigDigits)))
+      trim(TrimSigDigits(RootFinders(ControlNum)%MinPoint%X,NumSigDigits)))
       CALL ShowContinueError(' Minimum avail actuated='//  &
-         trim(TrimSigDigits(ControllerProps(ControlNum)%MinAvailActuated,NumSigDigits)))
+      trim(TrimSigDigits(ControllerProps(ControlNum)%MinAvailActuated,NumSigDigits)))
       CALL ShowFatalError('Preceding error causes program termination.')
     END IF
     IF ( RootFinders(ControlNum)%MaxPoint%X /= ControllerProps(ControlNum)%MaxAvailActuated ) THEN
       CALL ShowSevereError('CalcSimpleController: Root finder failed at '//TRIM(CreateHVACStepFullString()))
       CALL ShowContinueError( &
-        ' Controller name="'//TRIM(ControllerName)//'"' &
+      ' Controller name="'//TRIM(ControllerName)//'"' &
       )
       CALL ShowContinueError(' Maximum bound must remain invariant during successive iterations.')
       CALL ShowContinueError(' Maximum root finder point='//  &
-         trim(TrimSigDigits(RootFinders(ControlNum)%MaxPoint%X,NumSigDigits)))
+      trim(TrimSigDigits(RootFinders(ControlNum)%MaxPoint%X,NumSigDigits)))
       CALL ShowContinueError(' Maximum avail actuated='//  &
-         trim(TrimSigDigits(ControllerProps(ControlNum)%MaxAvailActuated,NumSigDigits)))
+      trim(TrimSigDigits(ControllerProps(ControlNum)%MaxAvailActuated,NumSigDigits)))
       CALL ShowFatalError('Preceding error causes program termination.')
     END IF
 
@@ -1725,46 +1725,46 @@ END SUBROUTINE CalcSimpleController
 
 SUBROUTINE FindRootSimpleController(ControlNum, FirstHVACIteration, IsConvergedFlag, IsUpToDateFlag, ControllerName)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Dimitri Curtil (LBNL)
-          !       DATE WRITTEN   March 2006
-          !       MODIFIED       na
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Dimitri Curtil (LBNL)
+  !       DATE WRITTEN   March 2006
+  !       MODIFIED       na
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! New routine to fire the root finder using the current actuated and sensed values.
-          ! - Updates IsConvergedFlag depending ou iteration status.
-          ! - Sets next actuated value to try in ControllerProps(ControlNum)%NextActuatedValue
-          !
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! New routine to fire the root finder using the current actuated and sensed values.
+  ! - Updates IsConvergedFlag depending ou iteration status.
+  ! - Sets next actuated value to try in ControllerProps(ControlNum)%NextActuatedValue
+  !
 
-          ! METHODOLOGY EMPLOYED:
+  ! METHODOLOGY EMPLOYED:
 
-          ! REFERENCES:
+  ! REFERENCES:
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE General,        ONLY : TrimSigDigits
   USE RootFinder,     ONLY : IterateRootFinder, CheckRootFinderCandidate
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   INTEGER, INTENT(IN)    :: ControlNum
   LOGICAL, INTENT(IN)    :: FirstHVACIteration
   LOGICAL, INTENT(OUT)   :: IsConvergedFlag
   LOGICAL, INTENT(OUT)   :: IsUpToDateFlag
   CHARACTER(len=*), INTENT(IN)    :: ControllerName ! used when errors occur
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER             :: ActuatedNode
   INTEGER             :: SensedNode
   ! TRUE if root finder needs to continue iterating, FALSE otherwise.
@@ -1785,159 +1785,159 @@ SUBROUTINE FindRootSimpleController(ControlNum, FirstHVACIteration, IsConvergedF
   ! Check for unconstrained/constrained convergence
   ! Compute next candidate if not converged yet.
   CALL IterateRootFinder( &
-    RootFinders(ControlNum),                       & ! root finder's data
-    ControllerProps(ControlNum)%ActuatedValue,     & ! X
-    ControllerProps(ControlNum)%DeltaSensed,       & ! Y
-    IsDoneFlag                                     & ! not used
+  RootFinders(ControlNum),                       & ! root finder's data
+  ControllerProps(ControlNum)%ActuatedValue,     & ! X
+  ControllerProps(ControlNum)%DeltaSensed,       & ! Y
+  IsDoneFlag                                     & ! not used
   )
 
 
   ! Process root finder if converged or error
   ! Map root finder status onto controller mode
   SelectStatus: SELECT CASE ( RootFinders(ControlNum)%StatusFlag )
-    CASE (iStatusNone, iStatusWarningNonMonotonic, iStatusWarningSingular)
-      ! We need to keep iterating...
-      IsConvergedFlag = .FALSE.
+  CASE (iStatusNone, iStatusWarningNonMonotonic, iStatusWarningSingular)
+    ! We need to keep iterating...
+    IsConvergedFlag = .FALSE.
 
-      IF ( FirstHVACIteration ) THEN
-        PreviousSolutionIndex = 1
-      ELSE
-        PreviousSolutionIndex = 2
-      END IF
+    IF ( FirstHVACIteration ) THEN
+      PreviousSolutionIndex = 1
+    ELSE
+      PreviousSolutionIndex = 2
+    END IF
 
-      PreviousSolutionDefinedFlag = ControllerProps(ControlNum)%SolutionTrackers(PreviousSolutionIndex)%DefinedFlag
-      PreviousSolutionMode  = ControllerProps(ControlNum)%SolutionTrackers(PreviousSolutionIndex)%Mode
-      PreviousSolutionValue = ControllerProps(ControlNum)%SolutionTrackers(PreviousSolutionIndex)%ActuatedValue
+    PreviousSolutionDefinedFlag = ControllerProps(ControlNum)%SolutionTrackers(PreviousSolutionIndex)%DefinedFlag
+    PreviousSolutionMode  = ControllerProps(ControlNum)%SolutionTrackers(PreviousSolutionIndex)%Mode
+    PreviousSolutionValue = ControllerProps(ControlNum)%SolutionTrackers(PreviousSolutionIndex)%ActuatedValue
 
-      ! Attempt to use root at previous HVAC step in place of the candidate produced by the
-      ! root finder.
-      ReusePreviousSolutionFlag = &
-        ! Set in InitController() depending on controller mode at previous HVAC step iteration
-        ControllerProps(ControlNum)%ReusePreviousSolutionFlag .AND.  &
-        ! Only attempted during bracketing phase of root finder.
-        (RootFinders(ControlNum)%CurrentMethodType == iMethodBracket) .AND.  &
-        ! Check that a previous solution is available
-        PreviousSolutionDefinedFlag  .AND.  &
-        ! Make sure that mode of previous solution was active
-        (PreviousSolutionMode == iModeActive)  .AND.  &
-        ! Make sure that proposed candidate does not conflict with current min/max range and lower/upper brackets
-        CheckRootFinderCandidate( RootFinders(ControlNum), PreviousSolutionValue )
+    ! Attempt to use root at previous HVAC step in place of the candidate produced by the
+    ! root finder.
+    ReusePreviousSolutionFlag = &
+    ! Set in InitController() depending on controller mode at previous HVAC step iteration
+    ControllerProps(ControlNum)%ReusePreviousSolutionFlag .AND.  &
+    ! Only attempted during bracketing phase of root finder.
+    (RootFinders(ControlNum)%CurrentMethodType == iMethodBracket) .AND.  &
+    ! Check that a previous solution is available
+    PreviousSolutionDefinedFlag  .AND.  &
+    ! Make sure that mode of previous solution was active
+    (PreviousSolutionMode == iModeActive)  .AND.  &
+    ! Make sure that proposed candidate does not conflict with current min/max range and lower/upper brackets
+    CheckRootFinderCandidate( RootFinders(ControlNum), PreviousSolutionValue )
 
-      IF ( ReusePreviousSolutionFlag ) THEN
-        ! Try to reuse saved solution from previous call to SolveAirLoopControllers()
-        ! instead of candidate proposed by the root finder
-        ControllerProps(ControlNum)%NextActuatedValue = PreviousSolutionValue
+    IF ( ReusePreviousSolutionFlag ) THEN
+      ! Try to reuse saved solution from previous call to SolveAirLoopControllers()
+      ! instead of candidate proposed by the root finder
+      ControllerProps(ControlNum)%NextActuatedValue = PreviousSolutionValue
 
-        ! Turn off flag since we can only use the previous solution once per HVAC iteration
-        ControllerProps(ControlNum)%ReusePreviousSolutionFlag = .FALSE.
-      ELSE
-        ! By default, use candidate value computed by root finder
-        ControllerProps(ControlNum)%NextActuatedValue = RootFinders(ControlNum)%XCandidate
-      END IF
-
-
-    CASE ( iStatusOK, iStatusOKRoundOff )
-      ! Indicate convergence with base value (used to obtain DeltaSensed!)
-      CALL ExitCalcController( &
-        ControlNum, &
-        RootFinders(ControlNum)%XCandidate, &
-        iModeActive,     &
-        IsConvergedFlag, &
-        IsUpToDateFlag   &
-      )
+      ! Turn off flag since we can only use the previous solution once per HVAC iteration
+      ControllerProps(ControlNum)%ReusePreviousSolutionFlag = .FALSE.
+    ELSE
+      ! By default, use candidate value computed by root finder
+      ControllerProps(ControlNum)%NextActuatedValue = RootFinders(ControlNum)%XCandidate
+    END IF
 
 
-    CASE (iStatusOKMin)
-      ! Indicate convergence with min value
-      CALL ExitCalcController( &
-        ControlNum, &
-        ! Should be the same as ControllerProps(ControlNum)%MinAvailActuated
-        RootFinders(ControlNum)%MinPoint%X, &
-        iModeMinActive, &
-        IsConvergedFlag, &
-        IsUpToDateFlag   &
-      )
+  CASE ( iStatusOK, iStatusOKRoundOff )
+    ! Indicate convergence with base value (used to obtain DeltaSensed!)
+    CALL ExitCalcController( &
+    ControlNum, &
+    RootFinders(ControlNum)%XCandidate, &
+    iModeActive,     &
+    IsConvergedFlag, &
+    IsUpToDateFlag   &
+    )
 
 
-    CASE (iStatusOKMax)
-      ! Indicate convergence with max value
-      CALL ExitCalcController( &
-        ControlNum, &
-        ! Should be the same as ControllerProps(ControlNum)%MaxAvailActuated
-        RootFinders(ControlNum)%MaxPoint%X, &
-        iModeMaxActive, &
-        IsConvergedFlag, &
-        IsUpToDateFlag   &
-      )
+  CASE (iStatusOKMin)
+    ! Indicate convergence with min value
+    CALL ExitCalcController( &
+    ControlNum, &
+    ! Should be the same as ControllerProps(ControlNum)%MinAvailActuated
+    RootFinders(ControlNum)%MinPoint%X, &
+    iModeMinActive, &
+    IsConvergedFlag, &
+    IsUpToDateFlag   &
+    )
 
 
-    CASE (iStatusErrorSingular)
-      ! Indicate inactive mode with min actuated value
-      CALL ExitCalcController( &
-        ControlNum, &
-        ! NOTE: Original code returned Node(ActuatedNode)%MassFlowRateMinAvail
-        !       This was not portable in case the actuated variable was NOT a mass flow rate!
-        !
-        !       Replaced   Node(ActuatedNode)%MassFlowRateMinAvail
-        !       with       RootFinders(ControlNum)%MinPoint%X
-        !       which is the same as (see SUBROUTINE InitController)
-        !                  ControllerProps(ControlNum)%MinAvailActuated
-        RootFinders(ControlNum)%MinPoint%X, &
-        iModeInactive,   &
-        IsConvergedFlag, &
-        IsUpToDateFlag   &
-      )
+  CASE (iStatusOKMax)
+    ! Indicate convergence with max value
+    CALL ExitCalcController( &
+    ControlNum, &
+    ! Should be the same as ControllerProps(ControlNum)%MaxAvailActuated
+    RootFinders(ControlNum)%MaxPoint%X, &
+    iModeMaxActive, &
+    IsConvergedFlag, &
+    IsUpToDateFlag   &
+    )
 
 
-    ! Abnormal case: should never happen
-    CASE (iStatusErrorRange)
-      CALL ShowSevereError('FindRootSimpleController: Root finder failed at '//TRIM(CreateHVACStepFullString()))
-      CALL ShowContinueError( &
-        ' Controller name="'//TRIM(ControllerName)//'"' &
-      )
-      CALL ShowContinueError( &
-        ' Root candidate x='// &
-        TRIM(TrimSigDigits(ControllerProps(ControlNum)%ActuatedValue,NumSigDigits))// &
-        ' does not lie within the min/max bounds.' &
-      )
-      CALL ShowContinueError( &
-        ' Min bound is x='// &
-        TRIM(TrimSigDigits(RootFinders(ControlNum)%MinPoint%X,NumSigDigits)) &
-      )
-      CALL ShowContinueError( &
-        ' Max bound is x='// &
-        TRIM(TrimSigDigits(RootFinders(ControlNum)%MaxPoint%X,NumSigDigits)) &
-      )
-      CALL ShowFatalError('Preceding error causes program termination.')
+  CASE (iStatusErrorSingular)
+    ! Indicate inactive mode with min actuated value
+    CALL ExitCalcController( &
+    ControlNum, &
+    ! NOTE: Original code returned Node(ActuatedNode)%MassFlowRateMinAvail
+    !       This was not portable in case the actuated variable was NOT a mass flow rate!
+    !
+    !       Replaced   Node(ActuatedNode)%MassFlowRateMinAvail
+    !       with       RootFinders(ControlNum)%MinPoint%X
+    !       which is the same as (see SUBROUTINE InitController)
+    !                  ControllerProps(ControlNum)%MinAvailActuated
+    RootFinders(ControlNum)%MinPoint%X, &
+    iModeInactive,   &
+    IsConvergedFlag, &
+    IsUpToDateFlag   &
+    )
 
 
     ! Abnormal case: should never happen
-    CASE (iStatusErrorBracket)
-      CALL ShowSevereError('FindRootSimpleController: Root finder failed at '//TRIM(CreateHVACStepFullString()))
+  CASE (iStatusErrorRange)
+    CALL ShowSevereError('FindRootSimpleController: Root finder failed at '//TRIM(CreateHVACStepFullString()))
+    CALL ShowContinueError( &
+    ' Controller name="'//TRIM(ControllerName)//'"' &
+    )
+    CALL ShowContinueError( &
+    ' Root candidate x='// &
+    TRIM(TrimSigDigits(ControllerProps(ControlNum)%ActuatedValue,NumSigDigits))// &
+    ' does not lie within the min/max bounds.' &
+    )
+    CALL ShowContinueError( &
+    ' Min bound is x='// &
+    TRIM(TrimSigDigits(RootFinders(ControlNum)%MinPoint%X,NumSigDigits)) &
+    )
+    CALL ShowContinueError( &
+    ' Max bound is x='// &
+    TRIM(TrimSigDigits(RootFinders(ControlNum)%MaxPoint%X,NumSigDigits)) &
+    )
+    CALL ShowFatalError('Preceding error causes program termination.')
+
+
+    ! Abnormal case: should never happen
+  CASE (iStatusErrorBracket)
+    CALL ShowSevereError('FindRootSimpleController: Root finder failed at '//TRIM(CreateHVACStepFullString()))
+    CALL ShowContinueError( &
+    ' Controller name='//TRIM(ControllerProps(ControlNum)%ControllerName) &
+    )
+    CALL ShowContinueError( &
+    ' Controller action='//TRIM(ActionTypes(ControllerProps(ControlNum)%Action)) &
+    )
+    CALL ShowContinueError( &
+    ' Root candidate x='// &
+    TRIM(TrimSigDigits(ControllerProps(ControlNum)%ActuatedValue,NumSigDigits))// &
+    ' does not lie within the lower/upper brackets.' &
+    )
+    IF ( RootFinders(ControlNum)%LowerPoint%DefinedFlag ) THEN
       CALL ShowContinueError( &
-        ' Controller name='//TRIM(ControllerProps(ControlNum)%ControllerName) &
+      ' Lower bracket is x='// &
+      TRIM(TrimSigDigits(RootFinders(ControlNum)%LowerPoint%X,NumSigDigits)) &
       )
+    END IF
+    IF ( RootFinders(ControlNum)%UpperPoint%DefinedFlag ) THEN
       CALL ShowContinueError( &
-        ' Controller action='//TRIM(ActionTypes(ControllerProps(ControlNum)%Action)) &
+      ' Upper bracket is x='// &
+      TRIM(TrimSigDigits(RootFinders(ControlNum)%UpperPoint%X,NumSigDigits)) &
       )
-      CALL ShowContinueError( &
-        ' Root candidate x='// &
-        TRIM(TrimSigDigits(ControllerProps(ControlNum)%ActuatedValue,NumSigDigits))// &
-        ' does not lie within the lower/upper brackets.' &
-      )
-      IF ( RootFinders(ControlNum)%LowerPoint%DefinedFlag ) THEN
-        CALL ShowContinueError( &
-          ' Lower bracket is x='// &
-          TRIM(TrimSigDigits(RootFinders(ControlNum)%LowerPoint%X,NumSigDigits)) &
-        )
-      END IF
-      IF ( RootFinders(ControlNum)%UpperPoint%DefinedFlag ) THEN
-        CALL ShowContinueError( &
-          ' Upper bracket is x='// &
-          TRIM(TrimSigDigits(RootFinders(ControlNum)%UpperPoint%X,NumSigDigits)) &
-        )
-      END IF
-      CALL ShowFatalError('Preceding error causes program termination.')
+    END IF
+    CALL ShowFatalError('Preceding error causes program termination.')
 
 
     ! Detected control function with wrong action between the min and max points.
@@ -1952,116 +1952,116 @@ SUBROUTINE FindRootSimpleController(ControlNum, FirstHVACIteration, IsConvergedF
     !       - REVERSE ACTION:
     !         - If y(xMin) < ySetPoint && y(xMax) > y(xMin), then  x = xMin
     !         - If y(xMin) > ySetPoint && y(xMax) > y(xMin), then  x = xMax
-    CASE (iStatusErrorSlope)
-      ! CALL ShowSevereError('FindRootSimpleController: Root finder failed at '//TRIM(CreateHVACStepFullString()))
-      ! CALL ShowContinueError( &
-      !   'FindRootSimpleController: Controller name='//TRIM(ControllerProps(ControlNum)%ControllerName) &
-     !  )
-     !  CALL ShowContinueError( &
-     !    'FindRootSimpleController: Controller action='//TRIM(ActionTypes(ControllerProps(ControlNum)%Action)) &
-     !  )
-     !  CALL ShowContinueError( &
-     !    'FindRootSimpleController: Controller setpoint='// &
-     !    TRIM(TrimSigDigits(ControllerProps(ControlNum)%SetPointValue,NumSigDigits)) &
-     !  )
-     !  CALL ShowContinueError( &
-     !    'FindRootSimpleController: Controller function is inconsistent with the specified action.' &
-     !  )
-     !  CALL ShowContinueError( &
-     !    'FindRootSimpleController: Min bound is '// &
-     !    'x='//TRIM(TrimSigDigits(RootFinders(ControlNum)%MinPoint%X,NumSigDigits))//','// &
-     !    'y='//TRIM(TrimSigDigits(RootFinders(ControlNum)%MinPoint%Y,NumSigDigits)) &
-     !  )
-     !  CALL ShowContinueError( &
-     !    'FindRootSimpleController: Max bound is '// &
-     !    'x='//TRIM(TrimSigDigits(RootFinders(ControlNum)%MaxPoint%X,NumSigDigits))//','// &
-     !    'y='//TRIM(TrimSigDigits(RootFinders(ControlNum)%MaxPoint%Y,NumSigDigits)) &
-     !  )
-     !  CALL ShowFatalError('FindRootSimpleController: Preceding error causes program termination.')
-      IF (.NOT. WarmupFlag .AND. ControllerProps(ControlNum)%BadActionErrCount == 0) THEN
-        ControllerProps(ControlNum)%BadActionErrCount = ControllerProps(ControlNum)%BadActionErrCount + 1
-        CALL ShowSevereError('FindRootSimpleController: Controller error for controller = "'//  &
-                              TRIM(ControllerName)//'"')
-        CALL ShowContinueErrorTimeStamp('  ')
-        CALL ShowContinueError('  Controller function is inconsistent with user specified controller action = ' // &
-                               TRIM(ActionTypes(ControllerProps(ControlNum)%Action)))
-        CALL ShowContinueError('  Actuator will be set to maximum action')
-        CALL ShowContinueError( 'Controller control type='// TRIM(ControlVariableTypes(ControllerProps(ControlNum)%ControlVar)) )
-        IF (ControllerProps(ControlNum)%ControlVar == iTemperature) THEN
-          CALL ShowContinueError('Controller temperature setpoint = '//  &
-                    TRIM(TrimSigDigits(ControllerProps(ControlNum)%SetPointValue,2))//' [C]')
-          CALL ShowContinueError('Controller sensed temperature = '//  &
-                    TRIM(TrimSigDigits(ControllerProps(ControlNum)%SensedValue,2))//' [C]')
-        ELSE IF (ControllerProps(ControlNum)%ControlVar == iHumidityRatio) THEN
-          CALL ShowContinueError('Controller humidity ratio setpoint = '//  &
-                    TRIM(TrimSigDigits(ControllerProps(ControlNum)%SetPointValue,2))// &
-                                 ' [kg-H2O/kg-air]')
-          CALL ShowContinueError('Controller sensed humidity ratio = '//  &
-                    TRIM(TrimSigDigits(ControllerProps(ControlNum)%SensedValue,2))// &
-                                 ' [kg-H2O/kg-air]')
-        ELSE IF (ControllerProps(ControlNum)%ControlVar == iTemperatureAndHumidityRatio) THEN
-          CALL ShowContinueError('Controller temperature setpoint = '//  &
-                    TRIM(TrimSigDigits(ControllerProps(ControlNum)%SetPointValue,2))//' [C]')
-          CALL ShowContinueError('Controller sensed temperature = '//  &
-                    TRIM(TrimSigDigits(ControllerProps(ControlNum)%SensedValue,2))//' [C]')
-          CALL ShowContinueError('Controller humidity ratio setpoint = '//  &
-                TRIM(TrimSigDigits(Node(ControllerProps(ControlNum)%SensedNode)%HumRatMax,2))//' [kg-H2O/kg-air]')
-          CALL ShowContinueError('Controller sensed humidity ratio = '//  &
-                TRIM(TrimSigDigits(Node(ControllerProps(ControlNum)%SensedNode)%HumRat,2))//' [kg-H2O/kg-air]')
-        ELSE IF (ControllerProps(ControlNum)%ControlVar == iFlow) THEN
-          CALL ShowContinueError('Controller mass flow rate setpoint = '//  &
-                    TRIM(TrimSigDigits(ControllerProps(ControlNum)%SetPointValue,2))//' [kg/s]')
-          CALL ShowContinueError('Controller sensed mass flow rate = '//  &
-                    TRIM(TrimSigDigits(ControllerProps(ControlNum)%SensedValue,2))//' [kg/s]')
-        ELSE
-          ! bad control variable input checked in input routine
-        END IF
-        IF (ControllerProps(ControlNum)%ActuatorVar == iFlow) THEN
-          CALL ShowContinueError('Controller actuator mass flow rate set to '//  &
-                  TRIM(TrimSigDigits(ControllerProps(ControlNum)%MaxAvailActuated,2))//' [kg/s]')
-          IF (ControllerProps(ControlNum)%ControlVar == iTemperature) THEN
-            CALL ShowContinueError('Controller actuator temperature = '//  &
-                  TRIM(TrimSigDigits(Node(ControllerProps(ControlNum)%ActuatedNode)%Temp,2))//' [C]')
-            CALL ShowContinueError('  Note: Chilled water coils should be reverse action and the entering chilled')
-            CALL ShowContinueError('        water temperature (controller actuator temperature) should be '//  &
-                                            'below the setpoint temperature')
-            CALL ShowContinueError('  Note: Hot water coils should be normal action and the entering hot')
-            CALL ShowContinueError('        water temperature (controller actuator temperature) should be '//  &
-                                            'above the setpoint temperature')
-          END IF
-        ELSE
-          ! bad actuator variable input checked in input routine
-        END IF
-      ELSE IF (.NOT. WarmupFlag) THEN
-        ControllerProps(ControlNum)%BadActionErrCount = ControllerProps(ControlNum)%BadActionErrCount + 1
-        CALL ShowRecurringSevereErrorAtEnd('FindRootSimpleController: Previous controller action error'//  &
-                                           ' continues for controller = '// &
-                                            TRIM(ControllerName), &
-                                            ControllerProps(ControlNum)%BadActionErrIndex)
+  CASE (iStatusErrorSlope)
+    ! CALL ShowSevereError('FindRootSimpleController: Root finder failed at '//TRIM(CreateHVACStepFullString()))
+    ! CALL ShowContinueError( &
+    !   'FindRootSimpleController: Controller name='//TRIM(ControllerProps(ControlNum)%ControllerName) &
+    !  )
+    !  CALL ShowContinueError( &
+    !    'FindRootSimpleController: Controller action='//TRIM(ActionTypes(ControllerProps(ControlNum)%Action)) &
+    !  )
+    !  CALL ShowContinueError( &
+    !    'FindRootSimpleController: Controller setpoint='// &
+    !    TRIM(TrimSigDigits(ControllerProps(ControlNum)%SetPointValue,NumSigDigits)) &
+    !  )
+    !  CALL ShowContinueError( &
+    !    'FindRootSimpleController: Controller function is inconsistent with the specified action.' &
+    !  )
+    !  CALL ShowContinueError( &
+    !    'FindRootSimpleController: Min bound is '// &
+    !    'x='//TRIM(TrimSigDigits(RootFinders(ControlNum)%MinPoint%X,NumSigDigits))//','// &
+    !    'y='//TRIM(TrimSigDigits(RootFinders(ControlNum)%MinPoint%Y,NumSigDigits)) &
+    !  )
+    !  CALL ShowContinueError( &
+    !    'FindRootSimpleController: Max bound is '// &
+    !    'x='//TRIM(TrimSigDigits(RootFinders(ControlNum)%MaxPoint%X,NumSigDigits))//','// &
+    !    'y='//TRIM(TrimSigDigits(RootFinders(ControlNum)%MaxPoint%Y,NumSigDigits)) &
+    !  )
+    !  CALL ShowFatalError('FindRootSimpleController: Preceding error causes program termination.')
+    IF (.NOT. WarmupFlag .AND. ControllerProps(ControlNum)%BadActionErrCount == 0) THEN
+      ControllerProps(ControlNum)%BadActionErrCount = ControllerProps(ControlNum)%BadActionErrCount + 1
+      CALL ShowSevereError('FindRootSimpleController: Controller error for controller = "'//  &
+      TRIM(ControllerName)//'"')
+      CALL ShowContinueErrorTimeStamp('  ')
+      CALL ShowContinueError('  Controller function is inconsistent with user specified controller action = ' // &
+      TRIM(ActionTypes(ControllerProps(ControlNum)%Action)))
+      CALL ShowContinueError('  Actuator will be set to maximum action')
+      CALL ShowContinueError( 'Controller control type='// TRIM(ControlVariableTypes(ControllerProps(ControlNum)%ControlVar)) )
+      IF (ControllerProps(ControlNum)%ControlVar == iTemperature) THEN
+        CALL ShowContinueError('Controller temperature setpoint = '//  &
+        TRIM(TrimSigDigits(ControllerProps(ControlNum)%SetPointValue,2))//' [C]')
+        CALL ShowContinueError('Controller sensed temperature = '//  &
+        TRIM(TrimSigDigits(ControllerProps(ControlNum)%SensedValue,2))//' [C]')
+      ELSE IF (ControllerProps(ControlNum)%ControlVar == iHumidityRatio) THEN
+        CALL ShowContinueError('Controller humidity ratio setpoint = '//  &
+        TRIM(TrimSigDigits(ControllerProps(ControlNum)%SetPointValue,2))// &
+        ' [kg-H2O/kg-air]')
+        CALL ShowContinueError('Controller sensed humidity ratio = '//  &
+        TRIM(TrimSigDigits(ControllerProps(ControlNum)%SensedValue,2))// &
+        ' [kg-H2O/kg-air]')
+      ELSE IF (ControllerProps(ControlNum)%ControlVar == iTemperatureAndHumidityRatio) THEN
+        CALL ShowContinueError('Controller temperature setpoint = '//  &
+        TRIM(TrimSigDigits(ControllerProps(ControlNum)%SetPointValue,2))//' [C]')
+        CALL ShowContinueError('Controller sensed temperature = '//  &
+        TRIM(TrimSigDigits(ControllerProps(ControlNum)%SensedValue,2))//' [C]')
+        CALL ShowContinueError('Controller humidity ratio setpoint = '//  &
+        TRIM(TrimSigDigits(Node(ControllerProps(ControlNum)%SensedNode)%HumRatMax,2))//' [kg-H2O/kg-air]')
+        CALL ShowContinueError('Controller sensed humidity ratio = '//  &
+        TRIM(TrimSigDigits(Node(ControllerProps(ControlNum)%SensedNode)%HumRat,2))//' [kg-H2O/kg-air]')
+      ELSE IF (ControllerProps(ControlNum)%ControlVar == iFlow) THEN
+        CALL ShowContinueError('Controller mass flow rate setpoint = '//  &
+        TRIM(TrimSigDigits(ControllerProps(ControlNum)%SetPointValue,2))//' [kg/s]')
+        CALL ShowContinueError('Controller sensed mass flow rate = '//  &
+        TRIM(TrimSigDigits(ControllerProps(ControlNum)%SensedValue,2))//' [kg/s]')
       ELSE
-      ! do nothing
+        ! bad control variable input checked in input routine
       END IF
-      ! Indicate convergence with min value
-      CALL ExitCalcController( &
-        ControlNum, &
-        ! Should be the same as ControllerProps(ControlNum)%MaxAvailActuated
-        RootFinders(ControlNum)%MaxPoint%X, &
-        iModeMaxActive, &
-        IsConvergedFlag, &
-        IsUpToDateFlag   &
-      )
+      IF (ControllerProps(ControlNum)%ActuatorVar == iFlow) THEN
+        CALL ShowContinueError('Controller actuator mass flow rate set to '//  &
+        TRIM(TrimSigDigits(ControllerProps(ControlNum)%MaxAvailActuated,2))//' [kg/s]')
+        IF (ControllerProps(ControlNum)%ControlVar == iTemperature) THEN
+          CALL ShowContinueError('Controller actuator temperature = '//  &
+          TRIM(TrimSigDigits(Node(ControllerProps(ControlNum)%ActuatedNode)%Temp,2))//' [C]')
+          CALL ShowContinueError('  Note: Chilled water coils should be reverse action and the entering chilled')
+          CALL ShowContinueError('        water temperature (controller actuator temperature) should be '//  &
+          'below the setpoint temperature')
+          CALL ShowContinueError('  Note: Hot water coils should be normal action and the entering hot')
+          CALL ShowContinueError('        water temperature (controller actuator temperature) should be '//  &
+          'above the setpoint temperature')
+        END IF
+      ELSE
+        ! bad actuator variable input checked in input routine
+      END IF
+    ELSE IF (.NOT. WarmupFlag) THEN
+      ControllerProps(ControlNum)%BadActionErrCount = ControllerProps(ControlNum)%BadActionErrCount + 1
+      CALL ShowRecurringSevereErrorAtEnd('FindRootSimpleController: Previous controller action error'//  &
+      ' continues for controller = '// &
+      TRIM(ControllerName), &
+      ControllerProps(ControlNum)%BadActionErrIndex)
+    ELSE
+      ! do nothing
+    END IF
+    ! Indicate convergence with min value
+    CALL ExitCalcController( &
+    ControlNum, &
+    ! Should be the same as ControllerProps(ControlNum)%MaxAvailActuated
+    RootFinders(ControlNum)%MaxPoint%X, &
+    iModeMaxActive, &
+    IsConvergedFlag, &
+    IsUpToDateFlag   &
+    )
 
-    CASE DEFAULT
-      ! Should never happen
-      CALL ShowSevereError('FindRootSimpleController: Root finder failed at '//TRIM(CreateHVACStepFullString()))
-      CALL ShowContinueError( &
-        ' Controller name='//TRIM(ControllerName) &
-      )
-      CALL ShowContinueError( &
-        ' Unrecognized root finder status flag='// &
-        TRIM(TrimSigDigits(RootFinders(ControlNum)%StatusFlag)) &
-      )
-      CALL ShowFatalError('Preceding error causes program termination.')
+  CASE DEFAULT
+    ! Should never happen
+    CALL ShowSevereError('FindRootSimpleController: Root finder failed at '//TRIM(CreateHVACStepFullString()))
+    CALL ShowContinueError( &
+    ' Controller name='//TRIM(ControllerName) &
+    )
+    CALL ShowContinueError( &
+    ' Unrecognized root finder status flag='// &
+    TRIM(TrimSigDigits(RootFinders(ControlNum)%StatusFlag)) &
+    )
+    CALL ShowFatalError('Preceding error causes program termination.')
 
 
   END SELECT SelectStatus
@@ -2072,47 +2072,47 @@ END SUBROUTINE FindRootSimpleController
 
 SUBROUTINE CheckSimpleController(ControlNum, IsConvergedFlag)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Dimitri Curtil (LBNL)
-          !       DATE WRITTEN   Feb 2006
-          !       MODIFIED       na
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Dimitri Curtil (LBNL)
+  !       DATE WRITTEN   Feb 2006
+  !       MODIFIED       na
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! New routine used to detect whether controller can be considered converged
-          ! depending on its mode of operation.
-          ! Used after all controllers on an air loop have been solved in order
-          ! to make sure that final air loop state still represents a converged
-          ! state.
-          !
-          ! PRECONDITION: Setpoint must be known. See ControllerProps%IsSetPointDefinedFlag
-          !
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! New routine used to detect whether controller can be considered converged
+  ! depending on its mode of operation.
+  ! Used after all controllers on an air loop have been solved in order
+  ! to make sure that final air loop state still represents a converged
+  ! state.
+  !
+  ! PRECONDITION: Setpoint must be known. See ControllerProps%IsSetPointDefinedFlag
+  !
 
-          ! METHODOLOGY EMPLOYED:
+  ! METHODOLOGY EMPLOYED:
 
-          ! REFERENCES:
+  ! REFERENCES:
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE General,        ONLY : TrimSigDigits
   USE RootFinder,     ONLY : CheckRootFinderConvergence
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   INTEGER, INTENT(IN)    :: ControlNum
   LOGICAL, INTENT(OUT)   :: IsConvergedFlag
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER             :: ActuatedNode
   INTEGER             :: SensedNode
 
@@ -2126,102 +2126,102 @@ SUBROUTINE CheckSimpleController(ControlNum, IsConvergedFlag)
 
 
   SelectMode: SELECT CASE (ControllerProps(ControlNum)%Mode)
-    CASE (iModeOff)
-      ! Check whether the component is running
-      !
-      ! This check is perfomed by looking at the component mass flow rate at the sensed node.
-      ! Since the components have been simulated before getting here, if they are zero they should be OFF.
-      IF (Node(SensedNode)%MassFlowRate == 0.0) THEN
-        IF ( ControllerProps(ControlNum)%ActuatedValue == 0.0 ) THEN
-          IsConvergedFlag = .TRUE.
-          RETURN
-        END IF
-      END IF
-
-
-    CASE (iModeInactive)
-      ! Controller component NOT available (ie, inactive)
-      ! Make sure that the actuated variable is still equal to the node min avail
-      !
-      ! NOTE: Replaced Node(ActuatedNode)%MassFlowRateMinAvail         in release 1.3
-      !       with     ControllerProps(ControlNum)%MinAvailActuated    in release 1.4
-      IF ( ControllerProps(ControlNum)%ActuatedValue == ControllerProps(ControlNum)%MinAvailActuated) THEN
+  CASE (iModeOff)
+    ! Check whether the component is running
+    !
+    ! This check is perfomed by looking at the component mass flow rate at the sensed node.
+    ! Since the components have been simulated before getting here, if they are zero they should be OFF.
+    IF (Node(SensedNode)%MassFlowRate == 0.0) THEN
+      IF ( ControllerProps(ControlNum)%ActuatedValue == 0.0 ) THEN
         IsConvergedFlag = .TRUE.
         RETURN
       END IF
+    END IF
 
 
-    CASE (iModeMinActive)
-      ! Check for min constrained convergence
-      IF ( CheckMinActiveController(ControlNum) ) THEN
-        IsConvergedFlag = .TRUE.
-        RETURN
-      END IF
-      ! Check for unconstrained convergence assuming that there is more than one controller controlling
-      ! the same sensed node and that the other controller was able to meet the setpoint although this one
-      ! was min-constrained.
-      IF ( CheckRootFinderConvergence( RootFinders(ControlNum), ControllerProps(ControlNum)%DeltaSensed ) ) THEN
-        ! Indicate convergence with base value (used to compute DeltaSensed!)
-        IsConvergedFlag = .TRUE.
-        RETURN
-      END IF
+  CASE (iModeInactive)
+    ! Controller component NOT available (ie, inactive)
+    ! Make sure that the actuated variable is still equal to the node min avail
+    !
+    ! NOTE: Replaced Node(ActuatedNode)%MassFlowRateMinAvail         in release 1.3
+    !       with     ControllerProps(ControlNum)%MinAvailActuated    in release 1.4
+    IF ( ControllerProps(ControlNum)%ActuatedValue == ControllerProps(ControlNum)%MinAvailActuated) THEN
+      IsConvergedFlag = .TRUE.
+      RETURN
+    END IF
 
 
-    CASE (iModeMaxActive)
-      ! Check for max constrained convergence
-      IF ( CheckMaxActiveController(ControlNum) ) THEN
-        IsConvergedFlag = .TRUE.
-        RETURN
-      END IF
-      ! Check for unconstrained convergence assuming that there is more than one controller controlling
-      ! the same sensed node and that the other controller was able to meet the setpoint although this one
-      ! was max-constrained.
-      IF ( CheckRootFinderConvergence( RootFinders(ControlNum), ControllerProps(ControlNum)%DeltaSensed ) ) THEN
-        ! Indicate convergence with base value (used to compute DeltaSensed!)
-        IsConvergedFlag = .TRUE.
-        RETURN
-      END IF
+  CASE (iModeMinActive)
+    ! Check for min constrained convergence
+    IF ( CheckMinActiveController(ControlNum) ) THEN
+      IsConvergedFlag = .TRUE.
+      RETURN
+    END IF
+    ! Check for unconstrained convergence assuming that there is more than one controller controlling
+    ! the same sensed node and that the other controller was able to meet the setpoint although this one
+    ! was min-constrained.
+    IF ( CheckRootFinderConvergence( RootFinders(ControlNum), ControllerProps(ControlNum)%DeltaSensed ) ) THEN
+      ! Indicate convergence with base value (used to compute DeltaSensed!)
+      IsConvergedFlag = .TRUE.
+      RETURN
+    END IF
 
 
-    CASE (iModeActive)
-      ! Check min constraint on actuated variable
-      IF ( ControllerProps(ControlNum)%ActuatedValue < ControllerProps(ControlNum)%MinAvailActuated ) THEN
-        IsConvergedFlag = .FALSE.
-        RETURN
-      END IF
-      ! Check max constraint on actuated variable
-      IF ( ControllerProps(ControlNum)%ActuatedValue > ControllerProps(ControlNum)%MaxAvailActuated ) THEN
-        IsConvergedFlag = .FALSE.
-        RETURN
-      END IF
-
-      ! Check for unconstrained convergence
-      !
-      ! Equivalent to:
-      ! IF ((ABS(ControllerProps(ControlNum)%DeltaSensed) .LE. ControllerProps(ControlNum)%Offset)) THEN
-      !
-      ! NOTE: If setpoint has changed since last call, then the following test will most likely fail.
-      IF ( CheckRootFinderConvergence( RootFinders(ControlNum), ControllerProps(ControlNum)%DeltaSensed ) ) THEN
-        ! Indicate convergence with base value (used to compute DeltaSensed!)
-        IsConvergedFlag = .TRUE.
-        RETURN
-      END IF
-      ! Check for min constrained convergence
-      IF ( CheckMinActiveController(ControlNum) ) THEN
-        IsConvergedFlag = .TRUE.
-        RETURN
-      END IF
-      ! Check for max constrained convergence
-      IF ( CheckMaxActiveController(ControlNum) ) THEN
-        IsConvergedFlag = .TRUE.
-        RETURN
-      END IF
+  CASE (iModeMaxActive)
+    ! Check for max constrained convergence
+    IF ( CheckMaxActiveController(ControlNum) ) THEN
+      IsConvergedFlag = .TRUE.
+      RETURN
+    END IF
+    ! Check for unconstrained convergence assuming that there is more than one controller controlling
+    ! the same sensed node and that the other controller was able to meet the setpoint although this one
+    ! was max-constrained.
+    IF ( CheckRootFinderConvergence( RootFinders(ControlNum), ControllerProps(ControlNum)%DeltaSensed ) ) THEN
+      ! Indicate convergence with base value (used to compute DeltaSensed!)
+      IsConvergedFlag = .TRUE.
+      RETURN
+    END IF
 
 
-    CASE DEFAULT
-      ! Can only happen if controller is not converged after MaxIter in SolveAirLoopControllers()
-      ! which will produce ControllerProps(ControlNum)%Mode = iModeNone
+  CASE (iModeActive)
+    ! Check min constraint on actuated variable
+    IF ( ControllerProps(ControlNum)%ActuatedValue < ControllerProps(ControlNum)%MinAvailActuated ) THEN
       IsConvergedFlag = .FALSE.
+      RETURN
+    END IF
+    ! Check max constraint on actuated variable
+    IF ( ControllerProps(ControlNum)%ActuatedValue > ControllerProps(ControlNum)%MaxAvailActuated ) THEN
+      IsConvergedFlag = .FALSE.
+      RETURN
+    END IF
+
+    ! Check for unconstrained convergence
+    !
+    ! Equivalent to:
+    ! IF ((ABS(ControllerProps(ControlNum)%DeltaSensed) .LE. ControllerProps(ControlNum)%Offset)) THEN
+    !
+    ! NOTE: If setpoint has changed since last call, then the following test will most likely fail.
+    IF ( CheckRootFinderConvergence( RootFinders(ControlNum), ControllerProps(ControlNum)%DeltaSensed ) ) THEN
+      ! Indicate convergence with base value (used to compute DeltaSensed!)
+      IsConvergedFlag = .TRUE.
+      RETURN
+    END IF
+    ! Check for min constrained convergence
+    IF ( CheckMinActiveController(ControlNum) ) THEN
+      IsConvergedFlag = .TRUE.
+      RETURN
+    END IF
+    ! Check for max constrained convergence
+    IF ( CheckMaxActiveController(ControlNum) ) THEN
+      IsConvergedFlag = .TRUE.
+      RETURN
+    END IF
+
+
+  CASE DEFAULT
+    ! Can only happen if controller is not converged after MaxIter in SolveAirLoopControllers()
+    ! which will produce ControllerProps(ControlNum)%Mode = iModeNone
+    IsConvergedFlag = .FALSE.
 
   END SELECT SelectMode
 
@@ -2230,40 +2230,40 @@ END SUBROUTINE CheckSimpleController
 
 
 LOGICAL FUNCTION CheckMinActiveController( ControlNum )
-          ! FUNCTION INFORMATION:
-          !       AUTHOR         Dimitri Curtil
-          !       DATE WRITTEN   May 2006
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! FUNCTION INFORMATION:
+  !       AUTHOR         Dimitri Curtil
+  !       DATE WRITTEN   May 2006
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS FUNCTION:
-          ! Returns true if controller is min-constrained. false otherwise.
+  ! PURPOSE OF THIS FUNCTION:
+  ! Returns true if controller is min-constrained. false otherwise.
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! FUNCTION ARGUMENT DEFINITIONS:
+  ! FUNCTION ARGUMENT DEFINITIONS:
   INTEGER, INTENT(IN)   :: ControlNum
 
-          ! FUNCTION PARAMETER DEFINITIONS:
-          ! na
+  ! FUNCTION PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! FUNCTION LOCAL VARIABLE DECLARATIONS:
-          ! na
+  ! FUNCTION LOCAL VARIABLE DECLARATIONS:
+  ! na
 
   CheckMinActiveController = .FALSE.
 
@@ -2291,10 +2291,10 @@ LOGICAL FUNCTION CheckMinActiveController( ControlNum )
   CASE DEFAULT
     ! Should never happen
     CALL ShowSevereError( &
-      'CheckMinActiveController: Invalid controller action during '//TRIM(CreateHVACStepFullString())//'.' &
+    'CheckMinActiveController: Invalid controller action during '//TRIM(CreateHVACStepFullString())//'.' &
     )
     CALL ShowContinueError( &
-      'CheckMinActiveController: Controller name='//TRIM(ControllerProps(ControlNum)%ControllerName) &
+    'CheckMinActiveController: Controller name='//TRIM(ControllerProps(ControlNum)%ControllerName) &
     )
     CALL ShowContinueError('CheckMinActiveController: Valid choices are "NORMAL" or "REVERSE"')
     CALL ShowFatalError('CheckMinActiveController: Preceding error causes program termination.')
@@ -2306,40 +2306,40 @@ END FUNCTION CheckMinActiveController
 
 
 LOGICAL FUNCTION CheckMaxActiveController( ControlNum )
-          ! FUNCTION INFORMATION:
-          !       AUTHOR         Dimitri Curtil
-          !       DATE WRITTEN   May 2006
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! FUNCTION INFORMATION:
+  !       AUTHOR         Dimitri Curtil
+  !       DATE WRITTEN   May 2006
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS FUNCTION:
-          ! Returns true if controller is max-constrained. false otherwise.
+  ! PURPOSE OF THIS FUNCTION:
+  ! Returns true if controller is max-constrained. false otherwise.
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! FUNCTION ARGUMENT DEFINITIONS:
+  ! FUNCTION ARGUMENT DEFINITIONS:
   INTEGER, INTENT(IN)   :: ControlNum
 
-          ! FUNCTION PARAMETER DEFINITIONS:
-          ! na
+  ! FUNCTION PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! FUNCTION LOCAL VARIABLE DECLARATIONS:
-          ! na
+  ! FUNCTION LOCAL VARIABLE DECLARATIONS:
+  ! na
 
   CheckMaxActiveController = .FALSE.
 
@@ -2367,10 +2367,10 @@ LOGICAL FUNCTION CheckMaxActiveController( ControlNum )
   CASE DEFAULT
     ! Should never happen
     CALL ShowSevereError( &
-      'CheckMaxActiveController: Invalid controller action during '//TRIM(CreateHVACStepFullString())//'.' &
+    'CheckMaxActiveController: Invalid controller action during '//TRIM(CreateHVACStepFullString())//'.' &
     )
     CALL ShowContinueError( &
-      'CheckMaxActiveController: Controller name='//TRIM(ControllerProps(ControlNum)%ControllerName) &
+    'CheckMaxActiveController: Controller name='//TRIM(ControllerProps(ControlNum)%ControllerName) &
     )
     CALL ShowContinueError('CheckMaxActiveController: Valid choices are "NORMAL" or "REVERSE"')
     CALL ShowFatalError('CheckMaxActiveController: Preceding error causes program termination.')
@@ -2383,43 +2383,43 @@ END FUNCTION CheckMaxActiveController
 
 SUBROUTINE SaveSimpleController(ControlNum, FirstHVACIteration, IsConvergedFlag)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Dimitri Curtil
-          !       DATE WRITTEN   April 2006
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Dimitri Curtil
+  !       DATE WRITTEN   April 2006
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Updates solution trackers if simple controller is converged.
-          !
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! Updates solution trackers if simple controller is converged.
+  !
 
-          ! METHODOLOGY EMPLOYED:
+  ! METHODOLOGY EMPLOYED:
 
-          ! REFERENCES:
+  ! REFERENCES:
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   INTEGER, INTENT(IN)   :: ControlNum
   LOGICAL, INTENT(IN)   :: FirstHVACIteration
   LOGICAL, INTENT(IN)   :: IsConvergedFlag
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER             :: PreviousSolutionIndex
 
-          ! FLOW
+  ! FLOW
 
   ! Save solution and mode for next call only if converged
   IF ( IsConvergedFlag ) THEN
@@ -2433,13 +2433,13 @@ SUBROUTINE SaveSimpleController(ControlNum, FirstHVACIteration, IsConvergedFlag)
       ControllerProps(ControlNum)%SolutionTrackers(PreviousSolutionIndex)%DefinedFlag   = .TRUE.
       ControllerProps(ControlNum)%SolutionTrackers(PreviousSolutionIndex)%Mode          = ControllerProps(ControlNum)%Mode
       ControllerProps(ControlNum)%SolutionTrackers(PreviousSolutionIndex)%ActuatedValue =   &
-                                                                              ControllerProps(ControlNum)%NextActuatedValue
+      ControllerProps(ControlNum)%NextActuatedValue
     ELSE
       ControllerProps(ControlNum)%SolutionTrackers(PreviousSolutionIndex)%DefinedFlag   = .FALSE.
       ControllerProps(ControlNum)%SolutionTrackers(PreviousSolutionIndex)%Mode          = ControllerProps(ControlNum)%Mode
       ControllerProps(ControlNum)%SolutionTrackers(PreviousSolutionIndex)%ActuatedValue =   &
-                                                                              ControllerProps(ControlNum)%NextActuatedValue
-     END IF
+      ControllerProps(ControlNum)%NextActuatedValue
+    END IF
   END IF
 
   RETURN
@@ -2448,38 +2448,38 @@ END SUBROUTINE SaveSimpleController
 
 SUBROUTINE LimitController(ControlNum, IsConvergedFlag) !RS: Debugging: Extraneous subroutine! It doesn't do anything
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR
-          !       DATE WRITTEN   July 1998
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR
+  !       DATE WRITTEN   July 1998
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
+  ! PURPOSE OF THIS SUBROUTINE:
 
-          ! METHODOLOGY EMPLOYED:
+  ! METHODOLOGY EMPLOYED:
 
-          ! REFERENCES:
+  ! REFERENCES:
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   INTEGER   :: ControlNum !unused1208
   LOGICAL   :: IsConvergedFlag !unused1208
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-          ! na
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! na
 
   RETURN
 END SUBROUTINE LimitController
@@ -2492,62 +2492,62 @@ END SUBROUTINE LimitController
 
 SUBROUTINE UpdateController(ControlNum)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         <author>
-          !       DATE WRITTEN   <date_written>
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         <author>
+  !       DATE WRITTEN   <date_written>
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine updates the actuated node with the next candidate value.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine updates the actuated node with the next candidate value.
 
-          ! METHODOLOGY EMPLOYED:
-          ! Needs description, as appropriate.
+  ! METHODOLOGY EMPLOYED:
+  ! Needs description, as appropriate.
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE PlantUtilities,  ONLY : SetActuatedBranchFlowRate
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   INTEGER, INTENT(IN) :: ControlNum
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER             :: ActuatedNode
   INTEGER             :: SensedNode
 
-   ! Set the sensed and actuated node numbers
-   ActuatedNode = ControllerProps(ControlNum)%ActuatedNode
-   SensedNode   = ControllerProps(ControlNum)%SensedNode
+  ! Set the sensed and actuated node numbers
+  ActuatedNode = ControllerProps(ControlNum)%ActuatedNode
+  SensedNode   = ControllerProps(ControlNum)%SensedNode
 
-   ! Set the actuated node of the Controller
+  ! Set the actuated node of the Controller
   SELECT CASE(ControllerProps(ControlNum)%ActuatorVar)
-    CASE (iFlow)  ! 'Flow'
-      Call SetActuatedBranchFlowRate(ControllerProps(ControlNum)%NextActuatedValue,  &
-                                   ControllerProps(ControlNum)%ActuatedNode ,      &
-                                   ControllerProps(ControlNum)%ActuatedNodePlantLoopNum, &
-                                   ControllerProps(ControlNum)%ActuatedNodePlantLoopSide, &
-                                   ControllerProps(ControlNum)%ActuatedNodePlantLoopBranchNum, &
-                                   .FALSE.)
-!     Node(ActuatedNode)%MassFlowRate = ControllerProps(ControlNum)%NextActuatedValue
+  CASE (iFlow)  ! 'Flow'
+    Call SetActuatedBranchFlowRate(ControllerProps(ControlNum)%NextActuatedValue,  &
+    ControllerProps(ControlNum)%ActuatedNode ,      &
+    ControllerProps(ControlNum)%ActuatedNodePlantLoopNum, &
+    ControllerProps(ControlNum)%ActuatedNodePlantLoopSide, &
+    ControllerProps(ControlNum)%ActuatedNodePlantLoopBranchNum, &
+    .FALSE.)
+    !     Node(ActuatedNode)%MassFlowRate = ControllerProps(ControlNum)%NextActuatedValue
 
-    CASE DEFAULT
-      CALL ShowFatalError( &
-        'UpdateController: Invalid Actuator Variable Type='// &
-        TRIM(ControlVariableTypes(ControllerProps(ControlNum)%ActuatorVar)) &
-      )
+  CASE DEFAULT
+    CALL ShowFatalError( &
+    'UpdateController: Invalid Actuator Variable Type='// &
+    TRIM(ControlVariableTypes(ControllerProps(ControlNum)%ActuatorVar)) &
+    )
   END SELECT
 
   RETURN
@@ -2562,43 +2562,43 @@ END SUBROUTINE UpdateController
 
 SUBROUTINE ReportController(ControlNum) !RS: Debugging: Extraneous subroutine! It doesn't do anything
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         <author>
-          !       DATE WRITTEN   <date_written>
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         <author>
+  !       DATE WRITTEN   <date_written>
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine needs a description.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine needs a description.
 
-          ! METHODOLOGY EMPLOYED:
-          ! Needs description, as appropriate.
+  ! METHODOLOGY EMPLOYED:
+  ! Needs description, as appropriate.
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   INTEGER, INTENT(IN) :: ControlNum !unused1208
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-          ! na
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! na
 
- ! Still needs to report the Controller power from this component
- ! Write(*,*)=ControllerProps(ControlNum)%ControllerPower
+  ! Still needs to report the Controller power from this component
+  ! Write(*,*)=ControllerProps(ControlNum)%ControllerPower
 
   RETURN
 END SUBROUTINE ReportController
@@ -2608,51 +2608,51 @@ END SUBROUTINE ReportController
 
 SUBROUTINE ExitCalcController(ControlNum, NextActuatedValue, Mode, IsConvergedFlag, IsUpToDateFlag)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Dimitri Curtil
-          !       DATE WRITTEN   February 06
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Dimitri Curtil
+  !       DATE WRITTEN   February 06
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Only called when controller is considered as "converged", meaning that we do no longer
-          ! need to continue iterating.
-          !
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! Only called when controller is considered as "converged", meaning that we do no longer
+  ! need to continue iterating.
+  !
 
-          ! METHODOLOGY EMPLOYED:
-          ! Updates:
-          ! - next actuated value
-          ! - controller mode
-          ! - IsConvergedFlag
-          ! - IsUpToDateFlag
-          !
+  ! METHODOLOGY EMPLOYED:
+  ! Updates:
+  ! - next actuated value
+  ! - controller mode
+  ! - IsConvergedFlag
+  ! - IsUpToDateFlag
+  !
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   INTEGER, INTENT(IN)     :: ControlNum
   REAL(r64), INTENT(IN)        :: NextActuatedValue
   INTEGER, INTENT(IN)     :: Mode
   LOGICAL, INTENT(OUT)    :: IsConvergedFlag
   LOGICAL, INTENT(OUT)    :: IsUpToDateFlag
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-          ! na
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! na
 
   ControllerProps(ControlNum)%NextActuatedValue = NextActuatedValue
   ControllerProps(ControlNum)%Mode = Mode
@@ -2674,38 +2674,38 @@ END SUBROUTINE ExitCalcController
 ! *****************************************************************************
 
 SUBROUTINE TrackAirLoopControllers( &
-              AirLoopNum, &
-              WarmRestartStatus, &
-              AirLoopIterMax, AirLoopIterTot, AirLoopNumCalls )
+  AirLoopNum, &
+  WarmRestartStatus, &
+  AirLoopIterMax, AirLoopIterTot, AirLoopNumCalls )
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Dimitri Curtil
-          !       DATE WRITTEN   April 2006
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Dimitri Curtil
+  !       DATE WRITTEN   April 2006
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Updates runtime statistics for controllers on the specified air loop.
-          ! Used to produce objective metrics when analyzing runtime performance
-          ! of HVAC controllers for different implementations.
-          !
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! Updates runtime statistics for controllers on the specified air loop.
+  ! Used to produce objective metrics when analyzing runtime performance
+  ! of HVAC controllers for different implementations.
+  !
 
-          ! METHODOLOGY EMPLOYED:
-          ! Needs description, as appropriate.
+  ! METHODOLOGY EMPLOYED:
+  ! Needs description, as appropriate.
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataHVACGlobals,  ONLY : NumPrimaryAirSys
   USE DataAirSystems,   ONLY : PrimaryAirSystem
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-          ! na
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! SUBROUTINE PARAMETER DEFINITIONS:
   INTEGER, INTENT(IN)          :: AirLoopNum
   ! See CONTROLLER_WARM_RESTART_<> parameters in DataHVACControllers.f90
   ! If Status<0, no speculative warm restart.
@@ -2719,16 +2719,16 @@ SUBROUTINE TrackAirLoopControllers( &
   ! Number of times SimAirLoopComponents() has been invoked
   INTEGER, INTENT(IN)          :: AirLoopNumCalls
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER                      :: ControllerNum
 
-          ! FLOW
+  ! FLOW
 
   ! If no controllers on this air loop then we have nothig to do
   IF ( PrimaryAirSystem(AirLoopNum)%NumControllers == 0 ) RETURN
@@ -2741,28 +2741,28 @@ SUBROUTINE TrackAirLoopControllers( &
   SELECT CASE (WarmRestartStatus)
   CASE (iControllerWarmRestartSuccess)
     AirLoopStats(AirLoopNum)%NumSuccessfulWarmRestarts = &
-      AirLoopStats(AirLoopNum)%NumSuccessfulWarmRestarts + 1
+    AirLoopStats(AirLoopNum)%NumSuccessfulWarmRestarts + 1
   CASE (iControllerWarmRestartFail)
     AirLoopStats(AirLoopNum)%NumFailedWarmRestarts = &
-      AirLoopStats(AirLoopNum)%NumFailedWarmRestarts + 1
+    AirLoopStats(AirLoopNum)%NumFailedWarmRestarts + 1
   CASE DEFAULT
     ! Nothing to do if no speculative warm restart used
   END SELECT
 
   AirLoopStats(AirLoopNum)%TotSimAirLoopComponents = &
-    AirLoopStats(AirLoopNum)%TotSimAirLoopComponents + AirLoopNumCalls
+  AirLoopStats(AirLoopNum)%TotSimAirLoopComponents + AirLoopNumCalls
 
   AirLoopStats(AirLoopNum)%MaxSimAirLoopComponents = MAX( &
-    AirLoopStats(AirLoopNum)%MaxSimAirLoopComponents, &
-    AirLoopNumCalls &
+  AirLoopStats(AirLoopNum)%MaxSimAirLoopComponents, &
+  AirLoopNumCalls &
   )
 
   AirLoopStats(AirLoopNum)%TotIterations = &
-    AirLoopStats(AirLoopNum)%TotIterations + AirLoopIterTot
+  AirLoopStats(AirLoopNum)%TotIterations + AirLoopIterTot
 
   AirLoopStats(AirLoopNum)%MaxIterations = MAX( &
-    AirLoopStats(AirLoopNum)%MaxIterations, &
-    AirLoopIterMax &
+  AirLoopStats(AirLoopNum)%MaxIterations, &
+  AirLoopIterMax &
   )
 
   ! Update performance statistics for each controller on air loop
@@ -2776,44 +2776,44 @@ END SUBROUTINE TrackAirLoopControllers
 
 SUBROUTINE TrackAirLoopController( AirLoopNum, AirLoopControlNum )
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Dimitri Curtil
-          !       DATE WRITTEN   April 2006
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Dimitri Curtil
+  !       DATE WRITTEN   April 2006
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Updates runtime statistics for the specified controller.
-          ! Used to produce objective metrics when analyzing runtime performance
-          ! of HVAC controllers for different implementations.
-          !
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! Updates runtime statistics for the specified controller.
+  ! Used to produce objective metrics when analyzing runtime performance
+  ! of HVAC controllers for different implementations.
+  !
 
-          ! METHODOLOGY EMPLOYED:
-          ! Needs description, as appropriate.
+  ! METHODOLOGY EMPLOYED:
+  ! Needs description, as appropriate.
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataHVACGlobals,  ONLY : NumPrimaryAirSys
   USE DataAirSystems,   ONLY : PrimaryAirSystem
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-          ! na
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! SUBROUTINE PARAMETER DEFINITIONS:
   INTEGER, INTENT(IN)     :: AirLoopNum         ! Air loop index
   INTEGER, INTENT(IN)     :: AirLoopControlNum  ! Controller index on this air loop
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   ! Corresponding index in ControllerProps array
   INTEGER                      :: ControlIndex
   ! Number of iterations needed to solve this controller
@@ -2821,7 +2821,7 @@ SUBROUTINE TrackAirLoopController( AirLoopNum, AirLoopControlNum )
   ! Current operating mode
   INTEGER                      :: Mode
 
-          ! FLOW
+  ! FLOW
 
   ControlIndex = PrimaryAirSystem(AirLoopNum)%ControllerIndex(AirLoopControlNum)
 
@@ -2836,15 +2836,15 @@ SUBROUTINE TrackAirLoopController( AirLoopNum, AirLoopControlNum )
   IF ( Mode /= iModeNone ) THEN
 
     AirLoopStats(AirLoopNum)%ControllerStats(AirLoopControlNum)%NumCalls(Mode) = &
-      AirLoopStats(AirLoopNum)%ControllerStats(AirLoopControlNum)%NumCalls(Mode) + 1
+    AirLoopStats(AirLoopNum)%ControllerStats(AirLoopControlNum)%NumCalls(Mode) + 1
 
     AirLoopStats(AirLoopNum)%ControllerStats(AirLoopControlNum)%TotIterations(Mode) = &
-      AirLoopStats(AirLoopNum)%ControllerStats(AirLoopControlNum)%TotIterations(Mode) + &
-      IterationCount
+    AirLoopStats(AirLoopNum)%ControllerStats(AirLoopControlNum)%TotIterations(Mode) + &
+    IterationCount
 
     AirLoopStats(AirLoopNum)%ControllerStats(AirLoopControlNum)%MaxIterations(Mode) = MAX( &
-      AirLoopStats(AirLoopNum)%ControllerStats(AirLoopControlNum)%MaxIterations(Mode), &
-      IterationCount &
+    AirLoopStats(AirLoopNum)%ControllerStats(AirLoopControlNum)%MaxIterations(Mode), &
+    IterationCount &
     )
 
   END IF
@@ -2855,47 +2855,47 @@ END SUBROUTINE TrackAirLoopController
 
 SUBROUTINE DumpAirLoopStatistics
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Dimitri Curtil
-          !       DATE WRITTEN   April 2006
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Dimitri Curtil
+  !       DATE WRITTEN   April 2006
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Writes runtime statistics for controllers on all air loops
-          ! to a CSV file named "statistics.HVACControllers.csv".
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! Writes runtime statistics for controllers on all air loops
+  ! to a CSV file named "statistics.HVACControllers.csv".
 
-          ! METHODOLOGY EMPLOYED:
-          ! Needs description, as appropriate.
+  ! METHODOLOGY EMPLOYED:
+  ! Needs description, as appropriate.
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataSystemVariables, ONLY : TrackAirLoopEnvFlag
   USE DataHVACGlobals,     ONLY : NumPrimaryAirSys
   USE DataAirSystems,      ONLY : PrimaryAirSystem
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-          ! na
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
+  ! INTERFACE BLOCK SPECIFICATIONS
   INTEGER, EXTERNAL            :: GetNewUnitNumber
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   CHARACTER(LEN=MaxNameLength) :: StatisticsFileName
   INTEGER                      :: FileUnit
   INTEGER                      :: AirLoopNum
 
-          ! FLOW
+  ! FLOW
 
   ! Detect if statistics have been generated or not for this run
   IF ( .NOT.TrackAirLoopEnvFlag ) THEN
@@ -2910,8 +2910,8 @@ SUBROUTINE DumpAirLoopStatistics
 
   IF ( FileUnit <= 0 ) THEN
     CALL ShowWarningError( &
-      'DumpAirLoopStatistics: Invalid unit for air loop statistics file="'// &
-      TRIM(StatisticsFileName)//'"')
+    'DumpAirLoopStatistics: Invalid unit for air loop statistics file="'// &
+    TRIM(StatisticsFileName)//'"')
     RETURN
   END IF
 
@@ -2925,9 +2925,9 @@ SUBROUTINE DumpAirLoopStatistics
 
   RETURN
 
-100 CONTINUE
+  100 CONTINUE
   CALL ShowFatalError( &
-    'DumpAirLoopStatistics: Failed to open statistics file "'//TRIM(StatisticsFileName)//'" for output (write).' &
+  'DumpAirLoopStatistics: Failed to open statistics file "'//TRIM(StatisticsFileName)//'" for output (write).' &
   )
 
   RETURN
@@ -2936,43 +2936,43 @@ END SUBROUTINE DumpAirLoopStatistics
 
 SUBROUTINE WriteAirLoopStatistics( FileUnit, ThisPrimaryAirSystem, ThisAirLoopStats )
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Dimitri Curtil
-          !       DATE WRITTEN   April 2006
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Dimitri Curtil
+  !       DATE WRITTEN   April 2006
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Writes runtime statistics for controllers on the specified air loop
-          ! to the specified file.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! Writes runtime statistics for controllers on the specified air loop
+  ! to the specified file.
 
-          ! METHODOLOGY EMPLOYED:
-          ! Needs description, as appropriate.
+  ! METHODOLOGY EMPLOYED:
+  ! Needs description, as appropriate.
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataAirSystems
   USE General, ONLY: TrimSigDigits
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-          ! na
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! SUBROUTINE PARAMETER DEFINITIONS:
   INTEGER, INTENT(IN)                      :: FileUnit
   TYPE(DefinePrimaryAirSystem), INTENT(IN) :: ThisPrimaryAirSystem
   TYPE(AirLoopStatsType), INTENT(IN)       :: ThisAirLoopStats
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER                      :: AirLoopControlNum
   INTEGER                      :: NumWarmRestarts
   REAL(r64)                    :: WarmRestartSuccessRatio
@@ -2982,7 +2982,7 @@ SUBROUTINE WriteAirLoopStatistics( FileUnit, ThisPrimaryAirSystem, ThisAirLoopSt
   REAL(r64)                    :: AvgIterations
   INTEGER                      :: iModeNum
 
-          ! FLOW
+  ! FLOW
 
   WRITE(FileUnit,'(A,A)') TRIM(ThisPrimaryAirSystem%Name), ','
 
@@ -3041,8 +3041,8 @@ SUBROUTINE WriteAirLoopStatistics( FileUnit, ThisPrimaryAirSystem, ThisAirLoopSt
       TotIterations = TotIterations + ThisAirLoopStats%ControllerStats(AirLoopControlNum)%TotIterations(iModeNum)
 
       MaxIterations = MAX( &
-        MaxIterations, &
-        ThisAirLoopStats%ControllerStats(AirLoopControlNum)%MaxIterations(iModeNum) &
+      MaxIterations, &
+      ThisAirLoopStats%ControllerStats(AirLoopControlNum)%MaxIterations(iModeNum) &
       )
     END DO
 
@@ -3069,22 +3069,22 @@ SUBROUTINE WriteAirLoopStatistics( FileUnit, ThisPrimaryAirSystem, ThisAirLoopSt
 
       ! Number of times this controller operated in this mode
       WRITE(FileUnit,'(A,A,A)')  'NumCalls', ',', &
-        TRIM(TrimSigDigits(ThisAirLoopStats%ControllerStats(AirLoopControlNum)%NumCalls(iModeNum)))
+      TRIM(TrimSigDigits(ThisAirLoopStats%ControllerStats(AirLoopControlNum)%NumCalls(iModeNum)))
 
       ! Aggregated number of iterations needed by this controller
       WRITE(FileUnit,'(A,A,A)')  'TotIterations', ',', &
-        TRIM(TrimSigDigits(ThisAirLoopStats%ControllerStats(AirLoopControlNum)%TotIterations(iModeNum)))
+      TRIM(TrimSigDigits(ThisAirLoopStats%ControllerStats(AirLoopControlNum)%TotIterations(iModeNum)))
       ! Aggregated number of iterations needed by this controller
       WRITE(FileUnit,'(A,A,A)')  'MaxIterations', ',', &
-        TRIM(TrimSigDigits(ThisAirLoopStats%ControllerStats(AirLoopControlNum)%MaxIterations(iModeNum)))
+      TRIM(TrimSigDigits(ThisAirLoopStats%ControllerStats(AirLoopControlNum)%MaxIterations(iModeNum)))
 
       ! Average number of iterations needed by controllers to simulate the specified air loop
       IF ( ThisAirLoopStats%ControllerStats(AirLoopControlNum)%NumCalls(iModeNum) == 0 ) THEN
         AvgIterations = 0
       ELSE
         AvgIterations = &
-          REAL(ThisAirLoopStats%ControllerStats(AirLoopControlNum)%TotIterations(iModeNum),r64) / &
-          REAL(ThisAirLoopStats%ControllerStats(AirLoopControlNum)%NumCalls(iModeNum),r64)
+        REAL(ThisAirLoopStats%ControllerStats(AirLoopControlNum)%TotIterations(iModeNum),r64) / &
+        REAL(ThisAirLoopStats%ControllerStats(AirLoopControlNum)%NumCalls(iModeNum),r64)
       END IF
       WRITE(FileUnit,'(A,A,A)')  'AvgIterations', ',', TRIM(TrimSigDigits(AvgIterations,10))
 
@@ -3101,42 +3101,42 @@ END SUBROUTINE WriteAirLoopStatistics
 
 SUBROUTINE SetupAirLoopControllersTracer( AirLoopNum )
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Dimitri Curtil
-          !       DATE WRITTEN   February 2006
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Dimitri Curtil
+  !       DATE WRITTEN   February 2006
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Opens main trace file for controllers on specific air loop
-          ! and writes header row with titles.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! Opens main trace file for controllers on specific air loop
+  ! and writes header row with titles.
 
-          ! METHODOLOGY EMPLOYED:
-          ! Needs description, as appropriate.
+  ! METHODOLOGY EMPLOYED:
+  ! Needs description, as appropriate.
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataAirSystems, ONLY : PrimaryAirSystem
   USE General, ONLY: TrimSigDigits
 
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-          ! na
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! SUBROUTINE PARAMETER DEFINITIONS:
   INTEGER, INTENT(IN)             :: AirLoopNum
 
-          ! INTERFACE BLOCK SPECIFICATIONS
+  ! INTERFACE BLOCK SPECIFICATIONS
   INTEGER, EXTERNAL               :: GetNewUnitNumber
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   CHARACTER(LEN=MaxNameLength)    :: TraceFileName
   INTEGER                         :: TraceFileUnit
   INTEGER                         :: ControllerNum
@@ -3151,8 +3151,8 @@ SUBROUTINE SetupAirLoopControllersTracer( AirLoopNum )
 
   IF ( TraceFileUnit <= 0 ) THEN
     CALL ShowWarningError( &
-      'SetupAirLoopControllersTracer: Invalid unit for air loop controllers trace file="'// &
-      TRIM(TraceFileName)//'"')
+    'SetupAirLoopControllersTracer: Invalid unit for air loop controllers trace file="'// &
+    TRIM(TraceFileName)//'"')
     RETURN
   END IF
 
@@ -3164,14 +3164,14 @@ SUBROUTINE SetupAirLoopControllersTracer( AirLoopNum )
 
   ! List all controllers and their corrresponding handles into main trace file
   WRITE(TraceFileUnit,'(2(A,A))') &
-    'Num', ',', &
-    'Name', ','
+  'Num', ',', &
+  'Name', ','
 
   DO ControllerNum = 1,PrimaryAirSystem(AirLoopNum)%NumControllers
     WRITE(TraceFileUnit,'(1(A,A),1(A,A))') &
-      TRIM(TrimSigDigits(ControllerNum)), ',', &
-      PrimaryAirSystem(AirLoopNum)%ControllerName(ControllerNum), ','
-      ! SAME AS ControllerProps(ControllerIndex)%ControllerName BUT NOT YET AVAILABLE
+    TRIM(TrimSigDigits(ControllerNum)), ',', &
+    PrimaryAirSystem(AirLoopNum)%ControllerName(ControllerNum), ','
+    ! SAME AS ControllerProps(ControllerIndex)%ControllerName BUT NOT YET AVAILABLE
   END DO
 
   ! Skip a bunch of lines
@@ -3182,27 +3182,27 @@ SUBROUTINE SetupAirLoopControllersTracer( AirLoopNum )
 
   ! Write column header in main contoller trace file
   WRITE(TraceFileUnit,'(12(A,A))',ADVANCE='No') &
-    'ZoneSizingCalc', ',', &
-    'SysSizingCalc', ',', &
-    'EnvironmentNum', ',', &
-    'WarmupFlag', ',', &
-    'SysTimeStamp', ',', &
-    'SysTimeInterval', ',', &
-    'BeginTimeStepFlag', ',', &
-    'FirstTimeStepSysFlag', ',', &
-    'FirstHVACIteration', ',', &
-    'AirLoopPass', ',', &
-    'AirLoopNumCallsTot', ',', &
-    'AirLoopConverged', ','
+  'ZoneSizingCalc', ',', &
+  'SysSizingCalc', ',', &
+  'EnvironmentNum', ',', &
+  'WarmupFlag', ',', &
+  'SysTimeStamp', ',', &
+  'SysTimeInterval', ',', &
+  'BeginTimeStepFlag', ',', &
+  'FirstTimeStepSysFlag', ',', &
+  'FirstHVACIteration', ',', &
+  'AirLoopPass', ',', &
+  'AirLoopNumCallsTot', ',', &
+  'AirLoopConverged', ','
 
   ! Write headers for final state
   DO ControllerNum = 1,PrimaryAirSystem(AirLoopNum)%NumControllers
     WRITE(TraceFileUnit,'(5(A,A,A))',ADVANCE='No') &
-      'Mode', TRIM(TrimSigDigits(ControllerNum)), ',', &
-      'IterMax', TRIM(TrimSigDigits(ControllerNum)), ',', &
-      'XRoot', TRIM(TrimSigDigits(ControllerNum)), ',', &
-      'YRoot', TRIM(TrimSigDigits(ControllerNum)), ',', &
-      'YSetPoint', TRIM(TrimSigDigits(ControllerNum)), ','
+    'Mode', TRIM(TrimSigDigits(ControllerNum)), ',', &
+    'IterMax', TRIM(TrimSigDigits(ControllerNum)), ',', &
+    'XRoot', TRIM(TrimSigDigits(ControllerNum)), ',', &
+    'YRoot', TRIM(TrimSigDigits(ControllerNum)), ',', &
+    'YSetPoint', TRIM(TrimSigDigits(ControllerNum)), ','
   END DO
 
   ! Finally goto next line
@@ -3210,9 +3210,9 @@ SUBROUTINE SetupAirLoopControllersTracer( AirLoopNum )
 
   RETURN
 
-100 CONTINUE
+  100 CONTINUE
   CALL ShowFatalError( &
-    'SetupAirLoopControllersTracer: Failed to open air loop trace file "'//TRIM(TraceFileName)//'" for output (write).' &
+  'SetupAirLoopControllersTracer: Failed to open air loop trace file "'//TRIM(TraceFileName)//'" for output (write).' &
   )
 
   RETURN
@@ -3220,31 +3220,31 @@ END SUBROUTINE SetupAirLoopControllersTracer
 
 
 SUBROUTINE TraceAirLoopControllers( &
-              FirstHVACIteration, AirLoopNum, AirLoopPass, AirLoopConverged, &
-              AirLoopNumCalls )
+  FirstHVACIteration, AirLoopNum, AirLoopPass, AirLoopConverged, &
+  AirLoopNumCalls )
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Dimitri Curtil
-          !       DATE WRITTEN   January 2006
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Dimitri Curtil
+  !       DATE WRITTEN   January 2006
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine writes diagnostic to the trace file attached to each air loop.
-          !
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine writes diagnostic to the trace file attached to each air loop.
+  !
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataAirSystems, ONLY : PrimaryAirSystem
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   LOGICAL, INTENT(IN)     :: FirstHVACIteration
   INTEGER, INTENT(IN)     :: AirLoopNum
   INTEGER, INTENT(IN)     :: AirLoopPass
@@ -3253,20 +3253,20 @@ SUBROUTINE TraceAirLoopControllers( &
   ! Number of times SimAirLoopComponents() has been invoked
   INTEGER, INTENT(IN)     :: AirLoopNumCalls
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER                 :: ControllerNum
   INTEGER                 :: TraceFileUnit
 
-          ! FLOW
+  ! FLOW
 
   ! IF no controllers on this air loop then we have nothig to do
   IF ( PrimaryAirSystem(AirLoopNum)%NumControllers == 0 ) RETURN
@@ -3286,16 +3286,16 @@ SUBROUTINE TraceAirLoopControllers( &
 
   ! Write iteration stamp first
   CALL TraceIterationStamp( &
-    TraceFileUnit, &
-    FirstHVACIteration, AirLoopPass, AirLoopConverged, &
-    AirLoopNumCalls )
+  TraceFileUnit, &
+  FirstHVACIteration, AirLoopPass, AirLoopConverged, &
+  AirLoopNumCalls )
 
   ! Loop over the air sys controllers and write diagnostic to trace file
   DO ControllerNum = 1,PrimaryAirSystem(AirLoopNum)%NumControllers
 
     CALL TraceAirLoopController( &
-      TraceFileUnit, &
-      PrimaryAirSystem(AirLoopNum)%ControllerIndex(ControllerNum) )
+    TraceFileUnit, &
+    PrimaryAirSystem(AirLoopNum)%ControllerIndex(ControllerNum) )
 
   END DO
 
@@ -3307,27 +3307,27 @@ END SUBROUTINE TraceAirLoopControllers
 
 
 SUBROUTINE TraceIterationStamp( &
-            TraceFileUnit, &
-            FirstHVACIteration, AirLoopPass, AirLoopConverged, &
-            AirLoopNumCalls )
+  TraceFileUnit, &
+  FirstHVACIteration, AirLoopPass, AirLoopConverged, &
+  AirLoopNumCalls )
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Dimitri Curtil
-          !       DATE WRITTEN   February 2006
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Dimitri Curtil
+  !       DATE WRITTEN   February 2006
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Writes current iteration time stamp to specified trace file.
-          !
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! Writes current iteration time stamp to specified trace file.
+  !
 
-          ! METHODOLOGY EMPLOYED:
-          ! Needs description, as appropriate.
+  ! METHODOLOGY EMPLOYED:
+  ! Needs description, as appropriate.
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataEnvironment,        ONLY : CurEnvirNum, CurMnDy
   USE DataGlobals_HPSimIntegrated,            ONLY : ZoneSizingCalc, SysSizingCalc, WarmupFlag, BeginTimeStepFlag
   USE DataHVACGlobals,        ONLY : FirstTimeStepSysFlag
@@ -3335,10 +3335,10 @@ SUBROUTINE TraceIterationStamp( &
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-          ! na
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! SUBROUTINE PARAMETER DEFINITIONS:
   INTEGER, INTENT(IN)     :: TraceFileUnit
   LOGICAL, INTENT(IN)     :: FirstHVACIteration
   INTEGER, INTENT(IN)     :: AirLoopPass
@@ -3347,31 +3347,31 @@ SUBROUTINE TraceIterationStamp( &
   ! Number of times SimAirLoopComponents() has been invoked
   INTEGER, INTENT(IN)     :: AirLoopNumCalls
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-          ! na
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! na
 
 
   ! Write step stamp to air loop trace file after reset
   ! Note that we do not go to the next line
   WRITE(TraceFileUnit,'(4(A,A),2(A,A),6(A,A))',ADVANCE='No') &
-      TRIM(TrimSigDigits(LogicalToInteger(ZoneSizingCalc))), ',', &
-      TRIM(TrimSigDigits(LogicalToInteger(SysSizingCalc))), ',', &
-      TRIM(TrimSigDigits(CurEnvirNum)), ',', &
-      TRIM(TrimSigDigits(LogicalToInteger(WarmupFlag))), ',', &
-      TRIM(CreateHVACTimeString()), ',', &
-      TRIM(MakeHVACTimeIntervalString()), ',', &
-      TRIM(TrimSigDigits(LogicalToInteger(BeginTimeStepFlag))), ',', &
-      TRIM(TrimSigDigits(LogicalToInteger(FirstTimeStepSysFlag))), ',', &
-      TRIM(TrimSigDigits(LogicalToInteger(FirstHVACIteration))), ',', &
-      TRIM(TrimSigDigits(AirLoopPass)), ',', &
-      TRIM(TrimSigDigits(AirLoopNumCalls)), ',', &
-      TRIM(TrimSigDigits(LogicalToInteger(AirLoopConverged))), ','
+  TRIM(TrimSigDigits(LogicalToInteger(ZoneSizingCalc))), ',', &
+  TRIM(TrimSigDigits(LogicalToInteger(SysSizingCalc))), ',', &
+  TRIM(TrimSigDigits(CurEnvirNum)), ',', &
+  TRIM(TrimSigDigits(LogicalToInteger(WarmupFlag))), ',', &
+  TRIM(CreateHVACTimeString()), ',', &
+  TRIM(MakeHVACTimeIntervalString()), ',', &
+  TRIM(TrimSigDigits(LogicalToInteger(BeginTimeStepFlag))), ',', &
+  TRIM(TrimSigDigits(LogicalToInteger(FirstTimeStepSysFlag))), ',', &
+  TRIM(TrimSigDigits(LogicalToInteger(FirstHVACIteration))), ',', &
+  TRIM(TrimSigDigits(AirLoopPass)), ',', &
+  TRIM(TrimSigDigits(AirLoopNumCalls)), ',', &
+  TRIM(TrimSigDigits(LogicalToInteger(AirLoopConverged))), ','
 
   RETURN
 END SUBROUTINE TraceIterationStamp
@@ -3379,41 +3379,41 @@ END SUBROUTINE TraceIterationStamp
 
 SUBROUTINE TraceAirLoopController( TraceFileUnit, ControlNum )
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Dimitri Curtil
-          !       DATE WRITTEN   January 2006
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Dimitri Curtil
+  !       DATE WRITTEN   January 2006
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine writes convergence diagnostic to the air loop trace file
-          ! for the specified controller index.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine writes convergence diagnostic to the air loop trace file
+  ! for the specified controller index.
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE General, ONLY: TrimSigDigits
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   INTEGER, INTENT(IN)   :: TraceFileUnit
   INTEGER, INTENT(IN)   :: ControlNum
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER               :: ActuatedNode
   INTEGER               :: SensedNode
 
@@ -3423,11 +3423,11 @@ SUBROUTINE TraceAirLoopController( TraceFileUnit, ControlNum )
   SensedNode   = ControllerProps(ControlNum)%SensedNode
 
   WRITE(TraceFileUnit,'(2(A,A),3(A,A))',ADVANCE='No')  &
-    TRIM(TrimSigDigits(ControllerProps(ControlNum)%Mode)), ',', &         ! controller mode for current step
-    TRIM(TrimSigDigits(ControllerProps(ControlNum)%NumCalcCalls)), ',', & ! number of Sim() calls since last reset
-    TRIM(TrimSigDigits(Node(ActuatedNode)%MassFlowRate,10)), ',', &          ! X = actuated variable
-    TRIM(TrimSigDigits(Node(SensedNode)%Temp,10)), ',', &                    ! Y = sensed variable
-    TRIM(TrimSigDigits(Node(SensedNode)%TempSetPoint,10)), ','               ! desired setpoint
+  TRIM(TrimSigDigits(ControllerProps(ControlNum)%Mode)), ',', &         ! controller mode for current step
+  TRIM(TrimSigDigits(ControllerProps(ControlNum)%NumCalcCalls)), ',', & ! number of Sim() calls since last reset
+  TRIM(TrimSigDigits(Node(ActuatedNode)%MassFlowRate,10)), ',', &          ! X = actuated variable
+  TRIM(TrimSigDigits(Node(SensedNode)%Temp,10)), ',', &                    ! Y = sensed variable
+  TRIM(TrimSigDigits(Node(SensedNode)%TempSetPoint,10)), ','               ! desired setpoint
 
   RETURN
 END SUBROUTINE  TraceAirLoopController
@@ -3435,40 +3435,40 @@ END SUBROUTINE  TraceAirLoopController
 
 SUBROUTINE SetupIndividualControllerTracer(ControlNum)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Dimitri Curtil
-          !       DATE WRITTEN   February 2006
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Dimitri Curtil
+  !       DATE WRITTEN   February 2006
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Opens individual controller trace file for the specified controller
-          ! and writes header row.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! Opens individual controller trace file for the specified controller
+  ! and writes header row.
 
-          ! METHODOLOGY EMPLOYED:
-          ! Needs description, as appropriate.
+  ! METHODOLOGY EMPLOYED:
+  ! Needs description, as appropriate.
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE RootFinder,           ONLY:  WriteRootFinderTraceHeader
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   INTEGER, INTENT(IN)             :: ControlNum
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
+  ! INTERFACE BLOCK SPECIFICATIONS
   INTEGER, EXTERNAL               :: GetNewUnitNumber
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   CHARACTER(LEN=MaxNameLength)    :: TraceFileName
   INTEGER                         :: TraceFileUnit = 0
 
@@ -3478,7 +3478,7 @@ SUBROUTINE SetupIndividualControllerTracer(ControlNum)
 
   IF ( TraceFileUnit <= 0 ) THEN
     CALL ShowFatalError( &
-      'SetupIndividualControllerTracer: Invalid unit (<=0) for setting up controller trace file')
+    'SetupIndividualControllerTracer: Invalid unit (<=0) for setting up controller trace file')
     RETURN
   END IF
 
@@ -3494,27 +3494,27 @@ SUBROUTINE SetupIndividualControllerTracer(ControlNum)
 
   ! Write header row
   WRITE(TraceFileUnit,'(19(A,A))',ADVANCE='No') &
-    'EnvironmentNum', ',',                    &
-    'WarmupFlag', ',',                        &
-    'SysTimeStamp', ',',                      &
-    'SysTimeInterval', ',',                   &
-    'AirLoopPass', ',',                       &
-    'FirstHVACIteration', ',',                &
-    'Operation', ',',                         &
-    'NumCalcCalls', ',',                      &
-    ! Masss flow rate
-    'SensedNode%MassFlowRate', ',',           &
-    'ActuatedNode%MassFlowRateMinAvail', ',', &
-    'ActuatedNode%MassFlowRateMaxAvail', ',', &
-    ! Convergence analysis
-    'X', ',',                                 &
-    'Y', ',',                                 &
-    'Setpoint', ',',                          &
-    'DeltaSensed', ',',                       &
-    'Offset', ',',                            &
-    'Mode', ',',                              &
-    'IsConvergedFlag', ',',                   &
-    'NextActuatedValue', ','
+  'EnvironmentNum', ',',                    &
+  'WarmupFlag', ',',                        &
+  'SysTimeStamp', ',',                      &
+  'SysTimeInterval', ',',                   &
+  'AirLoopPass', ',',                       &
+  'FirstHVACIteration', ',',                &
+  'Operation', ',',                         &
+  'NumCalcCalls', ',',                      &
+  ! Masss flow rate
+  'SensedNode%MassFlowRate', ',',           &
+  'ActuatedNode%MassFlowRateMinAvail', ',', &
+  'ActuatedNode%MassFlowRateMaxAvail', ',', &
+  ! Convergence analysis
+  'X', ',',                                 &
+  'Y', ',',                                 &
+  'Setpoint', ',',                          &
+  'DeltaSensed', ',',                       &
+  'Offset', ',',                            &
+  'Mode', ',',                              &
+  'IsConvergedFlag', ',',                   &
+  'NextActuatedValue', ','
 
   CALL WriteRootFinderTraceHeader( TraceFileUnit )
 
@@ -3523,9 +3523,9 @@ SUBROUTINE SetupIndividualControllerTracer(ControlNum)
 
   RETURN
 
-100 CONTINUE
+  100 CONTINUE
   CALL ShowFatalError( &
-    'SetupIndividualControllerTracer: Failed to open controller trace file "'//TRIM(TraceFileName)//'" for output (write).' &
+  'SetupIndividualControllerTracer: Failed to open controller trace file "'//TRIM(TraceFileName)//'" for output (write).' &
   )
 
   RETURN
@@ -3533,50 +3533,50 @@ END SUBROUTINE SetupIndividualControllerTracer
 
 
 SUBROUTINE TraceIndividualController( &
-            ControlNum, &
-            FirstHVACIteration, AirLoopPass, &
-            Operation, IsConvergedFlag )
+  ControlNum, &
+  FirstHVACIteration, AirLoopPass, &
+  Operation, IsConvergedFlag )
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Dimitri Curtil
-          !       DATE WRITTEN   January 2006
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Dimitri Curtil
+  !       DATE WRITTEN   January 2006
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine writes convergence diagnostic to the trace file for the specified
-          ! controller.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine writes convergence diagnostic to the trace file for the specified
+  ! controller.
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataEnvironment,        ONLY : CurEnvirNum
   USE General,                ONLY : TrimSigDigits,LogicalToInteger
   USE RootFinder,             ONLY : WriteRootFinderTrace
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   INTEGER, INTENT(IN)   :: ControlNum
   LOGICAL, INTENT(IN)   :: FirstHVACIteration
   INTEGER, INTENT(IN)   :: AirLoopPass
   INTEGER, INTENT(IN)   :: Operation         ! Operation to execute
   LOGICAL, INTENT(IN)   :: IsConvergedFlag
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER               :: TraceFileUnit
   INTEGER               :: ActuatedNode
   INTEGER               :: SensedNode
@@ -3608,33 +3608,33 @@ SUBROUTINE TraceIndividualController( &
 
   ! Write iteration stamp
   WRITE(TraceFileUnit,'(2(A,A),2(A,A),4(A,A))',ADVANCE='No')   &
-    TRIM(TrimSigDigits(CurEnvirNum)), ',',                             &
-    TRIM(TrimSigDigits(LogicalToInteger(WarmupFlag))), ',',           &
-    TRIM(CreateHVACTimeString()), ',',            &
-    TRIM(MakeHVACTimeIntervalString()), ',',    &
-    TRIM(TrimSigDigits(AirLoopPass)), ',',                             &
-    TRIM(TrimSigDigits(LogicalToInteger(FirstHVACIteration))), ',',   &
-    TRIM(TrimSigDigits(Operation)), ',',                               &
-    TRIM(TrimSigDigits(ControllerProps(ControlNum)%NumCalcCalls)), ','
+  TRIM(TrimSigDigits(CurEnvirNum)), ',',                             &
+  TRIM(TrimSigDigits(LogicalToInteger(WarmupFlag))), ',',           &
+  TRIM(CreateHVACTimeString()), ',',            &
+  TRIM(MakeHVACTimeIntervalString()), ',',    &
+  TRIM(TrimSigDigits(AirLoopPass)), ',',                             &
+  TRIM(TrimSigDigits(LogicalToInteger(FirstHVACIteration))), ',',   &
+  TRIM(TrimSigDigits(Operation)), ',',                               &
+  TRIM(TrimSigDigits(ControllerProps(ControlNum)%NumCalcCalls)), ','
 
   ! Write detailed diagnostic
   SelectOperation: SELECT CASE (Operation)
   CASE (iControllerOpColdStart, iControllerOpWarmRestart)
 
     WRITE(TraceFileUnit, '(3(A,A),3(A,A),2(A,A),2(A,A),1(A,A))',ADVANCE='No') &
-      ! Masss flow rate
-      TRIM(TrimSigDigits(Node(SensedNode)%MassFlowRate,10)), ',',                    &
-      TRIM(TrimSigDigits(Node(ActuatedNode)%MassFlowRateMinAvail,10)), ',',          &
-      TRIM(TrimSigDigits(Node(ActuatedNode)%MassFlowRateMaxAvail,10)), ',',          &
-      ! Convergence analysis
-      TRIM(TrimSigDigits(ControllerProps(ControlNum)%ActuatedValue,10)), ',',        & ! X
-      TRIM(TrimSigDigits(Node(SensedNode)%Temp,10)), ',',                            & ! Y
-      TRIM(TrimSigDigits(ControllerProps(ControlNum)%SetPointValue,10)), ',',        & ! setpoint
-      ' ', ',',                                              & ! DeltaSensed = Y - YRoot
-      ' ', ',',                                              & ! Offset
-      TRIM(TrimSigDigits(ControllerProps(ControlNum)%Mode)), ',',                 & ! Mode
-      TRIM(TrimSigDigits(LogicalToInteger(IsConvergedFlag))), ',',               & ! IsConvergedFlag
-      TRIM(TrimSigDigits(ControllerProps(ControlNum)%NextActuatedValue,10)), ','
+    ! Masss flow rate
+    TRIM(TrimSigDigits(Node(SensedNode)%MassFlowRate,10)), ',',                    &
+    TRIM(TrimSigDigits(Node(ActuatedNode)%MassFlowRateMinAvail,10)), ',',          &
+    TRIM(TrimSigDigits(Node(ActuatedNode)%MassFlowRateMaxAvail,10)), ',',          &
+    ! Convergence analysis
+    TRIM(TrimSigDigits(ControllerProps(ControlNum)%ActuatedValue,10)), ',',        & ! X
+    TRIM(TrimSigDigits(Node(SensedNode)%Temp,10)), ',',                            & ! Y
+    TRIM(TrimSigDigits(ControllerProps(ControlNum)%SetPointValue,10)), ',',        & ! setpoint
+    ' ', ',',                                              & ! DeltaSensed = Y - YRoot
+    ' ', ',',                                              & ! Offset
+    TRIM(TrimSigDigits(ControllerProps(ControlNum)%Mode)), ',',                 & ! Mode
+    TRIM(TrimSigDigits(LogicalToInteger(IsConvergedFlag))), ',',               & ! IsConvergedFlag
+    TRIM(TrimSigDigits(ControllerProps(ControlNum)%NextActuatedValue,10)), ','
 
     ! No trace available for root finder yet
     ! Skip call to WriteRootFinderTrace()
@@ -3644,19 +3644,19 @@ SUBROUTINE TraceIndividualController( &
 
   CASE (iControllerOpIterate)
     WRITE(TraceFileUnit, '(8(A,A),2(A,A),1(A,A))',ADVANCE='No') &
-      ! Masss flow rate
-      TRIM(TrimSigDigits(Node(SensedNode)%MassFlowRate,10)), ',',                    &
-      TRIM(TrimSigDigits(Node(ActuatedNode)%MassFlowRateMinAvail,10)), ',',          &
-      TRIM(TrimSigDigits(Node(ActuatedNode)%MassFlowRateMaxAvail,10)), ',',          &
-      ! Convergence analysis
-      TRIM(TrimSigDigits(ControllerProps(ControlNum)%ActuatedValue,10)), ',',        & ! X
-      TRIM(TrimSigDigits(Node(SensedNode)%Temp,10)), ',',                            & ! Y
-      TRIM(TrimSigDigits(ControllerProps(ControlNum)%SetPointValue,10)), ',',        & ! setpoint
-      TRIM(TrimSigDigits(ControllerProps(ControlNum)%DeltaSensed,10)), ',',          & ! DeltaSensed = Y - YRoot
-      TRIM(TrimSigDigits(ControllerProps(ControlNum)%Offset,10)), ',',               & ! Offset
-      TRIM(TrimSigDigits(ControllerProps(ControlNum)%Mode)), ',',                 & ! Mode
-      TRIM(TrimSigDigits(LogicalToInteger(IsConvergedFlag))), ',',               & ! IsConvergedFlag
-      TRIM(TrimSigDigits(ControllerProps(ControlNum)%NextActuatedValue,10)), ','
+    ! Masss flow rate
+    TRIM(TrimSigDigits(Node(SensedNode)%MassFlowRate,10)), ',',                    &
+    TRIM(TrimSigDigits(Node(ActuatedNode)%MassFlowRateMinAvail,10)), ',',          &
+    TRIM(TrimSigDigits(Node(ActuatedNode)%MassFlowRateMaxAvail,10)), ',',          &
+    ! Convergence analysis
+    TRIM(TrimSigDigits(ControllerProps(ControlNum)%ActuatedValue,10)), ',',        & ! X
+    TRIM(TrimSigDigits(Node(SensedNode)%Temp,10)), ',',                            & ! Y
+    TRIM(TrimSigDigits(ControllerProps(ControlNum)%SetPointValue,10)), ',',        & ! setpoint
+    TRIM(TrimSigDigits(ControllerProps(ControlNum)%DeltaSensed,10)), ',',          & ! DeltaSensed = Y - YRoot
+    TRIM(TrimSigDigits(ControllerProps(ControlNum)%Offset,10)), ',',               & ! Offset
+    TRIM(TrimSigDigits(ControllerProps(ControlNum)%Mode)), ',',                 & ! Mode
+    TRIM(TrimSigDigits(LogicalToInteger(IsConvergedFlag))), ',',               & ! IsConvergedFlag
+    TRIM(TrimSigDigits(ControllerProps(ControlNum)%NextActuatedValue,10)), ','
 
     ! Append trace for root finder
     CALL WriteRootFinderTrace( TraceFileUnit, RootFinders(ControlNum) )
@@ -3666,19 +3666,19 @@ SUBROUTINE TraceIndividualController( &
 
   CASE (iControllerOpEnd)
     WRITE(TraceFileUnit, '(3(A,A),5(A,A),2(A,A),1(A,A))',ADVANCE='No') &
-      ! Masss flow rate
-      TRIM(TrimSigDigits(Node(SensedNode)%MassFlowRate,10)), ',',                    &
-      TRIM(TrimSigDigits(Node(ActuatedNode)%MassFlowRateMinAvail,10)), ',',          &
-      TRIM(TrimSigDigits(Node(ActuatedNode)%MassFlowRateMaxAvail,10)), ',',          &
-      ! Convergence analysis
-      TRIM(TrimSigDigits(ControllerProps(ControlNum)%ActuatedValue,10)), ',',        & ! X
-      TRIM(TrimSigDigits(Node(SensedNode)%Temp,10)), ',',                            & ! Y
-      TRIM(TrimSigDigits(ControllerProps(ControlNum)%SetPointValue,10)), ',',        & ! setpoint
-      TRIM(TrimSigDigits(ControllerProps(ControlNum)%DeltaSensed,10)), ',',          & ! DeltaSensed = Y - YRoot
-      TRIM(TrimSigDigits(ControllerProps(ControlNum)%Offset,10)), ',',               & ! Offset
-      TRIM(TrimSigDigits(ControllerProps(ControlNum)%Mode)), ',',                 & ! Mode
-      TRIM(TrimSigDigits(LogicalToInteger(IsConvergedFlag))), ',',               & ! IsConvergedFlag
-      TRIM(TrimSigDigits(ControllerProps(ControlNum)%NextActuatedValue,10)), ','
+    ! Masss flow rate
+    TRIM(TrimSigDigits(Node(SensedNode)%MassFlowRate,10)), ',',                    &
+    TRIM(TrimSigDigits(Node(ActuatedNode)%MassFlowRateMinAvail,10)), ',',          &
+    TRIM(TrimSigDigits(Node(ActuatedNode)%MassFlowRateMaxAvail,10)), ',',          &
+    ! Convergence analysis
+    TRIM(TrimSigDigits(ControllerProps(ControlNum)%ActuatedValue,10)), ',',        & ! X
+    TRIM(TrimSigDigits(Node(SensedNode)%Temp,10)), ',',                            & ! Y
+    TRIM(TrimSigDigits(ControllerProps(ControlNum)%SetPointValue,10)), ',',        & ! setpoint
+    TRIM(TrimSigDigits(ControllerProps(ControlNum)%DeltaSensed,10)), ',',          & ! DeltaSensed = Y - YRoot
+    TRIM(TrimSigDigits(ControllerProps(ControlNum)%Offset,10)), ',',               & ! Offset
+    TRIM(TrimSigDigits(ControllerProps(ControlNum)%Mode)), ',',                 & ! Mode
+    TRIM(TrimSigDigits(LogicalToInteger(IsConvergedFlag))), ',',               & ! IsConvergedFlag
+    TRIM(TrimSigDigits(ControllerProps(ControlNum)%NextActuatedValue,10)), ','
 
     ! No trace available for root finder yet
     ! Skip call to WriteRootFinderTrace()
@@ -3692,8 +3692,8 @@ SUBROUTINE TraceIndividualController( &
   CASE DEFAULT
     ! Should never happen
     CALL ShowFatalError( &
-      'TraceIndividualController: Invalid Operation passed='//TRIM(TrimSigDigits(Operation))// &
-      ', Controller name='//TRIM(ControllerProps(ControlNum)%ControllerName) &
+    'TraceIndividualController: Invalid Operation passed='//TRIM(TrimSigDigits(Operation))// &
+    ', Controller name='//TRIM(ControllerProps(ControlNum)%ControllerName) &
     )
 
   END SELECT SelectOperation
@@ -3704,41 +3704,41 @@ END SUBROUTINE  TraceIndividualController
 
 FUNCTION CreateHVACTimeString() RESULT(OutputString)
 
-          ! FUNCTION INFORMATION:
-          !       AUTHOR         Dimitri Curtil
-          !       DATE WRITTEN   January 2006
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! FUNCTION INFORMATION:
+  !       AUTHOR         Dimitri Curtil
+  !       DATE WRITTEN   January 2006
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS FUNCTION:
-          ! This function creates a string describing the current time stamp of the system
-          ! time step.
+  ! PURPOSE OF THIS FUNCTION:
+  ! This function creates a string describing the current time stamp of the system
+  ! time step.
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataEnvironment,        ONLY : CurMnDy
   USE General,   ONLY : CreateTimeString, &
-                        GetCurrentHVACTime
+  GetCurrentHVACTime
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! FUNCTION ARGUMENT DEFINITIONS:
+  ! FUNCTION ARGUMENT DEFINITIONS:
   CHARACTER(len=32) :: OutputString
 
-          ! FUNCTION PARAMETER DEFINITIONS:
-          ! na
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! FUNCTION PARAMETER DEFINITIONS:
+  ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! FUNCTION LOCAL VARIABLE DECLARATIONS:
+  ! FUNCTION LOCAL VARIABLE DECLARATIONS:
   CHARACTER(len=32) Buffer
 
 
@@ -3751,43 +3751,43 @@ END FUNCTION CreateHVACTimeString
 
 FUNCTION CreateHVACStepFullString() RESULT(OutputString)
 
-          ! FUNCTION INFORMATION:
-          !       AUTHOR         Dimitri Curtil
-          !       DATE WRITTEN   April 2006
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! FUNCTION INFORMATION:
+  !       AUTHOR         Dimitri Curtil
+  !       DATE WRITTEN   April 2006
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS FUNCTION:
-          ! This function creates a string describing the current HVAC step.
-          ! It includes the environment name, the current day/month and the current
-          ! time stamp for the system time step.
-          !
-          ! It is used in error messages only.
+  ! PURPOSE OF THIS FUNCTION:
+  ! This function creates a string describing the current HVAC step.
+  ! It includes the environment name, the current day/month and the current
+  ! time stamp for the system time step.
+  !
+  ! It is used in error messages only.
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataEnvironment,        ONLY : EnvironmentName
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! FUNCTION ARGUMENT DEFINITIONS:
+  ! FUNCTION ARGUMENT DEFINITIONS:
   CHARACTER(LEN=200) :: OutputString
 
-          ! FUNCTION PARAMETER DEFINITIONS:
-          ! na
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! FUNCTION PARAMETER DEFINITIONS:
+  ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! FUNCTION LOCAL VARIABLE DECLARATIONS:
-          ! na
+  ! FUNCTION LOCAL VARIABLE DECLARATIONS:
+  ! na
 
   OutputString = TRIM(EnvironmentName)//', '//MakeHVACTimeIntervalString()
 
@@ -3797,40 +3797,40 @@ END FUNCTION CreateHVACStepFullString
 
 FUNCTION MakeHVACTimeIntervalString() RESULT(OutputString)
 
-          ! FUNCTION INFORMATION:
-          !       AUTHOR         Dimitri Curtil
-          !       DATE WRITTEN   January 2006
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! FUNCTION INFORMATION:
+  !       AUTHOR         Dimitri Curtil
+  !       DATE WRITTEN   January 2006
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS FUNCTION:
-          ! This function creates a string describing the current time interval of the system
-          ! time step.
+  ! PURPOSE OF THIS FUNCTION:
+  ! This function creates a string describing the current time interval of the system
+  ! time step.
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE General,   ONLY : CreateHVACTimeIntervalString
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! FUNCTION ARGUMENT DEFINITIONS:
+  ! FUNCTION ARGUMENT DEFINITIONS:
   CHARACTER(LEN=52) :: OutputString
 
-          ! FUNCTION PARAMETER DEFINITIONS:
-          ! na
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! FUNCTION PARAMETER DEFINITIONS:
+  ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! FUNCTION LOCAL VARIABLE DECLARATIONS:
-          ! na
+  ! FUNCTION LOCAL VARIABLE DECLARATIONS:
+  ! na
 
   OutputString = ADJUSTL(CreateHVACTimeIntervalString())
 
@@ -3840,43 +3840,43 @@ END FUNCTION MakeHVACTimeIntervalString
 
 SUBROUTINE CheckControllerListOrder
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         B. Griffith
-          !       DATE WRITTEN   Oct 10.
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         B. Griffith
+  !       DATE WRITTEN   Oct 10.
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! check that if multiple controllers on an air loop, that they aren't listed in a bad order
-          ! CR 8253
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! check that if multiple controllers on an air loop, that they aren't listed in a bad order
+  ! CR 8253
 
-          ! METHODOLOGY EMPLOYED:
-          ! setup data for sensed nodes and compare positions if on the same branch
+  ! METHODOLOGY EMPLOYED:
+  ! setup data for sensed nodes and compare positions if on the same branch
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataAirSystems,  ONLY: PrimaryAirSystem
   USE DataHVACGlobals, ONLY: NumPrimaryAirSys
   USE InputProcessor,  ONLY: SameString, FindItemInList
-!  USE DataGlobals_HPSimIntegrated,  ONLY: ShowFatalError, ShowContinueError, ShowSevereError
+  !  USE DataGlobals_HPSimIntegrated,  ONLY: ShowFatalError, ShowContinueError, ShowSevereError
 
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-          ! na
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER :: AirSysNum
   INTEGER :: ContrlNum
   INTEGER :: WaterCoilContrlCount
@@ -3905,7 +3905,7 @@ SUBROUTINE CheckControllerListOrder
           IF (SameString(PrimaryAirSystem(AirSysNum)%ControllerType(ContrlNum), 'CONTROLLER:WATERCOIL')) THEN
             SensedNodeIndex = SensedNodeIndex + 1
             foundControl = FindItemInList(PrimaryAirSystem(AirSysNum)%ControllerName(ContrlNum), &
-                                             ControllerProps%ControllerName, NumControllers)
+            ControllerProps%ControllerName, NumControllers)
             IF (foundControl > 0) THEN
               ContrlSensedNodeNums(SensedNodeIndex, 1) = ControllerProps(foundControl)%SensedNode
             ENDIF
@@ -3919,82 +3919,82 @@ SUBROUTINE CheckControllerListOrder
           DO SensedNodeIndex =1, WaterCoilContrlCount
             DO BranchNodeIndex = 1, PrimaryAirSystem(AirSysNum)%Branch(BranchNum)%TotalNodes
               IF ( ContrlSensedNodeNums(SensedNodeIndex, 1) &
-                   == PrimaryAirSystem(AirSysNum)%Branch(BranchNum)%NodeNum(BranchNodeIndex)) THen
-                ContrlSensedNodeNums(SensedNodeIndex, 2) = BranchNodeIndex
-                ContrlSensedNodeNums(SensedNodeIndex, 3) = BranchNum
-              ENDIF
-            ENDDO
+              == PrimaryAirSystem(AirSysNum)%Branch(BranchNum)%NodeNum(BranchNodeIndex)) THen
+              ContrlSensedNodeNums(SensedNodeIndex, 2) = BranchNodeIndex
+              ContrlSensedNodeNums(SensedNodeIndex, 3) = BranchNum
+            ENDIF
           ENDDO
         ENDDO
-      ENDIF
-      ! check if flow order doesn't agree with controller order
-      IF (ALLOCATED(ContrlSensedNodeNums)) THEN
-        DO SensedNodeIndex =1, WaterCoilContrlCount
-          IF (SensedNodeIndex == 1) CYCLE
-          IF (ContrlSensedNodeNums(SensedNodeIndex, 2) < ContrlSensedNodeNums(SensedNodeIndex-1, 2)) THEN
-            !now see if on the same branch
-            IF (ContrlSensedNodeNums(SensedNodeIndex, 3) == ContrlSensedNodeNums(SensedNodeIndex-1, 3)) THEN
-              ! we have a flow order problem with water coil controllers
-              CALL ShowSevereError('CheckControllerListOrder: A water coil controller list has the wrong order')
-              CALL ShowContinueError('Check the AirLoopHVAC:ControllerList for the air loop called "' &
-                                     //Trim(PrimaryAirSystem(AirSysNum)%Name)//'"')
-              CALL ShowContinueError('When there are multiple Controller:WaterCoil objects for the same air loop, ' &
-                                    //'they need to be listed in the proper order.')
-              CALL ShowContinueError('The controllers should be listed in natural flow order with those for upstream' &
-                                   //' coils listed before those for downstream coils.')
-              CALL ShowContinueError('The sensed nodes specified for the respective controllers should also reflect this order.')
-
-            ENDIF
+      ENDDO
+    ENDIF
+    ! check if flow order doesn't agree with controller order
+    IF (ALLOCATED(ContrlSensedNodeNums)) THEN
+      DO SensedNodeIndex =1, WaterCoilContrlCount
+        IF (SensedNodeIndex == 1) CYCLE
+        IF (ContrlSensedNodeNums(SensedNodeIndex, 2) < ContrlSensedNodeNums(SensedNodeIndex-1, 2)) THEN
+          !now see if on the same branch
+          IF (ContrlSensedNodeNums(SensedNodeIndex, 3) == ContrlSensedNodeNums(SensedNodeIndex-1, 3)) THEN
+            ! we have a flow order problem with water coil controllers
+            CALL ShowSevereError('CheckControllerListOrder: A water coil controller list has the wrong order')
+            CALL ShowContinueError('Check the AirLoopHVAC:ControllerList for the air loop called "' &
+            //Trim(PrimaryAirSystem(AirSysNum)%Name)//'"')
+            CALL ShowContinueError('When there are multiple Controller:WaterCoil objects for the same air loop, ' &
+            //'they need to be listed in the proper order.')
+            CALL ShowContinueError('The controllers should be listed in natural flow order with those for upstream' &
+            //' coils listed before those for downstream coils.')
+            CALL ShowContinueError('The sensed nodes specified for the respective controllers should also reflect this order.')
 
           ENDIF
-        ENDDO
-      ENDIF
 
-      IF (ALLOCATED(ContrlSensedNodeNums)) DEALLOCATE(ContrlSensedNodeNums)
+        ENDIF
+      ENDDO
+    ENDIF
 
-    ENDIF ! controllers > 1
-  ENDDO
+    IF (ALLOCATED(ContrlSensedNodeNums)) DEALLOCATE(ContrlSensedNodeNums)
 
-  RETURN
+  ENDIF ! controllers > 1
+ENDDO
+
+RETURN
 
 END SUBROUTINE CheckControllerListOrder
 
 SUBROUTINE CheckCoilWaterInletNode(WaterInletNodeNum, NodeNotFound)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Heejin Cho
-          !       DATE WRITTEN   November 2010
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Heejin Cho
+  !       DATE WRITTEN   November 2010
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS FUNCTION:
-          ! This subroutine checks that the water inlet node number is matched by
-          ! the actuator node number of some water coil
+  ! PURPOSE OF THIS FUNCTION:
+  ! This subroutine checks that the water inlet node number is matched by
+  ! the actuator node number of some water coil
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
 
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! FUNCTION ARGUMENT DEFINITIONS:
+  ! FUNCTION ARGUMENT DEFINITIONS:
   INTEGER, INTENT(IN)  :: WaterInletNodeNum   ! input actuator node number
   LOGICAL, INTENT(OUT) :: NodeNotFound      ! true if matching actuator node not found
 
-          ! FUNCTION PARAMETER DEFINITIONS:
-          ! na
+  ! FUNCTION PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! FUNCTION LOCAL VARIABLE DECLARATIONS:
+  ! FUNCTION LOCAL VARIABLE DECLARATIONS:
   INTEGER :: ControlNum
 
   IF (GetControllerInputFlag) THEN
@@ -4005,7 +4005,7 @@ SUBROUTINE CheckCoilWaterInletNode(WaterInletNodeNum, NodeNotFound)
   NodeNotFound = .TRUE.
   DO ControlNum = 1,NumControllers
     IF (ControllerProps(ControlNum)%ActuatedNode == WaterInletNodeNum) THEN
-        NodeNotFound = .FALSE.
+      NodeNotFound = .FALSE.
     END IF
   END DO
 
@@ -4017,7 +4017,7 @@ END SUBROUTINE CheckCoilWaterInletNode
 
 !     NOTICE
 !
-!     Copyright © 1996-2012 The Board of Trustees of the University of Illinois
+!     Copyright ï¿½ 1996-2012 The Board of Trustees of the University of Illinois
 !     and The Regents of the University of California through Ernest Orlando Lawrence
 !     Berkeley National Laboratory.  All rights reserved.
 !
@@ -4040,4 +4040,3 @@ END SUBROUTINE CheckCoilWaterInletNode
 !
 
 END MODULE HVACControllers
-

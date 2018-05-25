@@ -1,103 +1,103 @@
 MODULE DataGenerators
 
-          ! MODULE INFORMATION:
-          !       AUTHOR         B Griffith
-          !       DATE WRITTEN   March 2005
-          !       MODIFIED
-          !       RE-ENGINEERED  July 2006 BG, generalized and added data for ICE/SE model micro CHP
+  ! MODULE INFORMATION:
+  !       AUTHOR         B Griffith
+  !       DATE WRITTEN   March 2005
+  !       MODIFIED
+  !       RE-ENGINEERED  July 2006 BG, generalized and added data for ICE/SE model micro CHP
 
-          ! PURPOSE OF THIS MODULE:
-          ! This data-only module is a repository for the variables that relate specifically
-          ! to the Fuel cell and Micro CHP modeling in EnergyPlus
-          !  the data for the older BLAST generators are in those component's modules
+  ! PURPOSE OF THIS MODULE:
+  ! This data-only module is a repository for the variables that relate specifically
+  ! to the Fuel cell and Micro CHP modeling in EnergyPlus
+  !  the data for the older BLAST generators are in those component's modules
 
-          ! METHODOLOGY EMPLOYED:
+  ! METHODOLOGY EMPLOYED:
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! OTHER NOTES:
-          ! na
+  ! OTHER NOTES:
+  ! na
 
-          ! USE STATEMENTS:
-    USE DataPrecisionGlobals
-    USE DataGlobals_HPSimIntegrated, ONLY: MaxNameLength
+  ! USE STATEMENTS:
+  USE DataPrecisionGlobals
+  USE DataGlobals_HPSimIntegrated, ONLY: MaxNameLength
 
-    IMPLICIT NONE   ! Enforce explicit typing of all variables
+  IMPLICIT NONE   ! Enforce explicit typing of all variables
 
-    PUBLIC          ! By definition, all variables which are placed in this data
-                ! -only module should be available to other modules and routines.
-                ! Thus, all variables in this module must be PUBLIC.
+  PUBLIC          ! By definition, all variables which are placed in this data
+  ! -only module should be available to other modules and routines.
+  ! Thus, all variables in this module must be PUBLIC.
 
-          ! MODULE PARAMETER DEFINITIONS:
-    INTEGER, PARAMETER :: NormalizedCurveMode = 1 ! mode where efficiency curves are modifier curves
-    INTEGER, PARAMETER :: DirectCurveMode     = 2 ! mode where efficiency curves are direct
+  ! MODULE PARAMETER DEFINITIONS:
+  INTEGER, PARAMETER :: NormalizedCurveMode = 1 ! mode where efficiency curves are modifier curves
+  INTEGER, PARAMETER :: DirectCurveMode     = 2 ! mode where efficiency curves are direct
 
-    INTEGER, PARAMETER :: ConstantRateSkinLoss = 1 ! fixed rate mode for skin losses
-    INTEGER, PARAMETER :: UADTSkinLoss         = 2 ! UAdelta T mode for skin losses
-    INTEGER, PARAMETER :: QuadraticFuelNdotSkin= 3 ! Quadratic function of fuel flow for skin losses
+  INTEGER, PARAMETER :: ConstantRateSkinLoss = 1 ! fixed rate mode for skin losses
+  INTEGER, PARAMETER :: UADTSkinLoss         = 2 ! UAdelta T mode for skin losses
+  INTEGER, PARAMETER :: QuadraticFuelNdotSkin= 3 ! Quadratic function of fuel flow for skin losses
 
-    INTEGER, PARAMETER :: QuadraticFuncofNdot  = 1 ! function of fuel rate mode for air flow
-    INTEGER, PARAMETER :: ConstantStoicsAirRat = 2 ! Constant air ratio in stoics with fuel constituents
-    INTEGER, PARAMETER :: QuadraticFuncofPel   = 3 ! function of electric power mode
+  INTEGER, PARAMETER :: QuadraticFuncofNdot  = 1 ! function of fuel rate mode for air flow
+  INTEGER, PARAMETER :: ConstantStoicsAirRat = 2 ! Constant air ratio in stoics with fuel constituents
+  INTEGER, PARAMETER :: QuadraticFuncofPel   = 3 ! function of electric power mode
 
-    INTEGER, PARAMETER :: NoRecoveryOnAirIntake = 101 ! mode for controlling intake air heat recovery
-    INTEGER, PARAMETER :: RecoverBurnInvertBatt = 102 ! mode for controlling intake air heat recovery
-    INTEGER, PARAMETER :: RecoverAuxiliaryBurner= 103 ! mode for controlling intake air heat recovery
-    INTEGER, PARAMETER :: RecoverInverterBatt   = 104 ! mode for controlling intake air heat recovery
-    INTEGER, PARAMETER :: RecoverInverter       = 105 ! mode for controlling intake air heat recovery
-    INTEGER, PARAMETER :: RecoverBattery        = 106 ! mode for controlling intake air heat recovery
+  INTEGER, PARAMETER :: NoRecoveryOnAirIntake = 101 ! mode for controlling intake air heat recovery
+  INTEGER, PARAMETER :: RecoverBurnInvertBatt = 102 ! mode for controlling intake air heat recovery
+  INTEGER, PARAMETER :: RecoverAuxiliaryBurner= 103 ! mode for controlling intake air heat recovery
+  INTEGER, PARAMETER :: RecoverInverterBatt   = 104 ! mode for controlling intake air heat recovery
+  INTEGER, PARAMETER :: RecoverInverter       = 105 ! mode for controlling intake air heat recovery
+  INTEGER, PARAMETER :: RecoverBattery        = 106 ! mode for controlling intake air heat recovery
 
-    INTEGER, PARAMETER :: RegularAir = 1 !
-    INTEGER, PARAMETER :: UserDefinedConstituents = 2 !
+  INTEGER, PARAMETER :: RegularAir = 1 !
+  INTEGER, PARAMETER :: UserDefinedConstituents = 2 !
 
-    INTEGER, PARAMETER :: FuelInTempFromNode = 1
-    INTEGER, PARAMETER :: FuelInTempSchedule = 2
+  INTEGER, PARAMETER :: FuelInTempFromNode = 1
+  INTEGER, PARAMETER :: FuelInTempSchedule = 2
 
-    INTEGER, PARAMETER :: WaterInReformMains    = 21
-    INTEGER, PARAMETER :: WaterInReformAirNode  = 22
-    INTEGER, PARAMETER :: WaterInReformWaterNode = 23
-    INTEGER, PARAMETER :: WaterInReformSchedule  = 24
+  INTEGER, PARAMETER :: WaterInReformMains    = 21
+  INTEGER, PARAMETER :: WaterInReformAirNode  = 22
+  INTEGER, PARAMETER :: WaterInReformWaterNode = 23
+  INTEGER, PARAMETER :: WaterInReformSchedule  = 24
 
-    INTEGER, PARAMETER :: InverterEffConstant  = 1
-    INTEGER, PARAMETER :: InverterEffQuadratic = 2
+  INTEGER, PARAMETER :: InverterEffConstant  = 1
+  INTEGER, PARAMETER :: InverterEffQuadratic = 2
 
-    INTEGER, PARAMETER :: FixedEffectiveness = 11 !exhaust gas HX modeling mode
-    INTEGER, PARAMETER :: LMTDempiricalUAeff = 12 !exhaust gas HX modeling mode
-    INTEGER, PARAMETER :: LMTDfundementalUAeff = 13 !exhaust gas HX modeling mode
-    INTEGER, PARAMETER :: Condensing = 14           !exhaust gas HX modeling mode
+  INTEGER, PARAMETER :: FixedEffectiveness = 11 !exhaust gas HX modeling mode
+  INTEGER, PARAMETER :: LMTDempiricalUAeff = 12 !exhaust gas HX modeling mode
+  INTEGER, PARAMETER :: LMTDfundementalUAeff = 13 !exhaust gas HX modeling mode
+  INTEGER, PARAMETER :: Condensing = 14           !exhaust gas HX modeling mode
 
-    INTEGER, PARAMETER :: SimpleEffConstraints = 21 !electrical storage modeling mode
-    INTEGER, PARAMETER :: LeadAcidBatterySaupe = 22 !electrical storage modeling mode
-    INTEGER, PARAMETER :: LeadAcidBatterManwellMcGowan = 23 ! electrical storage modeling mode
+  INTEGER, PARAMETER :: SimpleEffConstraints = 21 !electrical storage modeling mode
+  INTEGER, PARAMETER :: LeadAcidBatterySaupe = 22 !electrical storage modeling mode
+  INTEGER, PARAMETER :: LeadAcidBatterManwellMcGowan = 23 ! electrical storage modeling mode
 
-    INTEGER, PARAMETER :: SurroundingZone = 31
-    INTEGER, PARAMETER :: AirInletForFC   = 32
+  INTEGER, PARAMETER :: SurroundingZone = 31
+  INTEGER, PARAMETER :: AirInletForFC   = 32
 
-    INTEGER, PARAMETER :: OpModeOFF      = 1 ! CHP operating mode OFF
-    INTEGER, PARAMETER :: OpModeStandby  = 2 ! CHP operating mode Stand By
-    INTEGER, PARAMETER :: OpModeWarmUp   = 3 ! CHP operating mode Warm Up or start up
-    INTEGER, PARAMETER :: OpModeNormal   = 4 ! CHP operating mode Normal
-    INTEGER, PARAMETER :: opModeCoolDown = 5 ! CHP operating mode Cool down or shut down
+  INTEGER, PARAMETER :: OpModeOFF      = 1 ! CHP operating mode OFF
+  INTEGER, PARAMETER :: OpModeStandby  = 2 ! CHP operating mode Stand By
+  INTEGER, PARAMETER :: OpModeWarmUp   = 3 ! CHP operating mode Warm Up or start up
+  INTEGER, PARAMETER :: OpModeNormal   = 4 ! CHP operating mode Normal
+  INTEGER, PARAMETER :: opModeCoolDown = 5 ! CHP operating mode Cool down or shut down
 
-    INTEGER, PARAMETER :: fuelModeGaseousConstituents = 301
-    INTEGER, PARAMETER :: fuelModeGenericLiquid       = 302
+  INTEGER, PARAMETER :: fuelModeGaseousConstituents = 301
+  INTEGER, PARAMETER :: fuelModeGenericLiquid       = 302
 
-    REAL(r64),    PARAMETER :: MinProductGasTemp = 100.0d0 ! Minimum bound on search for product gas temps
-    REAL(r64),    PARAMETER :: MaxProductGasTemp = 2000.0d0 ! Maximum bound on search for product gas temps
+  REAL(r64),    PARAMETER :: MinProductGasTemp = 100.0d0 ! Minimum bound on search for product gas temps
+  REAL(r64),    PARAMETER :: MaxProductGasTemp = 2000.0d0 ! Maximum bound on search for product gas temps
 
-    INTEGER, PARAMETER :: NISTShomate    = 41
-    INTEGER, PARAMETER :: NASAPolynomial = 42
+  INTEGER, PARAMETER :: NISTShomate    = 41
+  INTEGER, PARAMETER :: NASAPolynomial = 42
 
-    REAL(r64),    PARAMETER :: RinKJperMolpK  = 0.0083145d0 !R is ideal gas constant (kJ/mol-K)
-    REAL(r64),    PARAMETER :: InitHRTemp     = 50.0d0 !Initialization temperature for heat recovery water
+  REAL(r64),    PARAMETER :: RinKJperMolpK  = 0.0083145d0 !R is ideal gas constant (kJ/mol-K)
+  REAL(r64),    PARAMETER :: InitHRTemp     = 50.0d0 !Initialization temperature for heat recovery water
 
-    REAL(r64),    PARAMETER :: ImBalanceTol  = 0.00001d0 ! used as fraction of electrical power at power module
+  REAL(r64),    PARAMETER :: ImBalanceTol  = 0.00001d0 ! used as fraction of electrical power at power module
 
-          ! DERIVED TYPE DEFINITIONS
+  ! DERIVED TYPE DEFINITIONS
 
-TYPE FCPowerModuleStruct
-   ! user input data
+  TYPE FCPowerModuleStruct
+    ! user input data
     CHARACTER(len=MaxNameLength) :: Name     = ' '  !name of this PowerModule data
     INTEGER                      :: EffMode  = 0 ! mode for efficiency curves
     INTEGER                      :: EffCurveID = 0 ! pointer to curve for efficiency
@@ -135,7 +135,7 @@ TYPE FCPowerModuleStruct
     INTEGER                      :: DilutionExhaustNode = 0 ! pointer to node getting exhaust
     REAL(r64)                    :: PelMin = 0.0 ! minimum operating point for FCPM electrical power Pel
     REAL(r64)                    :: PelMax = 0.0 ! maximum operating point for FCPM electrical power Pel
-   !Calculated values and input from elsewhere
+    !Calculated values and input from elsewhere
 
     REAL(r64)                    :: Pel             = 0.0 !current DC electrical power produced
     REAL(r64)                    :: PelLastTimeStep = 0.0
@@ -164,10 +164,10 @@ TYPE FCPowerModuleStruct
     REAL(r64)                    :: WaterOutEnthalpy    = 0.0 ! enthalpy of vapor from water used for reforming
     INTEGER                      :: SeqSubstitIter  = 0 !
     INTEGER                      :: RegulaFalsiIter = 0 !
-END TYPE FCPowerModuleStruct
+  END TYPE FCPowerModuleStruct
 
-TYPE FCAirSupplyDataStruct
-   ! user input data
+  TYPE FCAirSupplyDataStruct
+    ! user input data
     CHARACTER(len=MaxNameLength) :: Name = ' ' !name of this
     CHARACTER(len=MaxNameLength) :: NodeName = ' ' ! Air supply node name
     INTEGER                      :: SupNodeNum = 0 ! Air supply node ID
@@ -183,7 +183,7 @@ TYPE FCAirSupplyDataStruct
     INTEGER                      :: NumConstituents = 0 !
     CHARACTER(len=MaxNameLength), DIMENSION(14) :: ConstitName = ' '
     REAL(r64), DIMENSION(14) :: ConstitMolalFract = 0.0
-   !Calculated values and input from elsewhere
+    !Calculated values and input from elsewhere
     INTEGER, DIMENSION(14)        :: GasLibID  = 0 ! lookup ID in Gas Phase ThermoChemistry Structure Array
 
     REAL(r64)                    :: O2fraction = 0.0
@@ -193,9 +193,9 @@ TYPE FCAirSupplyDataStruct
     REAL(r64)                    :: QskinLoss      = 0.0 ! pumping losses for zone
     REAL(r64)                    :: QintakeRecovery = 0.0 !heat recovered on intake air by accessories
 
-END TYPE FCAirSupplyDataStruct
+  END TYPE FCAirSupplyDataStruct
 
-TYPE FCStackCoolerDataStruct
+  TYPE FCStackCoolerDataStruct
     ! user input data
     CHARACTER(len=MaxNameLength) :: Name = ' ' !name of this stack cooler module
     CHARACTER(len=MaxNameLength) :: WaterInNodeName  = ' ' !HR Water Inlet Node
@@ -226,9 +226,9 @@ TYPE FCStackCoolerDataStruct
     REAL(r64)                    :: qs_cool  = 0.0 !
     REAL(r64)                    :: qs_air   = 0.0 !
 
-END Type FCStackCoolerDataStruct
+  END Type FCStackCoolerDataStruct
 
-TYPE FCWaterSupplyDataStruct
+  TYPE FCWaterSupplyDataStruct
     CHARACTER(len=MaxNameLength) :: Name = ' ' !name of this water supply module
     INTEGER                      :: WaterTempMode =0 ! temperature of water inlet determination
     CHARACTER(len=MaxNameLength) :: NodeName = ' ' !node name for temperature at input
@@ -245,9 +245,9 @@ TYPE FCWaterSupplyDataStruct
     REAL(r64)                    :: QskinLoss          = 0.0 ! pumping losses for zone
 
 
-END TYPE FCWaterSupplyDataStruct
+  END TYPE FCWaterSupplyDataStruct
 
-TYPE FCAuxilHeatDataStruct
+  TYPE FCAuxilHeatDataStruct
     CHARACTER(len=MaxNameLength) :: Name      = ' ' !name of this auxiliary heating module
     CHARACTER(len=MaxNameLength) :: ZoneName  = ' '
     INTEGER                      :: ZoneID    = 0
@@ -270,9 +270,9 @@ TYPE FCAuxilHeatDataStruct
     REAL(r64)                    :: QairIntake        = 0.0 ! heat into intake air
 
 
-END TYPE FCAuxilHeatDataStruct
+  END TYPE FCAuxilHeatDataStruct
 
-TYPE FCExhaustHXDataStruct
+  TYPE FCExhaustHXDataStruct
     ! user defined variables
     CHARACTER(len=MaxNameLength) :: Name             = ' ' !name of this exhaust gas heat recovery
     CHARACTER(len=MaxNameLength) :: WaterInNodeName  = ' ' !HR Water Inlet Node
@@ -301,7 +301,7 @@ TYPE FCExhaustHXDataStruct
     REAL(r64)                    :: l1Coeff          = 0.0 ! (method 4)
     REAL(r64)                    :: l2Coeff          = 0.0 ! (method 4)
     REAL(r64)                    :: CondensationThresholdTemp = 0.0 ! (method 4) [degrees C]
-   !calculated
+    !calculated
     REAL(r64)                    :: qHX = 0.0 ! heat flow from gas stream to water
     REAL(r64)                    :: THXexh = 0.0 ! temperature of exhaust gases leaving heat exchanger.
     REAL(r64)                    :: WaterMassFlowRateDesign = 0.0 !Design level of water flow rate
@@ -315,9 +315,9 @@ TYPE FCExhaustHXDataStruct
     REAL(r64)                    :: WaterOutletTemp     = 0.0D0
     REAL(r64)                    :: WaterOutletEnthalpy = 0.0D0
 
-END TYPE FCExhaustHXDataStruct
+  END TYPE FCExhaustHXDataStruct
 
-TYPE BatteryDichargeDataStruct
+  TYPE BatteryDichargeDataStruct
     ! user defined variables
     CHARACTER(len=MaxNameLength) :: Name = ' ' !name of this battery data set
     REAL(r64)                    :: NumInSeries = 0.0
@@ -332,10 +332,10 @@ TYPE BatteryDichargeDataStruct
     REAL(r64)                    :: c =0.0 !parameter in Manwell McGowan model
     REAL(r64)                    :: qmax =0.0 !parameter in Manwell McGowan model
 
-END TYPE BatteryDichargeDataStruct
+  END TYPE BatteryDichargeDataStruct
 
 
-TYPE FCElecStorageDataStruct
+  TYPE FCElecStorageDataStruct
     !user defined variables
     CHARACTER(len=MaxNameLength) :: Name = ' ' !name of this electrical storage module
     INTEGER                      :: StorageModelMode = 0
@@ -358,10 +358,10 @@ TYPE FCElecStorageDataStruct
     !nested structures
     TYPE(BatteryDichargeDataStruct) :: Battery
 
-END TYPE FCElecStorageDataStruct
+  END TYPE FCElecStorageDataStruct
 
 
-TYPE FCInverterDataStruct
+  TYPE FCInverterDataStruct
     ! user-defined data
     CHARACTER(len=MaxNameLength) :: Name = ' ' !name of this inverter
     INTEGER                      :: EffMode = 0 !efficiency calculation mode
@@ -371,92 +371,92 @@ TYPE FCInverterDataStruct
     REAL(r64)                    :: PCUlosses  = 0.0
     REAL(r64)                    :: QairIntake =0.0
 
-END TYPE FCInverterDataStruct
+  END TYPE FCInverterDataStruct
 
 
-TYPE FCReportDataStruct  !these are all for reporting only!
-       REAL(r64)    :: ACPowerGen                 = 0.0 ! reporting: power (W)
-       REAL(r64)    :: ACEnergyGen                = 0.0 ! reporting: energy (J)
+  TYPE FCReportDataStruct  !these are all for reporting only!
+    REAL(r64)    :: ACPowerGen                 = 0.0 ! reporting: power (W)
+    REAL(r64)    :: ACEnergyGen                = 0.0 ! reporting: energy (J)
 
-       REAL(r64)    :: QdotExhaust                = 0.0 ! reporting: exhaust gas heat recovered (W)
-       REAL(r64)    :: TotalHeatEnergyRec         = 0.0 ! reporting: total heat recovered (J)
-       REAL(r64)    :: ExhaustEnergyRec           = 0.0 ! reporting: exhaust gas heat recovered (J)
-       REAL(r64)    :: FuelEnergyLHV              = 0.0 ! reporting: Fuel Energy used in Lower Heating Value(J)
-       REAL(r64)    :: FuelEnergyUseRateLHV       = 0.0 ! reporting: Fuel Energy used in Lower Heating Value(W)
-       REAL(r64)    :: FuelEnergyHHV              = 0.0 ! reporting: Fuel Energy used in Lower Heating Value(J)
-       REAL(r64)    :: FuelEnergyUseRateHHV       = 0.0 ! reporting: Fuel Energy used in Lower Heating Value(W)
-       REAL(r64)    :: FuelRateMdot               = 0.0 ! (Kg/s)
-       REAL(r64)    :: HeatRecInletTemp           = 0.0 ! reporting: Heat Recovery Loop Inlet Temperature (C)
-       REAL(r64)    :: HeatRecOutletTemp          = 0.0 ! reporting: Heat Recovery Loop Outlet Temperature (C)
-       REAL(r64)    :: HeatRecMdot                = 0.0 ! reporting: Heat Recovery Loop Mass flow rate (kg/s)
-        ! air supply and blower
-       REAL(r64)    :: TairInlet         = 0.0 ! State point 1
-       REAL(r64)    :: TairIntoFCPM      = 0.0 ! Temperature at State point 4
-       REAL(r64)    :: NdotAir           = 0.0 ! air flow in kmol/sec
-       REAL(r64)    :: TotAirInEnthalphy = 0.0 ! Enthalpy at State point 4
-       REAL(r64)    :: BlowerPower       = 0.0 ! electrical power used by air supply blower
-       REAL(r64)    :: BlowerEnergy      = 0.0 ! electrical energy used by air supply blower
-       REAL(r64)    :: BlowerSkinLoss    = 0.0 ! heat rate of losses by blower
-        !fuel supply and compressor
-       REAL(r64)    :: TfuelInlet     = 0.0 ! State point 2 [C]
-       REAL(r64)    :: TfuelIntoFCPM  = 0.0 ! state point 5 [C]
-       REAL(r64)    :: NdotFuel       = 0.0 ! fuel flow in [kmol/sec]
-       REAL(r64)    :: TotFuelInEnthalpy = 0.0 ! state point 5 [W]
-       REAL(r64)    :: FuelCompressPower = 0.0 ! electrical power used by fuel supply compressor [W]
-       REAL(r64)    :: FuelCompressEnergy= 0.0 ! electrical energy used by fuel supply compressor [J]
-       REAL(r64)    :: FuelCompressSkinLoss = 0.0 !heat rate of losses.by fuel supply compressor [W]
-        !reformer water supply
-       REAL(r64)    :: TwaterInlet    = 0.0 ! State point 3
-       REAL(r64)    :: TwaterIntoFCPM = 0.0 ! State point 6
-       REAL(r64)    :: NdotWater      = 0.0 ! water flow in kmol/sec (reformer water)
-       REAL(r64)    :: WaterPumpPower = 0.0 ! electrical power used by water pump [W]
-       REAL(r64)    :: WaterPumpEnergy = 0.0 ! electrical energy used by water pump [J]
-       REAL(r64)    :: WaterIntoFCPMEnthalpy = 0.0  ! state point 6
-        !product (exhaust) gas leaving power module
-       REAL(r64)    :: TprodGas       = 0.0 ! State point 7 Product Gas temperature
-       REAL(r64)    :: EnthalProdGas  = 0.0 ! state point 7 product gas enthalpy
-       REAL(r64)    :: NdotProdGas    = 0.0 ! point 7 flow rate [kmol/sec]
-       REAL(r64)    :: NdotProdAr     = 0.0 ! argon flow rate at point 7
-       REAL(r64)    :: NdotProdCO2    = 0.0 ! carbon dioxide flow rate at point 7
-       REAL(r64)    :: NdotProdH2O    = 0.0 ! water vapor flow rate at point 7
-       REAL(r64)    :: NdotProdN2     = 0.0 ! nitrogen flow rate at point 7
-       REAL(r64)    :: NdotProdO2     = 0.0 ! oxygen flow rate at point 7
+    REAL(r64)    :: QdotExhaust                = 0.0 ! reporting: exhaust gas heat recovered (W)
+    REAL(r64)    :: TotalHeatEnergyRec         = 0.0 ! reporting: total heat recovered (J)
+    REAL(r64)    :: ExhaustEnergyRec           = 0.0 ! reporting: exhaust gas heat recovered (J)
+    REAL(r64)    :: FuelEnergyLHV              = 0.0 ! reporting: Fuel Energy used in Lower Heating Value(J)
+    REAL(r64)    :: FuelEnergyUseRateLHV       = 0.0 ! reporting: Fuel Energy used in Lower Heating Value(W)
+    REAL(r64)    :: FuelEnergyHHV              = 0.0 ! reporting: Fuel Energy used in Lower Heating Value(J)
+    REAL(r64)    :: FuelEnergyUseRateHHV       = 0.0 ! reporting: Fuel Energy used in Lower Heating Value(W)
+    REAL(r64)    :: FuelRateMdot               = 0.0 ! (Kg/s)
+    REAL(r64)    :: HeatRecInletTemp           = 0.0 ! reporting: Heat Recovery Loop Inlet Temperature (C)
+    REAL(r64)    :: HeatRecOutletTemp          = 0.0 ! reporting: Heat Recovery Loop Outlet Temperature (C)
+    REAL(r64)    :: HeatRecMdot                = 0.0 ! reporting: Heat Recovery Loop Mass flow rate (kg/s)
+    ! air supply and blower
+    REAL(r64)    :: TairInlet         = 0.0 ! State point 1
+    REAL(r64)    :: TairIntoFCPM      = 0.0 ! Temperature at State point 4
+    REAL(r64)    :: NdotAir           = 0.0 ! air flow in kmol/sec
+    REAL(r64)    :: TotAirInEnthalphy = 0.0 ! Enthalpy at State point 4
+    REAL(r64)    :: BlowerPower       = 0.0 ! electrical power used by air supply blower
+    REAL(r64)    :: BlowerEnergy      = 0.0 ! electrical energy used by air supply blower
+    REAL(r64)    :: BlowerSkinLoss    = 0.0 ! heat rate of losses by blower
+    !fuel supply and compressor
+    REAL(r64)    :: TfuelInlet     = 0.0 ! State point 2 [C]
+    REAL(r64)    :: TfuelIntoFCPM  = 0.0 ! state point 5 [C]
+    REAL(r64)    :: NdotFuel       = 0.0 ! fuel flow in [kmol/sec]
+    REAL(r64)    :: TotFuelInEnthalpy = 0.0 ! state point 5 [W]
+    REAL(r64)    :: FuelCompressPower = 0.0 ! electrical power used by fuel supply compressor [W]
+    REAL(r64)    :: FuelCompressEnergy= 0.0 ! electrical energy used by fuel supply compressor [J]
+    REAL(r64)    :: FuelCompressSkinLoss = 0.0 !heat rate of losses.by fuel supply compressor [W]
+    !reformer water supply
+    REAL(r64)    :: TwaterInlet    = 0.0 ! State point 3
+    REAL(r64)    :: TwaterIntoFCPM = 0.0 ! State point 6
+    REAL(r64)    :: NdotWater      = 0.0 ! water flow in kmol/sec (reformer water)
+    REAL(r64)    :: WaterPumpPower = 0.0 ! electrical power used by water pump [W]
+    REAL(r64)    :: WaterPumpEnergy = 0.0 ! electrical energy used by water pump [J]
+    REAL(r64)    :: WaterIntoFCPMEnthalpy = 0.0  ! state point 6
+    !product (exhaust) gas leaving power module
+    REAL(r64)    :: TprodGas       = 0.0 ! State point 7 Product Gas temperature
+    REAL(r64)    :: EnthalProdGas  = 0.0 ! state point 7 product gas enthalpy
+    REAL(r64)    :: NdotProdGas    = 0.0 ! point 7 flow rate [kmol/sec]
+    REAL(r64)    :: NdotProdAr     = 0.0 ! argon flow rate at point 7
+    REAL(r64)    :: NdotProdCO2    = 0.0 ! carbon dioxide flow rate at point 7
+    REAL(r64)    :: NdotProdH2O    = 0.0 ! water vapor flow rate at point 7
+    REAL(r64)    :: NdotProdN2     = 0.0 ! nitrogen flow rate at point 7
+    REAL(r64)    :: NdotProdO2     = 0.0 ! oxygen flow rate at point 7
 
-       !heat exchanger for water to exhaust heat recovery
-       REAL(r64)    :: qHX = 0.0 ! heat flow from gas stream to water [W]
-       REAL(r64)    :: HXenergy = 0.0 !energy from gas stream to water [J]
-       REAL(r64)    :: THXexh = 0.0 ! temperature of exhaust gases leaving heat exchanger.
-       REAL(r64)    :: WaterVaporFractExh = 0.0 ! water vapor fraction in exhaust gas stream
-                                           ! relative to water vapor entering HX  (NdotH20/Ndoaux-mix)
-       REAL(r64)    :: CondensateRate     = 0.0 ! water condensation rate [kmol/s]
+    !heat exchanger for water to exhaust heat recovery
+    REAL(r64)    :: qHX = 0.0 ! heat flow from gas stream to water [W]
+    REAL(r64)    :: HXenergy = 0.0 !energy from gas stream to water [J]
+    REAL(r64)    :: THXexh = 0.0 ! temperature of exhaust gases leaving heat exchanger.
+    REAL(r64)    :: WaterVaporFractExh = 0.0 ! water vapor fraction in exhaust gas stream
+    ! relative to water vapor entering HX  (NdotH20/Ndoaux-mix)
+    REAL(r64)    :: CondensateRate     = 0.0 ! water condensation rate [kmol/s]
 
-       INTEGER :: SeqSubstIterations = 0 ! number of iterations in SOFC loop
-       INTEGER :: RegulaFalsiIterations = 0 ! number of iterations in Tproduct gas solving
+    INTEGER :: SeqSubstIterations = 0 ! number of iterations in SOFC loop
+    INTEGER :: RegulaFalsiIterations = 0 ! number of iterations in Tproduct gas solving
 
-       REAL(r64)    :: ACancillariesPower  = 0.0 !
-       REAL(r64)    :: ACancillariesEnergy = 0.0 !
-       REAL(r64)    :: PCUlosses = 0.0  ! power conditioning Unit losses
-       REAL(r64)    :: DCPowerGen = 0.0 ! Pel, Power module power level [W]
-       REAL(r64)    :: DCPowerEff = 0.0 ! Eel, power module efficiency []
-       REAL(r64)    :: ElectEnergyinStorage = 0.0 ! State of charge in Electrical Storage [J]
-       REAL(r64)    :: StoredPower = 0.0 ! Power added to Electrical Storage [W]
-       REAL(r64)    :: StoredEnergy = 0.0 ! energy added to Electrical STorage [J]
-       REAL(r64)    :: DrawnPower = 0.0 ! Power drawn from Electrical STorage [W]
-       REAL(r64)    :: DrawnEnergy = 0.0 ! Energy drawn from Electrical STorage [J]
+    REAL(r64)    :: ACancillariesPower  = 0.0 !
+    REAL(r64)    :: ACancillariesEnergy = 0.0 !
+    REAL(r64)    :: PCUlosses = 0.0  ! power conditioning Unit losses
+    REAL(r64)    :: DCPowerGen = 0.0 ! Pel, Power module power level [W]
+    REAL(r64)    :: DCPowerEff = 0.0 ! Eel, power module efficiency []
+    REAL(r64)    :: ElectEnergyinStorage = 0.0 ! State of charge in Electrical Storage [J]
+    REAL(r64)    :: StoredPower = 0.0 ! Power added to Electrical Storage [W]
+    REAL(r64)    :: StoredEnergy = 0.0 ! energy added to Electrical STorage [J]
+    REAL(r64)    :: DrawnPower = 0.0 ! Power drawn from Electrical STorage [W]
+    REAL(r64)    :: DrawnEnergy = 0.0 ! Energy drawn from Electrical STorage [J]
 
-       REAL(r64)    :: SkinLossPower   = 0.0 ! heat loss to surrounding zone [W]
-       REAL(r64)    :: SkinLossEnergy  = 0.0 ! heat loss to surround zone [J]
-       REAL(r64)    :: SkinLossConvect = 0.0 ! convective heat loss to zone [W]
-       REAL(r64)    :: SkinLossRadiat  = 0.0 ! radiative heat loss to zone [W}
+    REAL(r64)    :: SkinLossPower   = 0.0 ! heat loss to surrounding zone [W]
+    REAL(r64)    :: SkinLossEnergy  = 0.0 ! heat loss to surround zone [J]
+    REAL(r64)    :: SkinLossConvect = 0.0 ! convective heat loss to zone [W]
+    REAL(r64)    :: SkinLossRadiat  = 0.0 ! radiative heat loss to zone [W}
 
-       REAL(r64)    :: ElectEfficiency  = 0.0
-       REAL(r64)    :: ThermalEfficiency = 0.0
-       REAL(r64)    :: OverallEfficiency = 0.0
-       REAL(r64)    :: ExergyEfficiency  = 0.0
+    REAL(r64)    :: ElectEfficiency  = 0.0
+    REAL(r64)    :: ThermalEfficiency = 0.0
+    REAL(r64)    :: OverallEfficiency = 0.0
+    REAL(r64)    :: ExergyEfficiency  = 0.0
 
-END TYPE FCReportDataStruct
-TYPE FCDataStruct
-  ! from input data and nested types for subsystems
+  END TYPE FCReportDataStruct
+  TYPE FCDataStruct
+    ! from input data and nested types for subsystems
     CHARACTER(len=MaxNameLength) :: Name           = ' ' ! user identifier
     CHARACTER(len=MaxNameLength) :: NameFCPM       = ' ' ! name of FC Power Module
     TYPE(FCPowerModuleStruct)    :: FCPM                 ! data for Power Module
@@ -482,16 +482,16 @@ TYPE FCDataStruct
     INTEGER                      :: CWCompNum     = 0  ! cooling water plant loop component index
     TYPE(FCReportDataStruct)     :: Report               ! data for reporting as E+ output variables
 
-   ! calculated whole-system level variables
+    ! calculated whole-system level variables
     REAL(r64)                    :: ACPowerGen   = 0.0 ! Net output from SOFC unit
     REAL(r64)                    :: QconvZone    = 0.0  ! convective heat lost to surrounding zone
     REAL(r64)                    :: QradZone     = 0.0  ! radiative heat lost to surrounding zone
     INTEGER                      :: DynamicsControlID = 0 !
     REAL(r64)                    :: TimeElapsed  = 0.0 ! used to track when timestep has changed
-END TYPE
+  END TYPE
 
-TYPE GeneratorFuelSupplyDataStruct
-   ! user input data
+  TYPE GeneratorFuelSupplyDataStruct
+    ! user input data
     CHARACTER(len=MaxNameLength) :: Name = ' ' !name of this fuel supply module
     INTEGER                      :: FuelTempMode = 0 ! temperature of fuel node
     INTEGER                      :: FuelTypeMode = 0 ! type of fuel, gasous or liquid
@@ -521,9 +521,9 @@ TYPE GeneratorFuelSupplyDataStruct
     REAL(r64)                    :: CO2ProductGasCoef = 0.0  ! molar multiplier for stoic products of this fuel
     REAL(r64)                    :: H20ProductGasCoef = 0.0  ! molar multiplier for stoic products of this fuel
 
-END TYPE GeneratorFuelSupplyDataStruct
+  END TYPE GeneratorFuelSupplyDataStruct
 
-TYPE GasPropertyDataStruct
+  TYPE GasPropertyDataStruct
     CHARACTER(len=MaxNameLength) :: ConstituentName           = ' ' !
     CHARACTER(len=MaxNameLength) :: ConstituentFormula        = ' '
     REAL(r64)                    :: StdRefMolarEnthOfForm     = 0.0 !
@@ -547,10 +547,10 @@ TYPE GasPropertyDataStruct
     REAL(r64)                    :: NASA_A5 = 0.0
     REAL(r64)                    :: NASA_A6 = 0.0
     REAL(r64)                    :: NASA_A7 = 0.0
-END TYPE
+  END TYPE
 
-TYPE GeneratorDynamicsManagerStruct
-   ! user input data
+  TYPE GeneratorDynamicsManagerStruct
+    ! user input data
     CHARACTER(len=MaxNameLength) :: Name = ' '
     REAL(r64)                    :: PelMin = 0.0 ! minimum operating point for electrical power Pel
     REAL(r64)                    :: PelMax = 0.0 ! maximum operating point for electrical power Pel
@@ -587,7 +587,7 @@ TYPE GeneratorDynamicsManagerStruct
     LOGICAL                      :: WarmRestartOkay       = .true.
     INTEGER                      :: AvailabilitySchedID   = 0
 
-   !Calculated values and input from elsewhere
+    !Calculated values and input from elsewhere
     INTEGER                       :: CurrentOpMode  = OpModeOFF ! current operating mode, uses params like OpModeNormal
     INTEGER                       :: LastOpMode     = OpModeOFF !
     REAL(r64)                     :: FractionalDayofLastShutDown = 0.0
@@ -605,9 +605,9 @@ TYPE GeneratorDynamicsManagerStruct
     REAL(r64)                     :: QdotHXMax = 0.0 ! Thermal power max
     REAL(r64)                     :: QdotHXMin = 0.0 ! thermal power min
     REAL(r64)                     :: QdotHXOpt = 0.0 ! thermal power nominal/optimal
-END TYPE !GeneratorDynamicsManagerStruct
+  END TYPE !GeneratorDynamicsManagerStruct
 
-Type MicroCHPParamsNonNormalized
+  Type MicroCHPParamsNonNormalized
     !user parameters
     CHARACTER(len=MaxNameLength) :: Name     = ' '  !name of this PowerModule data
     REAL(r64)                    :: MaxElecPower = 0.0 ! net electric power [W]
@@ -641,7 +641,7 @@ Type MicroCHPParamsNonNormalized
     LOGICAL                      :: WarmRestartOkay       = .true.
     ! calculated and from elsewhere
     REAL(r64)                    :: TimeElapsed = 0.0     ! Fraction of the current hour that has elapsed (h)
-                                                          ! Saved in order to identify the beginning of a new system time
+    ! Saved in order to identify the beginning of a new system time
     INTEGER                      :: opMode = 0
     REAL(r64)    :: OffModeTime      = 0.0 ! amount of time generator spent in Off mode
     REAL(r64)    :: StandyByModeTime = 0.0 ! amount of time generator spent in standby mode
@@ -664,71 +664,71 @@ Type MicroCHPParamsNonNormalized
     REAL(r64)                    :: QdotSkin = 0.0 ! rate of heat loss to zone
     REAL(r64)                    :: QdotConvZone = 0.0
     REAL(r64)                    :: QdotRadZone= 0.0
-END TYPE
+  END TYPE
 
-TYPE MicroCHPReportDataStruct  !these are all for reporting only!
-       INTEGER :: Mode                       = 0 ! report operating mode (dev only, remove at end)
-       REAL(r64)    :: OffModeTime                = 0.0 ! amount of time generator spent in Off mode
-       REAL(r64)    :: StandyByModeTime           = 0.0 ! amount of time generator spent in standby mode
-       REAL(r64)    :: WarmUpModeTime             = 0.0 ! amount of time generator spent in warm up mode
-       REAL(r64)    :: NormalModeTime             = 0.0 ! amount of time generator spent in normal mode
-       REAL(r64)    :: CoolDownModeTime           = 0.0 ! amount of time generator spent in Cool down mode
+  TYPE MicroCHPReportDataStruct  !these are all for reporting only!
+    INTEGER :: Mode                       = 0 ! report operating mode (dev only, remove at end)
+    REAL(r64)    :: OffModeTime                = 0.0 ! amount of time generator spent in Off mode
+    REAL(r64)    :: StandyByModeTime           = 0.0 ! amount of time generator spent in standby mode
+    REAL(r64)    :: WarmUpModeTime             = 0.0 ! amount of time generator spent in warm up mode
+    REAL(r64)    :: NormalModeTime             = 0.0 ! amount of time generator spent in normal mode
+    REAL(r64)    :: CoolDownModeTime           = 0.0 ! amount of time generator spent in Cool down mode
 
-       REAL(r64)    :: ACPowerGen                 = 0.0 ! reporting: power (W)
-       REAL(r64)    :: ACEnergyGen                = 0.0 ! reporting: energy (J)
-       REAL(r64)    :: Qdotgross                  = 0.0 ! reporting: interim gross power (W)
-       REAL(r64)    :: Qgenss                     = 0.0 ! reporting: net recovered heat rate steadystate(0)
-       REAL(r64)    :: QdotHX                     = 0.0 ! reporting: rate of heat exchange from engine to coolant (W)
-       REAL(r64)    :: QdotHR                     = 0.0 ! reporting: rate of heat recovered (W)
-       REAL(r64)    :: Tengine                    = 0.0 ! reporting: engine mass temperature (C)
+    REAL(r64)    :: ACPowerGen                 = 0.0 ! reporting: power (W)
+    REAL(r64)    :: ACEnergyGen                = 0.0 ! reporting: energy (J)
+    REAL(r64)    :: Qdotgross                  = 0.0 ! reporting: interim gross power (W)
+    REAL(r64)    :: Qgenss                     = 0.0 ! reporting: net recovered heat rate steadystate(0)
+    REAL(r64)    :: QdotHX                     = 0.0 ! reporting: rate of heat exchange from engine to coolant (W)
+    REAL(r64)    :: QdotHR                     = 0.0 ! reporting: rate of heat recovered (W)
+    REAL(r64)    :: Tengine                    = 0.0 ! reporting: engine mass temperature (C)
 
-       REAL(r64)    :: TotalHeatEnergyRec         = 0.0 ! reporting: total heat recovered (J)
-       REAL(r64)    :: ExhaustEnergyRec           = 0.0 ! reporting: exhaust gas heat recovered (J)
-       REAL(r64)    :: FuelEnergyLHV              = 0.0 ! reporting: Fuel Energy used in Lower Heating Value(J)
-       REAL(r64)    :: FuelEnergyUseRateLHV       = 0.0 ! reporting: Fuel Energy used in Lower Heating Value(W)
-       REAL(r64)    :: FuelEnergyHHV              = 0.0 ! reporting: Fuel Energy used in Higher Heating Value(J)
-       REAL(r64)    :: FuelEnergyUseRateHHV       = 0.0 ! reporting: Fuel Energy used in Higher Heating Value(W)
-       REAL(r64)    :: HeatRecInletTemp           = 0.0 ! reporting: Heat Recovery Loop Inlet Temperature (C)
-       REAL(r64)    :: HeatRecOutletTemp          = 0.0 ! reporting: Heat Recovery Loop Outlet Temperature (C)
-       REAL(r64)    :: HeatRecMdot                = 0.0 ! reporting: Heat Recovery Loop Mass flow rate (kg/s)
+    REAL(r64)    :: TotalHeatEnergyRec         = 0.0 ! reporting: total heat recovered (J)
+    REAL(r64)    :: ExhaustEnergyRec           = 0.0 ! reporting: exhaust gas heat recovered (J)
+    REAL(r64)    :: FuelEnergyLHV              = 0.0 ! reporting: Fuel Energy used in Lower Heating Value(J)
+    REAL(r64)    :: FuelEnergyUseRateLHV       = 0.0 ! reporting: Fuel Energy used in Lower Heating Value(W)
+    REAL(r64)    :: FuelEnergyHHV              = 0.0 ! reporting: Fuel Energy used in Higher Heating Value(J)
+    REAL(r64)    :: FuelEnergyUseRateHHV       = 0.0 ! reporting: Fuel Energy used in Higher Heating Value(W)
+    REAL(r64)    :: HeatRecInletTemp           = 0.0 ! reporting: Heat Recovery Loop Inlet Temperature (C)
+    REAL(r64)    :: HeatRecOutletTemp          = 0.0 ! reporting: Heat Recovery Loop Outlet Temperature (C)
+    REAL(r64)    :: HeatRecMdot                = 0.0 ! reporting: Heat Recovery Loop Mass flow rate (kg/s)
 
 
-       ! air supply and blower
-       REAL(r64)    :: TairInlet         = 0.0 ! State point 1
-       REAL(r64)    :: MdotAir           = 0.0 ! air flow in kmol/sec
-        !fuel supply and compressor
-       REAL(r64)    :: TfuelInlet     = 0.0 ! State point 2 [C]
-       REAL(r64)    :: NdotFuel       = 0.0 ! fuel flow in [kmol/sec]
-       REAL(r64)    :: MdotFuel       = 0.0 ! fuel flow in [kg/s]
-       REAL(r64)    :: FuelCompressPower = 0.0 ! electrical power used by fuel supply compressor [W]
-       REAL(r64)    :: FuelCompressEnergy= 0.0 ! electrical energy used by fuel supply compressor [J]
-       REAL(r64)    :: FuelCompressSkinLoss = 0.0 !heat rate of losses.by fuel supply compressor [W]
+    ! air supply and blower
+    REAL(r64)    :: TairInlet         = 0.0 ! State point 1
+    REAL(r64)    :: MdotAir           = 0.0 ! air flow in kmol/sec
+    !fuel supply and compressor
+    REAL(r64)    :: TfuelInlet     = 0.0 ! State point 2 [C]
+    REAL(r64)    :: NdotFuel       = 0.0 ! fuel flow in [kmol/sec]
+    REAL(r64)    :: MdotFuel       = 0.0 ! fuel flow in [kg/s]
+    REAL(r64)    :: FuelCompressPower = 0.0 ! electrical power used by fuel supply compressor [W]
+    REAL(r64)    :: FuelCompressEnergy= 0.0 ! electrical energy used by fuel supply compressor [J]
+    REAL(r64)    :: FuelCompressSkinLoss = 0.0 !heat rate of losses.by fuel supply compressor [W]
 
-       !heat exchanger for water to exhaust heat recovery
+    !heat exchanger for water to exhaust heat recovery
     !   REAL(r64)    :: qHX = 0.0 ! heat flow from gas stream to water [W]
     !   REAL(r64)    :: HXenergy = 0.0 !energy from gas stream to water [J]
     !   REAL(r64)    :: THXexh = 0.0 ! temperature of exhaust gases leaving heat exchanger.
     !   REAL(r64)    :: WaterVaporFractExh = 0.0 ! water vapor fraction in exhaust gas stream
-                                           ! relative to water vapor entering HX  (NdotH20/Ndoaux-mix)
+    ! relative to water vapor entering HX  (NdotH20/Ndoaux-mix)
 
 
-   !    INTEGER :: SeqSubstIterations = 0 ! number of iterations in SOFC loop
-   !    INTEGER :: RegulaFalsiIterations = 0 ! number of iterations in Tproduct gas solving
+    !    INTEGER :: SeqSubstIterations = 0 ! number of iterations in SOFC loop
+    !    INTEGER :: RegulaFalsiIterations = 0 ! number of iterations in Tproduct gas solving
 
 
-       REAL(r64)    :: SkinLossPower   = 0.0 ! heat loss to surrounding zone [W]
-       REAL(r64)    :: SkinLossEnergy  = 0.0 ! heat loss to surround zone [J]
-       REAL(r64)    :: SkinLossConvect = 0.0 ! convective heat loss to zone [W]
-       REAL(r64)    :: SkinLossRadiat  = 0.0 ! radiative heat loss to zone [W}
+    REAL(r64)    :: SkinLossPower   = 0.0 ! heat loss to surrounding zone [W]
+    REAL(r64)    :: SkinLossEnergy  = 0.0 ! heat loss to surround zone [J]
+    REAL(r64)    :: SkinLossConvect = 0.0 ! convective heat loss to zone [W]
+    REAL(r64)    :: SkinLossRadiat  = 0.0 ! radiative heat loss to zone [W}
 
-       REAL(r64)    :: ElectEfficiency  = 0.0
-       REAL(r64)    :: ThermalEfficiency = 0.0
-       REAL(r64)    :: OverallEfficiency = 0.0
+    REAL(r64)    :: ElectEfficiency  = 0.0
+    REAL(r64)    :: ThermalEfficiency = 0.0
+    REAL(r64)    :: OverallEfficiency = 0.0
 
-END TYPE MicroCHPReportDataStruct
+  END TYPE MicroCHPReportDataStruct
 
-TYPE MicroCHPDataStruct
-   ! user input data
+  TYPE MicroCHPDataStruct
+    ! user input data
     CHARACTER(len=MaxNameLength) :: Name                = ' '  !name of this Micro CHP Generator
     CHARACTER(len=MaxNameLength) :: ParamObjName        = '' !name of parameter object
     Type(MicroCHPParamsNonNormalized):: A42Model ! Nested parameter data structure
@@ -754,45 +754,45 @@ TYPE MicroCHPDataStruct
     INTEGER                      :: CWLoopSideNum = 0  ! cooling water plant loop side index
     INTEGER                      :: CWBranchNum   = 0  ! cooling water plant loop branch index
     INTEGER                      :: CWCompNum     = 0  ! cooling water plant loop component index
-END TYPE !MicroCHP
+  END TYPE !MicroCHP
 
 
-          ! MODULE VARIABLE DECLARATIONS:
-TYPE (FCDataStruct),    ALLOCATABLE, DIMENSION(:)  :: FuelCell  !dimension to number of machines
-TYPE (GasPropertyDataStruct), ALLOCATABLE, DIMENSION(:) :: GasPhaseThermoChemistryData
-TYPE (GeneratorFuelSupplyDataStruct), ALLOCATABLE, DIMENSION(:) :: FuelSupply !fuel supply (reused across various)
-TYPE (MicroCHPDataStruct), ALLOCATABLE, DIMENSION(:)            :: MicroCHP
-TYPE (MicroCHPParamsNonNormalized), Allocatable, Dimension(:)   :: MicroCHPParamInput !  Used during get input then put into nested
-TYPE (GeneratorDynamicsManagerStruct) , Allocatable, Dimension(:)  :: GeneratorDynamics
+  ! MODULE VARIABLE DECLARATIONS:
+  TYPE (FCDataStruct),    ALLOCATABLE, DIMENSION(:)  :: FuelCell  !dimension to number of machines
+  TYPE (GasPropertyDataStruct), ALLOCATABLE, DIMENSION(:) :: GasPhaseThermoChemistryData
+  TYPE (GeneratorFuelSupplyDataStruct), ALLOCATABLE, DIMENSION(:) :: FuelSupply !fuel supply (reused across various)
+  TYPE (MicroCHPDataStruct), ALLOCATABLE, DIMENSION(:)            :: MicroCHP
+  TYPE (MicroCHPParamsNonNormalized), Allocatable, Dimension(:)   :: MicroCHPParamInput !  Used during get input then put into nested
+  TYPE (GeneratorDynamicsManagerStruct) , Allocatable, Dimension(:)  :: GeneratorDynamics
 
-INTEGER  :: NumFuelConstit=0
-INTEGER  :: NumGeneratorFuelSups=0
-INTEGER  :: NumFuelCellGenerators=0 ! number of SOFC Generators specified in input
-INTEGER  :: NumMicroCHPs=0 !
-INTEGER  :: NumMicroCHPParams  =0  ! number of parameter sets for micro chp
-INTEGER  :: NumGensWDynamics =0 ! number of dynamics controls for generators
+  INTEGER  :: NumFuelConstit=0
+  INTEGER  :: NumGeneratorFuelSups=0
+  INTEGER  :: NumFuelCellGenerators=0 ! number of SOFC Generators specified in input
+  INTEGER  :: NumMicroCHPs=0 !
+  INTEGER  :: NumMicroCHPParams  =0  ! number of parameter sets for micro chp
+  INTEGER  :: NumGensWDynamics =0 ! number of dynamics controls for generators
 
-!     NOTICE
-!
-!     Copyright © 1996-2012 The Board of Trustees of the University of Illinois
-!     and The Regents of the University of California through Ernest Orlando Lawrence
-!     Berkeley National Laboratory.  All rights reserved.
-!
-!     Portions of the EnergyPlus software package have been developed and copyrighted
-!     by other individuals, companies and institutions.  These portions have been
-!     incorporated into the EnergyPlus software package under license.   For a complete
-!     list of contributors, see "Notice" located in EnergyPlus.f90.
-!
-!     NOTICE: The U.S. Government is granted for itself and others acting on its
-!     behalf a paid-up, nonexclusive, irrevocable, worldwide license in this data to
-!     reproduce, prepare derivative works, and perform publicly and display publicly.
-!     Beginning five (5) years after permission to assert copyright is granted,
-!     subject to two possible five year renewals, the U.S. Government is granted for
-!     itself and others acting on its behalf a paid-up, non-exclusive, irrevocable
-!     worldwide license in this data to reproduce, prepare derivative works,
-!     distribute copies to the public, perform publicly and display publicly, and to
-!     permit others to do so.
-!
-!     TRADEMARKS: EnergyPlus is a trademark of the US Department of Energy.
+  !     NOTICE
+  !
+  !     Copyright ï¿½ 1996-2012 The Board of Trustees of the University of Illinois
+  !     and The Regents of the University of California through Ernest Orlando Lawrence
+  !     Berkeley National Laboratory.  All rights reserved.
+  !
+  !     Portions of the EnergyPlus software package have been developed and copyrighted
+  !     by other individuals, companies and institutions.  These portions have been
+  !     incorporated into the EnergyPlus software package under license.   For a complete
+  !     list of contributors, see "Notice" located in EnergyPlus.f90.
+  !
+  !     NOTICE: The U.S. Government is granted for itself and others acting on its
+  !     behalf a paid-up, nonexclusive, irrevocable, worldwide license in this data to
+  !     reproduce, prepare derivative works, and perform publicly and display publicly.
+  !     Beginning five (5) years after permission to assert copyright is granted,
+  !     subject to two possible five year renewals, the U.S. Government is granted for
+  !     itself and others acting on its behalf a paid-up, non-exclusive, irrevocable
+  !     worldwide license in this data to reproduce, prepare derivative works,
+  !     distribute copies to the public, perform publicly and display publicly, and to
+  !     permit others to do so.
+  !
+  !     TRADEMARKS: EnergyPlus is a trademark of the US Department of Energy.
 
 END MODULE DataGenerators

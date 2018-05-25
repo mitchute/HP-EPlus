@@ -1,40 +1,40 @@
 MODULE DataZoneControls
 
-          ! Module containing the routines dealing with the zone controls.
+  ! Module containing the routines dealing with the zone controls.
 
-          ! MODULE INFORMATION:
-          !       AUTHOR         Linda Lawrie
-          !       DATE WRITTEN   October 2007
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! MODULE INFORMATION:
+  !       AUTHOR         Linda Lawrie
+  !       DATE WRITTEN   October 2007
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS MODULE:
-          ! This module has the data and structures for various types of controls
-          ! (humidity, temperature, comfort) within the zones.  This data was formerly
-          ! public data in ZoneTempPredictorCorrector.
+  ! PURPOSE OF THIS MODULE:
+  ! This module has the data and structures for various types of controls
+  ! (humidity, temperature, comfort) within the zones.  This data was formerly
+  ! public data in ZoneTempPredictorCorrector.
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! OTHER NOTES:
-          ! na
+  ! OTHER NOTES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataPrecisionGlobals
   USE DataGlobals_HPSimIntegrated, ONLY: MaxNameLength
-          ! <use statements for access to subroutines in other modules>
+  ! <use statements for access to subroutines in other modules>
 
-IMPLICIT NONE ! Enforce explicit typing of all variables
+  IMPLICIT NONE ! Enforce explicit typing of all variables
 
-PUBLIC ! Everything private unless explicitly made public
+  PUBLIC ! Everything private unless explicitly made public
 
-          ! MODULE PARAMETER DEFINITIONS:
-          ! na
+  ! MODULE PARAMETER DEFINITIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
+  ! DERIVED TYPE DEFINITIONS:
   TYPE :: ZoneTempControls
     CHARACTER(len=MaxNameLength) :: Name                 =' ' ! Name of the thermostat
     CHARACTER(len=MaxNameLength) :: ZoneName             =' ' ! Name of the zone
@@ -61,7 +61,7 @@ PUBLIC ! Everything private unless explicitly made public
 
     LOGICAL :: OperativeTempControl                      = .FALSE.  ! flag to indicate whether control based on Operative Temp
     LOGICAL :: OpTempCntrlModeScheduled                  = .FALSE.  ! flag to indicate if radiative fraction is scheduled,
-                                                                    ! else constant
+    ! else constant
     REAL(r64) :: FixedRadiativeFraction                  = 0.0  ! weighting factor for mean radiant temp for Operative temperature
     INTEGER :: OpTempRadiativeFractionSched              = 0 ! index of schedule for when fraction is scheduled
 
@@ -69,11 +69,11 @@ PUBLIC ! Everything private unless explicitly made public
     REAL(r64) :: ZoneOvercoolRange                     = 0.0d0   ! Zone overcool temperature range (max), deg C
     LOGICAL   :: ZoneOvercoolControl                   = .FALSE. ! Flag to indicate whether control is based on overcool
     LOGICAL   :: OvercoolCntrlModeScheduled            = .FALSE. ! Flag to indicate if zone overcool range is scheduled
-                                                                 !   or constant
+    !   or constant
     REAL(r64) :: ZoneOvercoolConstRange                = 0.0d0   ! Overcool Range for Zone Air Setpoint Temperature [deltaC]
     INTEGER   :: ZoneOvercoolRangeSchedIndex           = 0       ! Index for Overcool Range Schedule
     REAL(r64) :: ZoneOvercoolControlRatio              = 0.0d0   ! Zone relative humidity shift per dry-bulb temperature overcooling
-                                                                 !      below the original cooling setpoint, %RH/deltaC
+    !      below the original cooling setpoint, %RH/deltaC
     CHARACTER(len=MaxNameLength) :: DehumidifyingSched =' '  ! Name of the schedule to determine the zone dehumidifying setpoint
     INTEGER                 :: DehumidifyingSchedIndex =0    ! Index for dehumidifying schedule
 
@@ -151,7 +151,7 @@ PUBLIC ! Everything private unless explicitly made public
   END TYPE
 
 
-          ! MODULE VARIABLE DECLARATIONS:
+  ! MODULE VARIABLE DECLARATIONS:
   TYPE (ZoneHumidityControls), ALLOCATABLE, DIMENSION(:) :: HumidityControlZone
   TYPE (ZoneTempControls), ALLOCATABLE, DIMENSION(:)     :: TempControlledZone
   TYPE (ZoneComfortControls), ALLOCATABLE, DIMENSION(:)  :: ComfortControlledZone
@@ -167,29 +167,28 @@ PUBLIC ! Everything private unless explicitly made public
   LOGICAL :: AnyOpTempControl = .FALSE.              ! flag set true if any zones have op temp control
   LOGICAL :: AnyZoneTempAndHumidityControl = .FALSE. ! flag set true if any zones have over cool control
 
-!     NOTICE
-!
-!     Copyright © 1996-2012 The Board of Trustees of the University of Illinois
-!     and The Regents of the University of California through Ernest Orlando Lawrence
-!     Berkeley National Laboratory.  All rights reserved.
-!
-!     Portions of the EnergyPlus software package have been developed and copyrighted
-!     by other individuals, companies and institutions.  These portions have been
-!     incorporated into the EnergyPlus software package under license.   For a complete
-!     list of contributors, see "Notice" located in EnergyPlus.f90.
-!
-!     NOTICE: The U.S. Government is granted for itself and others acting on its
-!     behalf a paid-up, nonexclusive, irrevocable, worldwide license in this data to
-!     reproduce, prepare derivative works, and perform publicly and display publicly.
-!     Beginning five (5) years after permission to assert copyright is granted,
-!     subject to two possible five year renewals, the U.S. Government is granted for
-!     itself and others acting on its behalf a paid-up, non-exclusive, irrevocable
-!     worldwide license in this data to reproduce, prepare derivative works,
-!     distribute copies to the public, perform publicly and display publicly, and to
-!     permit others to do so.
-!
-!     TRADEMARKS: EnergyPlus is a trademark of the US Department of Energy.
-!
+  !     NOTICE
+  !
+  !     Copyright ï¿½ 1996-2012 The Board of Trustees of the University of Illinois
+  !     and The Regents of the University of California through Ernest Orlando Lawrence
+  !     Berkeley National Laboratory.  All rights reserved.
+  !
+  !     Portions of the EnergyPlus software package have been developed and copyrighted
+  !     by other individuals, companies and institutions.  These portions have been
+  !     incorporated into the EnergyPlus software package under license.   For a complete
+  !     list of contributors, see "Notice" located in EnergyPlus.f90.
+  !
+  !     NOTICE: The U.S. Government is granted for itself and others acting on its
+  !     behalf a paid-up, nonexclusive, irrevocable, worldwide license in this data to
+  !     reproduce, prepare derivative works, and perform publicly and display publicly.
+  !     Beginning five (5) years after permission to assert copyright is granted,
+  !     subject to two possible five year renewals, the U.S. Government is granted for
+  !     itself and others acting on its behalf a paid-up, non-exclusive, irrevocable
+  !     worldwide license in this data to reproduce, prepare derivative works,
+  !     distribute copies to the public, perform publicly and display publicly, and to
+  !     permit others to do so.
+  !
+  !     TRADEMARKS: EnergyPlus is a trademark of the US Department of Energy.
+  !
 
 END MODULE DataZoneControls
-

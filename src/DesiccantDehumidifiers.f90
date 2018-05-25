@@ -44,8 +44,8 @@ MODULE DesiccantDehumidifiers
   USE DataLoopNode
   USE DataEnvironment, ONLY: OutBaroPress,StdRhoAir
   USE DataHVACGlobals, ONLY: SmallMassFlow, OnOffFanPartLoadFraction, ContFanCycCoil, &
-                             BlowThru, DrawThru, Coil_HeatingWater, Coil_HeatingSteam, &
-                             Coil_HeatingGas, Coil_HeatingElectric
+  BlowThru, DrawThru, Coil_HeatingWater, Coil_HeatingSteam, &
+  Coil_HeatingGas, Coil_HeatingElectric
   USE DataHeatBalance, ONLY: HeatReclaimDXCoil
   USE DataInterfaces
   ! Use statements for access to subroutines in other modules
@@ -79,7 +79,7 @@ MODULE DesiccantDehumidifiers
 
   ! DERIVED TYPE DEFINITIONS
   TYPE DesiccantDehumidifierData
-  ! User Input data
+    ! User Input data
     CHARACTER(len=MaxNameLength) :: Name             =' '  ! unique name of component
     CHARACTER(len=MaxNameLength) :: Sched            =' '  ! name of availability schedule
     CHARACTER(len=MaxNameLength) :: RegenCoilType    =' '  ! type of regen coil
@@ -90,7 +90,7 @@ MODULE DesiccantDehumidifiers
     INTEGER                      :: ProcAirInNode    =0    ! process air inlet node of dehumidifier
     INTEGER                      :: ProcAirOutNode   =0    ! process air outlet node of dehumidifier
     INTEGER                      :: RegenAirInNode   =0    ! regen air inlet node of dehumidifier
-                                                           ! (initially set to conditions entering regen heating coil)
+    ! (initially set to conditions entering regen heating coil)
     INTEGER                      :: RegenAirOutNode  =0    ! regen air outlet node of dehumidifier
     INTEGER                      :: RegenFanInNode   =0    ! regen fan inlet node
     INTEGER                      :: ControlType      =0    ! type of controls
@@ -110,13 +110,13 @@ MODULE DesiccantDehumidifiers
     INTEGER                      :: RegenVelCurvefV    =0  ! number of regen velocity f(v) curve
     REAL(r64)                    :: NomRegenTemp  = 121.0  ! nominal regen temperature for regen energy curve [C]
 
-  ! Possible future inputs, hardwired for now depending on which performance model is in use, unit off if out of bounds
+    ! Possible future inputs, hardwired for now depending on which performance model is in use, unit off if out of bounds
     REAL(r64)            :: MinProcAirInTemp   = -73.3   ! min allowable process inlet air temperature [C]
     REAL(r64)            :: MaxProcAirInTemp   = 65.6    ! max allowable process inlet air temperature [C]
     REAL(r64)            :: MinProcAirInHumRat = 0.0     ! min allowable process inlet air humidity ratio [kg water / kg air]
     REAL(r64)            :: MaxProcAirInHumRat = 0.21273 ! max allowable process inlet air humidity ratio [kg water / kg air]
 
-  ! Internal Data
+    ! Internal Data
     INTEGER              :: SchedPtr              =0   ! index of availability schedule
     REAL(r64)            :: NomProcAirMassFlow    =0.0 ! nominal process air mass flow rate [kg/s]
     REAL(r64)            :: NomRegenAirMassFlow   =0.0 ! nominal regeneration air mass flow rate [kg/s]
@@ -154,7 +154,7 @@ MODULE DesiccantDehumidifiers
     INTEGER                      :: RegenFanErrorIndex3 =0  ! recurring error message index for incorrect regen fan flow
     INTEGER                      :: RegenFanErrorIndex4 =0  ! recurring error message index for incorrect regen fan flow
 
-! structure elements unique to generic desiccant dehumidifier
+    ! structure elements unique to generic desiccant dehumidifier
     CHARACTER(len=MaxNameLength) :: HXType              =' '  ! type of desiccant heat exchanger
     CHARACTER(len=MaxNameLength) :: HXName              =' '  ! name of desiccant heat exchanger
     INTEGER                      :: HXTypeNum           = 0   ! parameter number of desiccant heat exchanger
@@ -226,83 +226,83 @@ MODULE DesiccantDehumidifiers
 
 CONTAINS
 
-SUBROUTINE SimDesiccantDehumidifier(CompName,FirstHVACIteration,CompIndex)
+  SUBROUTINE SimDesiccantDehumidifier(CompName,FirstHVACIteration,CompIndex)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Michael J. Witte, GARD Analytics, Inc.
-          !                      for Gas Research Institute
-          !       DATE WRITTEN   March 2001
-          !       MODIFIED       June 2007, R. Raustad, Added new dehumidifier type -- DESICCANT DEHUMIDIFIER
-          !       RE-ENGINEERED  na
+    ! SUBROUTINE INFORMATION:
+    !       AUTHOR         Michael J. Witte, GARD Analytics, Inc.
+    !                      for Gas Research Institute
+    !       DATE WRITTEN   March 2001
+    !       MODIFIED       June 2007, R. Raustad, Added new dehumidifier type -- DESICCANT DEHUMIDIFIER
+    !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Manage the simulation of an air dehumidifier
+    ! PURPOSE OF THIS SUBROUTINE:
+    ! Manage the simulation of an air dehumidifier
 
-          ! METHODOLOGY EMPLOYED:
-          ! NA
+    ! METHODOLOGY EMPLOYED:
+    ! NA
 
-          ! REFERENCES:
-          ! NA
+    ! REFERENCES:
+    ! NA
 
-          ! USE STATEMENTS:
-  USE InputProcessor, ONLY: FindItemInList
+    ! USE STATEMENTS:
+    USE InputProcessor, ONLY: FindItemInList
 
-  IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
+    IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-  CHARACTER(len=*), INTENT (IN)  :: CompName            ! name of the dehumidifier unit
-  LOGICAL,          INTENT (IN)  :: FirstHVACIteration  ! TRUE if 1st HVAC simulation of system timestep
-  INTEGER,          INTENT(INOUT):: CompIndex
+    ! SUBROUTINE ARGUMENT DEFINITIONS:
+    CHARACTER(len=*), INTENT (IN)  :: CompName            ! name of the dehumidifier unit
+    LOGICAL,          INTENT (IN)  :: FirstHVACIteration  ! TRUE if 1st HVAC simulation of system timestep
+    INTEGER,          INTENT(INOUT):: CompIndex
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+    ! SUBROUTINE PARAMETER DEFINITIONS:
+    ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+    ! INTERFACE BLOCK SPECIFICATIONS
+    ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+    ! DERIVED TYPE DEFINITIONS
+    ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-  INTEGER      :: DesicDehumNum             ! index of solid desiccant unit being simulated
-  LOGICAL,SAVE :: GetInputFlag = .true.     ! First time, input is "gotten"
-  REAL(r64)    :: HumRatNeeded              ! process air leaving humidity ratio set by controller [kg water/kg air]
+    ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+    INTEGER      :: DesicDehumNum             ! index of solid desiccant unit being simulated
+    LOGICAL,SAVE :: GetInputFlag = .true.     ! First time, input is "gotten"
+    REAL(r64)    :: HumRatNeeded              ! process air leaving humidity ratio set by controller [kg water/kg air]
 
 
-  IF (GetInputFlag) THEN
-    CALL GetDesiccantDehumidifierInput
-    GetInputFlag=.false.
-  ENDIF
-
-  ! Get the desiccant dehumidifier unit index
-  IF (CompIndex == 0) THEN
-    DesicDehumNum = FindItemInList(CompName,DesicDehum%Name,NumDesicDehums)
-    IF (DesicDehumNum == 0) THEN
-      CALL ShowFatalError('SimDesiccantDehumidifier: Unit not found='//TRIM(CompName))
+    IF (GetInputFlag) THEN
+      CALL GetDesiccantDehumidifierInput
+      GetInputFlag=.false.
     ENDIF
-    CompIndex=DesicDehumNum
-  ELSE
-    DesicDehumNum=CompIndex
-    IF (DesicDehumNum > NumDesicDehums .or. DesicDehumNum < 1) THEN
-      CALL ShowFatalError('SimDesiccantDehumidifier:  Invalid CompIndex passed='//  &
-                          TRIM(TrimSigDigits(DesicDehumNum))// &
-                          ', Number of Units='//TRIM(TrimSigDigits(NumDesicDehums))//  &
-                          ', Entered Unit name='//TRIM(CompName))
+
+    ! Get the desiccant dehumidifier unit index
+    IF (CompIndex == 0) THEN
+      DesicDehumNum = FindItemInList(CompName,DesicDehum%Name,NumDesicDehums)
+      IF (DesicDehumNum == 0) THEN
+        CALL ShowFatalError('SimDesiccantDehumidifier: Unit not found='//TRIM(CompName))
+      ENDIF
+      CompIndex=DesicDehumNum
+    ELSE
+      DesicDehumNum=CompIndex
+      IF (DesicDehumNum > NumDesicDehums .or. DesicDehumNum < 1) THEN
+        CALL ShowFatalError('SimDesiccantDehumidifier:  Invalid CompIndex passed='//  &
+        TRIM(TrimSigDigits(DesicDehumNum))// &
+        ', Number of Units='//TRIM(TrimSigDigits(NumDesicDehums))//  &
+        ', Entered Unit name='//TRIM(CompName))
+      ENDIF
+      IF (CompName /= DesicDehum(DesicDehumNum)%Name) THEN
+        CALL ShowFatalError('SimDesiccantDehumidifier: Invalid CompIndex passed='//  &
+        TRIM(TrimSigDigits(DesicDehumNum))// &
+        ', Unit name='//TRIM(CompName)//', stored Unit Name for that index='//  &
+        TRIM(DesicDehum(DesicDehumNum)%Name))
+      ENDIF
     ENDIF
-    IF (CompName /= DesicDehum(DesicDehumNum)%Name) THEN
-      CALL ShowFatalError('SimDesiccantDehumidifier: Invalid CompIndex passed='//  &
-                          TRIM(TrimSigDigits(DesicDehumNum))// &
-                          ', Unit name='//TRIM(CompName)//', stored Unit Name for that index='//  &
-                          TRIM(DesicDehum(DesicDehumNum)%Name))
-    ENDIF
-  ENDIF
 
-  CALL InitDesiccantDehumidifier(DesicDehumNum,FirstHVACIteration)
+    CALL InitDesiccantDehumidifier(DesicDehumNum,FirstHVACIteration)
 
-  CALL ControlDesiccantDehumidifier(DesicDehumNum,HumRatNeeded,FirstHVACIteration)
+    CALL ControlDesiccantDehumidifier(DesicDehumNum,HumRatNeeded,FirstHVACIteration)
 
-  ! call the correct dehumidifier calculation routine
-  SELECT CASE(DesicDehum(DesicDehumNum)%DehumTypeCode)
+    ! call the correct dehumidifier calculation routine
+    SELECT CASE(DesicDehum(DesicDehumNum)%DehumTypeCode)
 
     CASE (Solid)
 
@@ -315,343 +315,343 @@ SUBROUTINE SimDesiccantDehumidifier(CompName,FirstHVACIteration,CompIndex)
     CASE DEFAULT
       CALL ShowFatalError('Invalid type, Desiccant Dehumidifer='//TRIM(DesicDehum(DesicDehumNum)%DehumType))
 
-  END SELECT
+    END SELECT
 
-  CALL UpdateDesiccantDehumidifier(DesicDehumNum)
+    CALL UpdateDesiccantDehumidifier(DesicDehumNum)
 
-  CALL ReportDesiccantDehumidifier(DesicDehumNum)
+    CALL ReportDesiccantDehumidifier(DesicDehumNum)
 
-  RETURN
+    RETURN
 
-END SUBROUTINE SimDesiccantDehumidifier
+  END SUBROUTINE SimDesiccantDehumidifier
 
-SUBROUTINE GetDesiccantDehumidifierInput
+  SUBROUTINE GetDesiccantDehumidifierInput
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Michael J. Witte, GARD Analytics, Inc.
-          !                      for Gas Research Institute
-          !       DATE WRITTEN   March 2001
-          !       MODIFIED       Jan 2005 M. J. Witte, GARD Analytics, Inc.
-          !                        Add new control type option:
-          !                          NODE LEAVING HUMRAT SETPOINT:BYPASS
-          !                        Change existing control type to:
-          !                          FIXED LEAVING HUMRAT SETPOINT:BYPASS
-          !                        Work supported by ASHRAE research project 1254-RP
-          !                      June 2007 R. Raustad, FSEC
-          !                        Added new dehumidifier type -- DESICCANT DEHUMIDIFIER
-          !       RE-ENGINEERED  na
+    ! SUBROUTINE INFORMATION:
+    !       AUTHOR         Michael J. Witte, GARD Analytics, Inc.
+    !                      for Gas Research Institute
+    !       DATE WRITTEN   March 2001
+    !       MODIFIED       Jan 2005 M. J. Witte, GARD Analytics, Inc.
+    !                        Add new control type option:
+    !                          NODE LEAVING HUMRAT SETPOINT:BYPASS
+    !                        Change existing control type to:
+    !                          FIXED LEAVING HUMRAT SETPOINT:BYPASS
+    !                        Work supported by ASHRAE research project 1254-RP
+    !                      June 2007 R. Raustad, FSEC
+    !                        Added new dehumidifier type -- DESICCANT DEHUMIDIFIER
+    !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Obtains input data for humidifiers and stores it in dehumidifier data structures.
+    ! PURPOSE OF THIS SUBROUTINE:
+    ! Obtains input data for humidifiers and stores it in dehumidifier data structures.
 
-          ! METHODOLOGY EMPLOYED:
-          ! Uses InputProcessor "Get" routines to obtain data.
+    ! METHODOLOGY EMPLOYED:
+    ! Uses InputProcessor "Get" routines to obtain data.
 
-          ! REFERENCES:
-          ! na
+    ! REFERENCES:
+    ! na
 
-          ! USE STATEMENTS:
-  USE InputProcessor,    ONLY: GetNumObjectsFound, GetObjectItem, VerifyName, SameString, GetObjectDefMaxArgs
-  USE NodeInputManager,  ONLY: GetOnlySingleNode
-  USE BranchNodeConnections, ONLY: SetUpCompSets, TestCompSet
-  USE DXCoils,           ONLY: GetDXCoilOutletNode=>GetCoilOutletNode,GetCoilCondenserInletNode, GetDXCoilBypassedFlowFrac, &
-                               GetDXCoilIndex, GetDXCoilCapacity=>GetCoilCapacity
-  USE HeatRecovery,      ONLY: GetSupplyOutletNode, GetSupplyInletNode, &
-                               GetSecondaryInletNode, GetSecondaryOutletNode
-  USE HeatingCoils,      ONLY: GetHeatingCoilInletNode=>GetCoilInletNode, GetHeatingCoilOutletNode=>GetCoilOutletNode, &
-                               GetHeatReclaimSourceIndexNum=>GetHeatReclaimSourceIndex, GetHeatingCoilIndex=>GetCoilIndex, &
-                               GetHeatingCoilControlNodeNum=>GetCoilControlNodeNum
-  USE WaterCoils,        ONLY: GetCoilWaterInletNode, GetCoilMaxWaterFlowRate, GetWaterCoilIndex, &
-                               GetWaterCoilInletNode=>GetCoilInletNode,GetWaterCoilOutletNode=>GetCoilOutletNode
-  USE SteamCoils,        ONLY: GetSteamCoilAirInletNode=>GetCoilAirInletNode, GetSteamCoilIndex, &
-                               GetSteamCoilAirOutletNode=>GetCoilAirOutletNode, &
-                               GetSteamCoilSteamInletNode=>GetCoilSteamInletNode, &
-                               GetCoilMaxSteamFlowRate=>GetCoilMaxSteamFlowRate, GetTypeOfCoil, ZoneLoadControl, &
-                               GetSteamCoilControlNodeNum
-  USE OutAirNodeManager, ONLY: CheckOutAirNodeNumber, CheckAndAddAirNodeNumber
-  USE DataIPShortCuts
+    ! USE STATEMENTS:
+    USE InputProcessor,    ONLY: GetNumObjectsFound, GetObjectItem, VerifyName, SameString, GetObjectDefMaxArgs
+    USE NodeInputManager,  ONLY: GetOnlySingleNode
+    USE BranchNodeConnections, ONLY: SetUpCompSets, TestCompSet
+    USE DXCoils,           ONLY: GetDXCoilOutletNode=>GetCoilOutletNode,GetCoilCondenserInletNode, GetDXCoilBypassedFlowFrac, &
+    GetDXCoilIndex, GetDXCoilCapacity=>GetCoilCapacity
+    USE HeatRecovery,      ONLY: GetSupplyOutletNode, GetSupplyInletNode, &
+    GetSecondaryInletNode, GetSecondaryOutletNode
+    USE HeatingCoils,      ONLY: GetHeatingCoilInletNode=>GetCoilInletNode, GetHeatingCoilOutletNode=>GetCoilOutletNode, &
+    GetHeatReclaimSourceIndexNum=>GetHeatReclaimSourceIndex, GetHeatingCoilIndex=>GetCoilIndex, &
+    GetHeatingCoilControlNodeNum=>GetCoilControlNodeNum
+    USE WaterCoils,        ONLY: GetCoilWaterInletNode, GetCoilMaxWaterFlowRate, GetWaterCoilIndex, &
+    GetWaterCoilInletNode=>GetCoilInletNode,GetWaterCoilOutletNode=>GetCoilOutletNode
+    USE SteamCoils,        ONLY: GetSteamCoilAirInletNode=>GetCoilAirInletNode, GetSteamCoilIndex, &
+    GetSteamCoilAirOutletNode=>GetCoilAirOutletNode, &
+    GetSteamCoilSteamInletNode=>GetCoilSteamInletNode, &
+    GetCoilMaxSteamFlowRate=>GetCoilMaxSteamFlowRate, GetTypeOfCoil, ZoneLoadControl, &
+    GetSteamCoilControlNodeNum
+    USE OutAirNodeManager, ONLY: CheckOutAirNodeNumber, CheckAndAddAirNodeNumber
+    USE DataIPShortCuts
 
-  IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
+    IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-          ! na
+    ! SUBROUTINE ARGUMENT DEFINITIONS:
+    ! na
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-  CHARACTER (len=*), PARAMETER   :: RoutineName='GetDesiccantDehumidifierInput: ' ! include trailing blank space
+    ! SUBROUTINE PARAMETER DEFINITIONS:
+    CHARACTER (len=*), PARAMETER   :: RoutineName='GetDesiccantDehumidifierInput: ' ! include trailing blank space
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+    ! INTERFACE BLOCK SPECIFICATIONS
+    ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+    ! DERIVED TYPE DEFINITIONS
+    ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-  INTEGER                        :: DesicDehumIndex         ! Loop index
-  INTEGER                        :: DesicDehumNum           ! Current desiccant dehumidifier number
-  INTEGER                        :: NumAlphas               ! Number of Alphas for each GetObjectItem call
-  INTEGER                        :: NumNumbers              ! Number of Numbers for each GetObjectItem call
-  INTEGER                        :: IOStatus                ! Used in GetObjectItem
-  LOGICAL                        :: ErrorsFound=.false.     ! Set to true if errors in input, fatal at end of routine
-  LOGICAL                        :: ErrorsFound2=.false.    ! Set to true if errors in input, fatal at end of routine
-  LOGICAL                        :: ErrorsFoundGeneric=.false. ! Set to true if errors in input, fatal at end of routine
-  LOGICAL                        :: IsNotOK                 ! Flag to verify name
-  LOGICAL                        :: IsBlank                 ! Flag for blank name
-  LOGICAL                        :: OANodeError             ! Flag for check on outside air node
-  CHARACTER (len=MaxNameLength)  :: RegenFanInlet           ! Desiccant system regeneration air fan inlet node
-  CHARACTER (len=MaxNameLength)  :: RegenFanOutlet          ! Desiccant system regeneration air fan outlet node
-  CHARACTER (len=MaxNameLength)  :: RegenCoilInlet          ! Desiccant system regeneration air heater inlet node
-  CHARACTER (len=MaxNameLength)  :: RegenCoilOutlet         ! Desiccant system regeneration air heater outlet node
-  CHARACTER (len=MaxNameLength)  :: ProcAirInlet            ! HX process air inlet node
-  CHARACTER (len=MaxNameLength)  :: ProcAirOutlet           ! HX process air outlet node
-  CHARACTER (len=MaxNameLength)  :: RegenAirInlet           ! HX regeneration air inlet node
-  CHARACTER (len=MaxNameLength)  :: RegenAirOutlet          ! HX regeneration air outlet node
-  CHARACTER (len=MaxNameLength)  :: CurrentModuleObject     ! for ease in getting objects
-  INTEGER                        :: DesuperHeaterIndex      ! Index of desuperheater heating coil
-  INTEGER                        :: RegenCoilControlNodeNum ! Control node number of regen heating coil
-  REAL(r64)                      :: CoilBypassedFlowFrac    ! Bypass air fraction for multimode DX coils
-  CHARACTER(len=MaxNameLength), ALLOCATABLE, DIMENSION(:) :: Alphas         ! Alpha input items for object
-  CHARACTER(len=MaxNameLength), ALLOCATABLE, DIMENSION(:) :: cAlphaFields   ! Alpha field names
-  CHARACTER(len=MaxNameLength), ALLOCATABLE, DIMENSION(:) :: cNumericFields ! Numeric field names
-  REAL(r64), ALLOCATABLE, DIMENSION(:) :: Numbers           ! Numeric input items for object
-  LOGICAL, ALLOCATABLE, DIMENSION(:)   :: lAlphaBlanks      ! Logical array, alpha field input BLANK = .true.
-  LOGICAL, ALLOCATABLE, DIMENSION(:)   :: lNumericBlanks    ! Logical array, numeric field input BLANK = .true.
-  INTEGER                        :: MaxNums=0               ! Maximum number of numeric input fields
-  INTEGER                        :: MaxAlphas=0             ! Maximum number of alpha input fields
-  INTEGER                        :: TotalArgs=0             ! Total number of alpha and numeric arguments (max) for a
-                                                            !  certain object in the input file
-  INTEGER                        :: RegenCoilAirInletNode   ! regen heating coil air inlet node number
-  INTEGER                        :: RegenCoilAirOutletNode  ! regen heating coil air outlet node number
-  LOGICAL                        :: ErrFlag                 ! local error flag
-  CHARACTER(len=MaxNameLength)   :: RegenCoilType           ! Regen heating coil type
-  CHARACTER(len=MaxNameLength)   :: RegenCoilName           ! Regen heating coil name
-  REAL(r64)                      :: SteamDensity  = 0.0     ! density of steam at 100C
-  INTEGER                        :: SteamIndex              ! steam coil Index
+    ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+    INTEGER                        :: DesicDehumIndex         ! Loop index
+    INTEGER                        :: DesicDehumNum           ! Current desiccant dehumidifier number
+    INTEGER                        :: NumAlphas               ! Number of Alphas for each GetObjectItem call
+    INTEGER                        :: NumNumbers              ! Number of Numbers for each GetObjectItem call
+    INTEGER                        :: IOStatus                ! Used in GetObjectItem
+    LOGICAL                        :: ErrorsFound=.false.     ! Set to true if errors in input, fatal at end of routine
+    LOGICAL                        :: ErrorsFound2=.false.    ! Set to true if errors in input, fatal at end of routine
+    LOGICAL                        :: ErrorsFoundGeneric=.false. ! Set to true if errors in input, fatal at end of routine
+    LOGICAL                        :: IsNotOK                 ! Flag to verify name
+    LOGICAL                        :: IsBlank                 ! Flag for blank name
+    LOGICAL                        :: OANodeError             ! Flag for check on outside air node
+    CHARACTER (len=MaxNameLength)  :: RegenFanInlet           ! Desiccant system regeneration air fan inlet node
+    CHARACTER (len=MaxNameLength)  :: RegenFanOutlet          ! Desiccant system regeneration air fan outlet node
+    CHARACTER (len=MaxNameLength)  :: RegenCoilInlet          ! Desiccant system regeneration air heater inlet node
+    CHARACTER (len=MaxNameLength)  :: RegenCoilOutlet         ! Desiccant system regeneration air heater outlet node
+    CHARACTER (len=MaxNameLength)  :: ProcAirInlet            ! HX process air inlet node
+    CHARACTER (len=MaxNameLength)  :: ProcAirOutlet           ! HX process air outlet node
+    CHARACTER (len=MaxNameLength)  :: RegenAirInlet           ! HX regeneration air inlet node
+    CHARACTER (len=MaxNameLength)  :: RegenAirOutlet          ! HX regeneration air outlet node
+    CHARACTER (len=MaxNameLength)  :: CurrentModuleObject     ! for ease in getting objects
+    INTEGER                        :: DesuperHeaterIndex      ! Index of desuperheater heating coil
+    INTEGER                        :: RegenCoilControlNodeNum ! Control node number of regen heating coil
+    REAL(r64)                      :: CoilBypassedFlowFrac    ! Bypass air fraction for multimode DX coils
+    CHARACTER(len=MaxNameLength), ALLOCATABLE, DIMENSION(:) :: Alphas         ! Alpha input items for object
+    CHARACTER(len=MaxNameLength), ALLOCATABLE, DIMENSION(:) :: cAlphaFields   ! Alpha field names
+    CHARACTER(len=MaxNameLength), ALLOCATABLE, DIMENSION(:) :: cNumericFields ! Numeric field names
+    REAL(r64), ALLOCATABLE, DIMENSION(:) :: Numbers           ! Numeric input items for object
+    LOGICAL, ALLOCATABLE, DIMENSION(:)   :: lAlphaBlanks      ! Logical array, alpha field input BLANK = .true.
+    LOGICAL, ALLOCATABLE, DIMENSION(:)   :: lNumericBlanks    ! Logical array, numeric field input BLANK = .true.
+    INTEGER                        :: MaxNums=0               ! Maximum number of numeric input fields
+    INTEGER                        :: MaxAlphas=0             ! Maximum number of alpha input fields
+    INTEGER                        :: TotalArgs=0             ! Total number of alpha and numeric arguments (max) for a
+    !  certain object in the input file
+    INTEGER                        :: RegenCoilAirInletNode   ! regen heating coil air inlet node number
+    INTEGER                        :: RegenCoilAirOutletNode  ! regen heating coil air outlet node number
+    LOGICAL                        :: ErrFlag                 ! local error flag
+    CHARACTER(len=MaxNameLength)   :: RegenCoilType           ! Regen heating coil type
+    CHARACTER(len=MaxNameLength)   :: RegenCoilName           ! Regen heating coil name
+    REAL(r64)                      :: SteamDensity  = 0.0     ! density of steam at 100C
+    INTEGER                        :: SteamIndex              ! steam coil Index
 
-  NumSolidDesicDehums = GetNumObjectsFound('Dehumidifier:Desiccant:NoFans')
-  NumGenericDesicDehums = GetNumObjectsFound('Dehumidifier:Desiccant:System')
-  NumDesicDehums = NumSolidDesicDehums + NumGenericDesicDehums
-  ! allocate the data array
-  ALLOCATE(DesicDehum(NumDesicDehums))
+    NumSolidDesicDehums = GetNumObjectsFound('Dehumidifier:Desiccant:NoFans')
+    NumGenericDesicDehums = GetNumObjectsFound('Dehumidifier:Desiccant:System')
+    NumDesicDehums = NumSolidDesicDehums + NumGenericDesicDehums
+    ! allocate the data array
+    ALLOCATE(DesicDehum(NumDesicDehums))
 
-  CALL GetObjectDefMaxArgs('Dehumidifier:Desiccant:NoFans',TotalArgs,NumAlphas,NumNumbers)
-  MaxNums=MAX(MaxNums,NumNumbers)
-  MaxAlphas=MAX(MaxAlphas,NumAlphas)
-  CALL GetObjectDefMaxArgs('Dehumidifier:Desiccant:System',TotalArgs,NumAlphas,NumNumbers)
-  MaxNums=MAX(MaxNums,NumNumbers)
-  MaxAlphas=MAX(MaxAlphas,NumAlphas)
+    CALL GetObjectDefMaxArgs('Dehumidifier:Desiccant:NoFans',TotalArgs,NumAlphas,NumNumbers)
+    MaxNums=MAX(MaxNums,NumNumbers)
+    MaxAlphas=MAX(MaxAlphas,NumAlphas)
+    CALL GetObjectDefMaxArgs('Dehumidifier:Desiccant:System',TotalArgs,NumAlphas,NumNumbers)
+    MaxNums=MAX(MaxNums,NumNumbers)
+    MaxAlphas=MAX(MaxAlphas,NumAlphas)
 
-  ALLOCATE(Alphas(MaxAlphas))
-  Alphas=' '
-  ALLOCATE(cAlphaFields(MaxAlphas))
-  cAlphaFields=' '
-  ALLOCATE(cNumericFields(MaxNums))
-  cNumericFields=' '
-  ALLOCATE(Numbers(MaxNums))
-  Numbers=0.0
-  ALLOCATE(lAlphaBlanks(MaxAlphas))
-  lAlphaBlanks=.true.
-  ALLOCATE(lNumericBlanks(MaxNums))
-  lNumericBlanks=.true.
+    ALLOCATE(Alphas(MaxAlphas))
+    Alphas=' '
+    ALLOCATE(cAlphaFields(MaxAlphas))
+    cAlphaFields=' '
+    ALLOCATE(cNumericFields(MaxNums))
+    cNumericFields=' '
+    ALLOCATE(Numbers(MaxNums))
+    Numbers=0.0
+    ALLOCATE(lAlphaBlanks(MaxAlphas))
+    lAlphaBlanks=.true.
+    ALLOCATE(lNumericBlanks(MaxNums))
+    lNumericBlanks=.true.
 
-  ! loop over solid desiccant dehumidifiers and load the input data
-  CurrentModuleObject = 'Dehumidifier:Desiccant:NoFans'
-  DO DesicDehumIndex = 1,NumSolidDesicDehums
-    RegenCoilAirInletNode = 0
-    RegenCoilAirOutletNode = 0
-    CALL GetObjectItem(TRIM(CurrentModuleObject),DesicDehumIndex,Alphas,NumAlphas,Numbers,NumNumbers,IOStatus, &
-                       NumBlank=lNumericBlanks,AlphaBlank=lAlphaBlanks, &
-                       AlphaFieldNames=cAlphaFields,NumericFieldNames=cNumericFields)
+    ! loop over solid desiccant dehumidifiers and load the input data
+    CurrentModuleObject = 'Dehumidifier:Desiccant:NoFans'
+    DO DesicDehumIndex = 1,NumSolidDesicDehums
+      RegenCoilAirInletNode = 0
+      RegenCoilAirOutletNode = 0
+      CALL GetObjectItem(TRIM(CurrentModuleObject),DesicDehumIndex,Alphas,NumAlphas,Numbers,NumNumbers,IOStatus, &
+      NumBlank=lNumericBlanks,AlphaBlank=lAlphaBlanks, &
+      AlphaFieldNames=cAlphaFields,NumericFieldNames=cNumericFields)
 
-    DesicDehumNum = DesicDehumIndex
-    IsNotOK=.FALSE.
-    IsBlank=.FALSE.
-    CALL VerifyName(Alphas(1),DesicDehum%Name,DesicDehumNum-1,IsNotOK,IsBlank,TRIM(CurrentModuleObject)//' Name')
-    IF (IsNotOK) THEN
-      ErrorsFound=.true.
-      IF (IsBlank) Alphas(1)='xxxxx'
-    ENDIF
-    DesicDehum(DesicDehumNum)%Name = Alphas(1)
-    DesicDehum(DesicDehumNum)%DehumType = TRIM(CurrentModuleObject)
-    DesicDehum(DesicDehumNum)%DehumTypeCode = Solid
-    DesicDehum(DesicDehumNum)%Sched = Alphas(2)
-    DesicDehum(DesicDehumNum)%SchedPtr = GetScheduleIndex(Alphas(2))  ! convert schedule name to pointer
+      DesicDehumNum = DesicDehumIndex
+      IsNotOK=.FALSE.
+      IsBlank=.FALSE.
+      CALL VerifyName(Alphas(1),DesicDehum%Name,DesicDehumNum-1,IsNotOK,IsBlank,TRIM(CurrentModuleObject)//' Name')
+      IF (IsNotOK) THEN
+        ErrorsFound=.true.
+        IF (IsBlank) Alphas(1)='xxxxx'
+      ENDIF
+      DesicDehum(DesicDehumNum)%Name = Alphas(1)
+      DesicDehum(DesicDehumNum)%DehumType = TRIM(CurrentModuleObject)
+      DesicDehum(DesicDehumNum)%DehumTypeCode = Solid
+      DesicDehum(DesicDehumNum)%Sched = Alphas(2)
+      DesicDehum(DesicDehumNum)%SchedPtr = GetScheduleIndex(Alphas(2))  ! convert schedule name to pointer
 
-    IF (DesicDehum(DesicDehumNum)%SchedPtr .EQ. 0) THEN
-      IF (lAlphaBlanks(2)) THEN
-        CALL ShowSevereError(RoutineName//TRIM(CurrentModuleObject)//': '//TRIM(cAlphaFields(2))//  &
-                             ' is required, missing for '//TRIM(cAlphaFields(1))//'='//TRIM(Alphas(1)))
-      ELSE
-        CALL ShowSevereError(RoutineName//TRIM(CurrentModuleObject)//': invalid '//TRIM(cAlphaFields(2))//  &
-                             ' entered ='//TRIM(Alphas(2))// &
-                             ' for '//TRIM(cAlphaFields(1))//'='//TRIM(Alphas(1)))
+      IF (DesicDehum(DesicDehumNum)%SchedPtr .EQ. 0) THEN
+        IF (lAlphaBlanks(2)) THEN
+          CALL ShowSevereError(RoutineName//TRIM(CurrentModuleObject)//': '//TRIM(cAlphaFields(2))//  &
+          ' is required, missing for '//TRIM(cAlphaFields(1))//'='//TRIM(Alphas(1)))
+        ELSE
+          CALL ShowSevereError(RoutineName//TRIM(CurrentModuleObject)//': invalid '//TRIM(cAlphaFields(2))//  &
+          ' entered ='//TRIM(Alphas(2))// &
+          ' for '//TRIM(cAlphaFields(1))//'='//TRIM(Alphas(1)))
+        END IF
+        ErrorsFound=.true.
       END IF
-      ErrorsFound=.true.
-    END IF
-          ! For node connections, this object is both a parent and a non-parent, because the
-          ! Desiccant wheel is not called out as a separate component, its nodes must be connected
-          ! as ObjectIsNotParent.  But for the Regen fan, the nodes are connected as ObjectIsParent
-    DesicDehum(DesicDehumNum)%ProcAirInNode = &
-               GetOnlySingleNode(Alphas(3),ErrorsFound,TRIM(CurrentModuleObject),Alphas(1), &
-               NodeType_Air,NodeConnectionType_Inlet,1,ObjectIsNotParent)
+      ! For node connections, this object is both a parent and a non-parent, because the
+      ! Desiccant wheel is not called out as a separate component, its nodes must be connected
+      ! as ObjectIsNotParent.  But for the Regen fan, the nodes are connected as ObjectIsParent
+      DesicDehum(DesicDehumNum)%ProcAirInNode = &
+      GetOnlySingleNode(Alphas(3),ErrorsFound,TRIM(CurrentModuleObject),Alphas(1), &
+      NodeType_Air,NodeConnectionType_Inlet,1,ObjectIsNotParent)
 
-    DesicDehum(DesicDehumNum)%ProcAirOutNode = &
-               GetOnlySingleNode(Alphas(4),ErrorsFound,TRIM(CurrentModuleObject),Alphas(1), &
-               NodeType_Air,NodeConnectionType_Outlet,1,ObjectIsNotParent)
+      DesicDehum(DesicDehumNum)%ProcAirOutNode = &
+      GetOnlySingleNode(Alphas(4),ErrorsFound,TRIM(CurrentModuleObject),Alphas(1), &
+      NodeType_Air,NodeConnectionType_Outlet,1,ObjectIsNotParent)
 
-    DesicDehum(DesicDehumNum)%RegenAirInNode = &
-               GetOnlySingleNode(Alphas(5),ErrorsFound,TRIM(CurrentModuleObject),Alphas(1), &
-               NodeType_Air,NodeConnectionType_Inlet,2,ObjectIsNotParent)
+      DesicDehum(DesicDehumNum)%RegenAirInNode = &
+      GetOnlySingleNode(Alphas(5),ErrorsFound,TRIM(CurrentModuleObject),Alphas(1), &
+      NodeType_Air,NodeConnectionType_Inlet,2,ObjectIsNotParent)
 
-    DesicDehum(DesicDehumNum)%RegenFanInNode = &
-               GetOnlySingleNode(Alphas(6),ErrorsFound,TRIM(CurrentModuleObject),Alphas(1), &
-               NodeType_Air,NodeConnectionType_Internal,2,ObjectIsParent)
+      DesicDehum(DesicDehumNum)%RegenFanInNode = &
+      GetOnlySingleNode(Alphas(6),ErrorsFound,TRIM(CurrentModuleObject),Alphas(1), &
+      NodeType_Air,NodeConnectionType_Internal,2,ObjectIsParent)
 
-    IF (SameString(Alphas(7),'LEAVING HUMRAT:BYPASS')) THEN
-      CALL ShowWarningError(RoutineName//TRIM(CurrentModuleObject)//' = '//TRIM(DesicDehum(DesicDehumNum)%Name))
-      CALL ShowContinueError('Obsolete '//TRIM(cAlphaFields(7))//' = '//TRIM(Alphas(7)))
-      CALL ShowContinueError('setting to LeavingMaximumHumidityRatioSetpoint')
-      DesicDehum(DesicDehumNum)%ControlType      = FixedHumratBypass
-    END IF
-    IF (SameString(Alphas(7),'LeavingMaximumHumidityRatioSetpoint'))  &
-               DesicDehum(DesicDehumNum)%ControlType = FixedHumratBypass
-    IF (SameString(Alphas(7),'SystemNodeMaximumHumidityRatioSetpoint'))  &
-               DesicDehum(DesicDehumNum)%ControlType = NodeHumratBypass
-    IF (DesicDehum(DesicDehumNum)%ControlType == 0) THEN
-      CALL ShowWarningError(RoutineName//TRIM(CurrentModuleObject)//' = '//TRIM(DesicDehum(DesicDehumNum)%Name))
-      CALL ShowContinueError('Invalid '//TRIM(cAlphaFields(7))//' = '//TRIM(Alphas(7)))
-      CALL ShowContinueError('setting to LeavingMaximumHumidityRatioSetpoint')
-      DesicDehum(DesicDehumNum)%ControlType      = FixedHumratBypass
-    END IF
-    DesicDehum(DesicDehumNum)%HumRatSet          = Numbers(1)
-    DesicDehum(DesicDehumNum)%NomProcAirVolFlow  = Numbers(2)
-    DesicDehum(DesicDehumNum)%NomProcAirVel      = Numbers(3)
+      IF (SameString(Alphas(7),'LEAVING HUMRAT:BYPASS')) THEN
+        CALL ShowWarningError(RoutineName//TRIM(CurrentModuleObject)//' = '//TRIM(DesicDehum(DesicDehumNum)%Name))
+        CALL ShowContinueError('Obsolete '//TRIM(cAlphaFields(7))//' = '//TRIM(Alphas(7)))
+        CALL ShowContinueError('setting to LeavingMaximumHumidityRatioSetpoint')
+        DesicDehum(DesicDehumNum)%ControlType      = FixedHumratBypass
+      END IF
+      IF (SameString(Alphas(7),'LeavingMaximumHumidityRatioSetpoint'))  &
+      DesicDehum(DesicDehumNum)%ControlType = FixedHumratBypass
+      IF (SameString(Alphas(7),'SystemNodeMaximumHumidityRatioSetpoint'))  &
+      DesicDehum(DesicDehumNum)%ControlType = NodeHumratBypass
+      IF (DesicDehum(DesicDehumNum)%ControlType == 0) THEN
+        CALL ShowWarningError(RoutineName//TRIM(CurrentModuleObject)//' = '//TRIM(DesicDehum(DesicDehumNum)%Name))
+        CALL ShowContinueError('Invalid '//TRIM(cAlphaFields(7))//' = '//TRIM(Alphas(7)))
+        CALL ShowContinueError('setting to LeavingMaximumHumidityRatioSetpoint')
+        DesicDehum(DesicDehumNum)%ControlType      = FixedHumratBypass
+      END IF
+      DesicDehum(DesicDehumNum)%HumRatSet          = Numbers(1)
+      DesicDehum(DesicDehumNum)%NomProcAirVolFlow  = Numbers(2)
+      DesicDehum(DesicDehumNum)%NomProcAirVel      = Numbers(3)
 
-    DesicDehum(DesicDehumNum)%RegenCoilType      = Alphas(8)
-    DesicDehum(DesicDehumNum)%RegenCoilName      = Alphas(9)
-    RegenCoilType = Alphas(8)
-    RegenCoilName = Alphas(9)
+      DesicDehum(DesicDehumNum)%RegenCoilType      = Alphas(8)
+      DesicDehum(DesicDehumNum)%RegenCoilName      = Alphas(9)
+      RegenCoilType = Alphas(8)
+      RegenCoilName = Alphas(9)
 
-    IF (SameString(DesicDehum(DesicDehumNum)%RegenCoilType,'Coil:Heating:Electric') .OR. &
-        SameString(DesicDehum(DesicDehumNum)%RegenCoilType,'Coil:Heating:Gas')) THEN
+      IF (SameString(DesicDehum(DesicDehumNum)%RegenCoilType,'Coil:Heating:Electric') .OR. &
+      SameString(DesicDehum(DesicDehumNum)%RegenCoilType,'Coil:Heating:Gas')) THEN
       IF (SameString(DesicDehum(DesicDehumNum)%RegenCoilType,'Coil:Heating:Electric')) &
-                        DesicDehum(DesicDehumNum)%RegenCoilType_Num = Coil_HeatingElectric
+      DesicDehum(DesicDehumNum)%RegenCoilType_Num = Coil_HeatingElectric
       IF (SameString(DesicDehum(DesicDehumNum)%RegenCoilType,'Coil:Heating:Gas')) &
-                        DesicDehum(DesicDehumNum)%RegenCoilType_Num = Coil_HeatingGas
+      DesicDehum(DesicDehumNum)%RegenCoilType_Num = Coil_HeatingGas
       CALL ValidateComponent(DesicDehum(DesicDehumNum)%RegenCoilType,DesicDehum(DesicDehumNum)%RegenCoilName,  &
-                             ErrorsFound2,TRIM(CurrentModuleObject)//'='//TRIM(Alphas(1)))
+      ErrorsFound2,TRIM(CurrentModuleObject)//'='//TRIM(Alphas(1)))
       IF (ErrorsFound2) ErrorsFound = .TRUE.
       CALL GetHeatingCoilIndex(DesicDehum(DesicDehumNum)%RegenCoilName,DesicDehum(DesicDehumNum)%RegenCoilIndex,&
-                        ErrorsFound2)
+      ErrorsFound2)
       IF (ErrorsFound2) ErrorsFound = .TRUE.
 
     ELSEIF (SameString(DesicDehum(DesicDehumNum)%RegenCoilType,'Coil:Heating:Water')) THEN
       DesicDehum(DesicDehumNum)%RegenCoilType_Num = Coil_HeatingWater
       CALL ValidateComponent(RegenCoilType,RegenCoilName,IsNotOK,TRIM(CurrentModuleObject))
       IF (IsNotOK) THEN
-          CALL ShowContinueError('...occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(Alphas(1)))
-          ErrorsFound=.TRUE.
+        CALL ShowContinueError('...occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(Alphas(1)))
+        ErrorsFound=.TRUE.
       ELSE ! mine data from heating coil object
-          ErrFlag = .FALSE.
-          DesicDehum(DesicDehumNum)%RegenCoilIndex = GetWaterCoilIndex('COIL:HEATING:WATER',RegenCoilName,ErrFlag)
-          IF (DesicDehum(DesicDehumNum)%RegenCoilIndex .EQ. 0) THEN
-              CALL ShowSevereError(RoutineName//TRIM(CurrentModuleObject)//' illegal '//TRIM(cAlphaFields(9))//' = ' &
-                              //TRIM(RegenCoilName))
-              CALL ShowContinueError('Occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(DesicDehum(DesicDehumNum)%Name))
-              ErrorsFound = .TRUE.
-          END IF
+        ErrFlag = .FALSE.
+        DesicDehum(DesicDehumNum)%RegenCoilIndex = GetWaterCoilIndex('COIL:HEATING:WATER',RegenCoilName,ErrFlag)
+        IF (DesicDehum(DesicDehumNum)%RegenCoilIndex .EQ. 0) THEN
+          CALL ShowSevereError(RoutineName//TRIM(CurrentModuleObject)//' illegal '//TRIM(cAlphaFields(9))//' = ' &
+          //TRIM(RegenCoilName))
+          CALL ShowContinueError('Occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(DesicDehum(DesicDehumNum)%Name))
+          ErrorsFound = .TRUE.
+        END IF
 
-           ! Get the Heating Coil Hot water Inlet or control Node number
-          ErrFlag = .FALSE.
-          DesicDehum(DesicDehumNum)%CoilControlNode = GetCoilWaterInletNode('Coil:Heating:Water', &
-                                                         RegenCoilName,ErrFlag)
-          IF(ErrFlag)THEN
-              CALL ShowContinueError('Occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(DesicDehum(DesicDehumNum)%Name))
-              ErrorsFound = .TRUE.
-          END IF
+        ! Get the Heating Coil Hot water Inlet or control Node number
+        ErrFlag = .FALSE.
+        DesicDehum(DesicDehumNum)%CoilControlNode = GetCoilWaterInletNode('Coil:Heating:Water', &
+        RegenCoilName,ErrFlag)
+        IF(ErrFlag)THEN
+          CALL ShowContinueError('Occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(DesicDehum(DesicDehumNum)%Name))
+          ErrorsFound = .TRUE.
+        END IF
 
-          ! Get the Regeneration Heating Coil hot water max volume flow rate
-          ErrFlag = .FALSE.
-          DesicDehum(DesicDehumNum)%MaxCoilFluidFlow = GetCoilMaxWaterFlowRate('Coil:Heating:Water',  &
-                                                       RegenCoilName,ErrFlag)
-          IF(ErrFlag)THEN
-              CALL ShowContinueError('Occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(DesicDehum(DesicDehumNum)%Name))
-              ErrorsFound = .TRUE.
-          END IF
+        ! Get the Regeneration Heating Coil hot water max volume flow rate
+        ErrFlag = .FALSE.
+        DesicDehum(DesicDehumNum)%MaxCoilFluidFlow = GetCoilMaxWaterFlowRate('Coil:Heating:Water',  &
+        RegenCoilName,ErrFlag)
+        IF(ErrFlag)THEN
+          CALL ShowContinueError('Occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(DesicDehum(DesicDehumNum)%Name))
+          ErrorsFound = .TRUE.
+        END IF
 
-          ! Get the Regeneration Heating Coil Inlet Node
-          ErrFlag = .FALSE.
-          RegenCoilAirInletNode =  GetWaterCoilInletNode('Coil:Heating:Water',RegenCoilName,ErrFlag)
-          DesicDehum(DesicDehumNum)%RegenCoilInletNode = RegenCoilAirInletNode
-          IF(ErrFlag)THEN
-              CALL ShowContinueError('Occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(DesicDehum(DesicDehumNum)%Name))
-              ErrorsFound = .TRUE.
-          END IF
+        ! Get the Regeneration Heating Coil Inlet Node
+        ErrFlag = .FALSE.
+        RegenCoilAirInletNode =  GetWaterCoilInletNode('Coil:Heating:Water',RegenCoilName,ErrFlag)
+        DesicDehum(DesicDehumNum)%RegenCoilInletNode = RegenCoilAirInletNode
+        IF(ErrFlag)THEN
+          CALL ShowContinueError('Occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(DesicDehum(DesicDehumNum)%Name))
+          ErrorsFound = .TRUE.
+        END IF
 
-          ! Get the Regeneration Heating Coil Outlet Node
-          ErrFlag = .FALSE.
-          RegenCoilAirOutletNode = GetWaterCoilOutletNode('Coil:Heating:Water',RegenCoilName,ErrFlag)
-          DesicDehum(DesicDehumNum)%RegenCoilOutletNode = RegenCoilAirOutletNode
-          IF(ErrFlag)THEN
-              CALL ShowContinueError('Occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(DesicDehum(DesicDehumNum)%Name))
-              ErrorsFound = .TRUE.
-          END IF
+        ! Get the Regeneration Heating Coil Outlet Node
+        ErrFlag = .FALSE.
+        RegenCoilAirOutletNode = GetWaterCoilOutletNode('Coil:Heating:Water',RegenCoilName,ErrFlag)
+        DesicDehum(DesicDehumNum)%RegenCoilOutletNode = RegenCoilAirOutletNode
+        IF(ErrFlag)THEN
+          CALL ShowContinueError('Occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(DesicDehum(DesicDehumNum)%Name))
+          ErrorsFound = .TRUE.
+        END IF
 
-        ENDIF
+      ENDIF
     ELSEIF (SameString(DesicDehum(DesicDehumNum)%RegenCoilType,'Coil:Heating:Steam')) THEN
-        DesicDehum(DesicDehumNum)%RegenCoilType_Num = Coil_HeatingSteam
-        CALL ValidateComponent(Alphas(8),RegenCoilName,IsNotOK,TRIM(CurrentModuleObject))
-        IF (IsNotOK) THEN
-             CALL ShowContinueError('...occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(Alphas(1)))
-             ErrorsFound=.TRUE.
-        ELSE ! mine data from the regeneration heating coil object
+      DesicDehum(DesicDehumNum)%RegenCoilType_Num = Coil_HeatingSteam
+      CALL ValidateComponent(Alphas(8),RegenCoilName,IsNotOK,TRIM(CurrentModuleObject))
+      IF (IsNotOK) THEN
+        CALL ShowContinueError('...occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(Alphas(1)))
+        ErrorsFound=.TRUE.
+      ELSE ! mine data from the regeneration heating coil object
 
-            ErrFlag = .FALSE.
-            DesicDehum(DesicDehumNum)%RegenCoilIndex = GetSTeamCoilIndex('COIL:HEATING:STEAM',RegenCoilName,ErrFlag)
-            IF (DesicDehum(DesicDehumNum)%RegenCoilIndex .EQ. 0) THEN
-                CALL ShowSevereError(RoutineName//TRIM(CurrentModuleObject)//' illegal '//TRIM(cAlphaFields(9))//' = ' &
-                                //TRIM(RegenCoilName))
-                CALL ShowContinueError('Occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(DesicDehum(DesicDehumNum)%Name))
-                ErrorsFound = .TRUE.
-            END IF
+        ErrFlag = .FALSE.
+        DesicDehum(DesicDehumNum)%RegenCoilIndex = GetSTeamCoilIndex('COIL:HEATING:STEAM',RegenCoilName,ErrFlag)
+        IF (DesicDehum(DesicDehumNum)%RegenCoilIndex .EQ. 0) THEN
+          CALL ShowSevereError(RoutineName//TRIM(CurrentModuleObject)//' illegal '//TRIM(cAlphaFields(9))//' = ' &
+          //TRIM(RegenCoilName))
+          CALL ShowContinueError('Occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(DesicDehum(DesicDehumNum)%Name))
+          ErrorsFound = .TRUE.
+        END IF
 
-            ! Get the regeneration Heating Coil steam inlet node number
-            ErrFlag = .FALSE.
-            DesicDehum(DesicDehumNum)%CoilControlNode = GetSteamCoilSteamInletNode('Coil:Heating:Steam',RegenCoilName,ErrFlag)
-            IF(ErrFlag)THEN
-                CALL ShowContinueError('Occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(DesicDehum(DesicDehumNum)%Name))
-                ErrorsFound = .TRUE.
-            END IF
+        ! Get the regeneration Heating Coil steam inlet node number
+        ErrFlag = .FALSE.
+        DesicDehum(DesicDehumNum)%CoilControlNode = GetSteamCoilSteamInletNode('Coil:Heating:Steam',RegenCoilName,ErrFlag)
+        IF(ErrFlag)THEN
+          CALL ShowContinueError('Occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(DesicDehum(DesicDehumNum)%Name))
+          ErrorsFound = .TRUE.
+        END IF
 
-            ! Get the regeneration heating Coil steam max volume flow rate
-            DesicDehum(DesicDehumNum)%MaxCoilFluidFlow = &
-                                    GetCoilMaxSteamFlowRate(DesicDehum(DesicDehumNum)%RegenCoilIndex,ErrFlag)
-            IF (DesicDehum(DesicDehumNum)%MaxCoilFluidFlow .GT. 0.0)THEN
-                SteamIndex = 0      ! Function GetSatDensityRefrig will look up steam index if 0 is passed
-                SteamDensity=GetSatDensityRefrig("STEAM",TempSteamIn,1.0d0,SteamIndex,'Dehumidifier:Desiccant:NoFans')
-                DesicDehum(DesicDehumNum)%MaxCoilFluidFlow = DesicDehum(DesicDehumNum)%MaxCoilFluidFlow * SteamDensity
-            END IF
+        ! Get the regeneration heating Coil steam max volume flow rate
+        DesicDehum(DesicDehumNum)%MaxCoilFluidFlow = &
+        GetCoilMaxSteamFlowRate(DesicDehum(DesicDehumNum)%RegenCoilIndex,ErrFlag)
+        IF (DesicDehum(DesicDehumNum)%MaxCoilFluidFlow .GT. 0.0)THEN
+          SteamIndex = 0      ! Function GetSatDensityRefrig will look up steam index if 0 is passed
+          SteamDensity=GetSatDensityRefrig("STEAM",TempSteamIn,1.0d0,SteamIndex,'Dehumidifier:Desiccant:NoFans')
+          DesicDehum(DesicDehumNum)%MaxCoilFluidFlow = DesicDehum(DesicDehumNum)%MaxCoilFluidFlow * SteamDensity
+        END IF
 
-            ! Get the regeneration heating Coil Inlet Node
-            ErrFlag = .FALSE.
-            RegenCoilAirInletNode = &
-                        GetSteamCoilAirInletNode(DesicDehum(DesicDehumNum)%RegenCoilIndex,RegenCoilName,ErrFlag)
-            DesicDehum(DesicDehumNum)%RegenCoilInletNode = RegenCoilAirInletNode
-            IF(ErrFlag)THEN
-                CALL ShowContinueError('Occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(DesicDehum(DesicDehumNum)%Name))
-                ErrorsFound = .TRUE.
-            END IF
+        ! Get the regeneration heating Coil Inlet Node
+        ErrFlag = .FALSE.
+        RegenCoilAirInletNode = &
+        GetSteamCoilAirInletNode(DesicDehum(DesicDehumNum)%RegenCoilIndex,RegenCoilName,ErrFlag)
+        DesicDehum(DesicDehumNum)%RegenCoilInletNode = RegenCoilAirInletNode
+        IF(ErrFlag)THEN
+          CALL ShowContinueError('Occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(DesicDehum(DesicDehumNum)%Name))
+          ErrorsFound = .TRUE.
+        END IF
 
-            ! Get the regeneration heating Coil Outlet Node
-            ErrFlag = .FALSE.
-            RegenCoilAirOutletNode = &
-                        GetSteamCoilAirOutletNode(DesicDehum(DesicDehumNum)%RegenCoilIndex,RegenCoilName,ErrFlag)
-            DesicDehum(DesicDehumNum)%RegenCoilOutletNode = RegenCoilAirOutletNode
-            IF(ErrFlag)THEN
-                CALL ShowContinueError('Occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(DesicDehum(DesicDehumNum)%Name))
-                ErrorsFound = .TRUE.
-            END IF
+        ! Get the regeneration heating Coil Outlet Node
+        ErrFlag = .FALSE.
+        RegenCoilAirOutletNode = &
+        GetSteamCoilAirOutletNode(DesicDehum(DesicDehumNum)%RegenCoilIndex,RegenCoilName,ErrFlag)
+        DesicDehum(DesicDehumNum)%RegenCoilOutletNode = RegenCoilAirOutletNode
+        IF(ErrFlag)THEN
+          CALL ShowContinueError('Occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(DesicDehum(DesicDehumNum)%Name))
+          ErrorsFound = .TRUE.
+        END IF
 
-        ENDIF
+      ENDIF
     ELSE
       CALL ShowSevereError(RoutineName//TRIM(CurrentModuleObject)//' = '//TRIM(Alphas(1)))
       CALL ShowContinueError('Illegal '//TRIM(cAlphaFields(8))//' = '//TRIM(DesicDehum(DesicDehumNum)%RegenCoilType))
@@ -663,922 +663,922 @@ SUBROUTINE GetDesiccantDehumidifierInput
     DesicDehum(DesicDehumNum)%RegenFanName       = Alphas(11)
 
     CALL TestCompSet(DesicDehum(DesicDehumNum)%DehumType,DesicDehum(DesicDehumNum)%Name, &
-                     Alphas(3), Alphas(4),'Process Air Nodes')
+    Alphas(3), Alphas(4),'Process Air Nodes')
 
     ! Set up component set for regen coil
     CALL SetUpCompSets(DesicDehum(DesicDehumNum)%DehumType, DesicDehum(DesicDehumNum)%Name, &
-                       Alphas(8),Alphas(9),'UNDEFINED','UNDEFINED')
+    Alphas(8),Alphas(9),'UNDEFINED','UNDEFINED')
 
     ! Set up component set for regen fan
     CALL SetUpCompSets(DesicDehum(DesicDehumNum)%DehumType, DesicDehum(DesicDehumNum)%Name, &
-                       Alphas(10),Alphas(11),Alphas(6),'UNDEFINED')
+    Alphas(10),Alphas(11),Alphas(6),'UNDEFINED')
 
     IF ((.not. SameString(Alphas(12),'Default'))&
-        .AND. (SameString(Alphas(12),'UserCurves')) ) THEN
-      CALL ShowWarningError(RoutineName//TRIM(CurrentModuleObject)//': Invalid'//TRIM(cAlphaFields(12))//' = '//TRIM(Alphas(12)))
-      CALL ShowContinueError('resetting to Default')
-      DesicDehum(DesicDehumNum)%PerformanceModel_Num = PM_Default
-    END IF
-
-    IF (SameString(Alphas(12),'UserCurves')) THEN
-        DesicDehum(DesicDehumNum)%PerformanceModel_Num = PM_UserCurves
-        DesicDehum(DesicDehumNum)%ProcDryBulbCurvefTW= GetCurveIndex(Alphas(13))
-        IF (DesicDehum(DesicDehumNum)%ProcDryBulbCurvefTW .EQ. 0) THEN
-          CALL ShowSevereError(RoutineName//'Curve object='//TRIM(Alphas(13))//' not found.')
-          ErrorsFound2 = .TRUE.
-        ENDIF
-        DesicDehum(DesicDehumNum)%ProcDryBulbCurvefV = GetCurveIndex(Alphas(14))
-        IF (DesicDehum(DesicDehumNum)%ProcDryBulbCurvefV .EQ. 0) THEN
-          CALL ShowSevereError(RoutineName//'Curve object='//TRIM(Alphas(14))//' not found.')
-          ErrorsFound2 = .TRUE.
-        ENDIF
-        DesicDehum(DesicDehumNum)%ProcHumRatCurvefTW = GetCurveIndex(Alphas(15))
-        IF (DesicDehum(DesicDehumNum)%ProcHumRatCurvefTW .EQ. 0) THEN
-          CALL ShowSevereError(RoutineName//'Curve object='//TRIM(Alphas(15))//' not found.')
-          ErrorsFound2 = .TRUE.
-        ENDIF
-        DesicDehum(DesicDehumNum)%ProcHumRatCurvefV  = GetCurveIndex(Alphas(16))
-        IF (DesicDehum(DesicDehumNum)%ProcHumRatCurvefV .EQ. 0) THEN
-          CALL ShowSevereError(RoutineName//'Curve object='//TRIM(Alphas(16))//' not found.')
-          ErrorsFound2 = .TRUE.
-        ENDIF
-        DesicDehum(DesicDehumNum)%RegenEnergyCurvefTW= GetCurveIndex(Alphas(17))
-        IF (DesicDehum(DesicDehumNum)%RegenEnergyCurvefTW .EQ. 0) THEN
-          CALL ShowSevereError(RoutineName//'Curve object='//TRIM(Alphas(17))//' not found.')
-          ErrorsFound2 = .TRUE.
-        ENDIF
-        DesicDehum(DesicDehumNum)%RegenEnergyCurvefV = GetCurveIndex(Alphas(18))
-        IF (DesicDehum(DesicDehumNum)%RegenEnergyCurvefV .EQ. 0) THEN
-          CALL ShowSevereError(RoutineName//'Curve object='//TRIM(Alphas(18))//' not found.')
-          ErrorsFound2 = .TRUE.
-        ENDIF
-        DesicDehum(DesicDehumNum)%RegenVelCurvefTW   = GetCurveIndex(Alphas(19))
-        IF (DesicDehum(DesicDehumNum)%RegenVelCurvefTW .EQ. 0) THEN
-          CALL ShowSevereError(RoutineName//'Curve object='//TRIM(Alphas(19))//' not found.')
-          ErrorsFound2 = .TRUE.
-        ENDIF
-        DesicDehum(DesicDehumNum)%RegenVelCurvefV    = GetCurveIndex(Alphas(20))
-        IF (DesicDehum(DesicDehumNum)%RegenVelCurvefV .EQ. 0) THEN
-          CALL ShowSevereError(RoutineName//'Curve object='//TRIM(Alphas(20))//' not found.')
-          ErrorsFound2 = .TRUE.
-        ENDIF
-        IF (ErrorsFound2) THEN
-          CALL ShowSevereError(RoutineName//TRIM(CurrentModuleObject)//' = '//TRIM(Alphas(1)))
-          CALL ShowContinueError('Errors found in getting performance curves.')
-          ErrorsFound = .TRUE.
-        END IF
-        DesicDehum(DesicDehumNum)%NomRegenTemp      = Numbers(5)
-           ! Validate regen fan type, for user defined curves, can be constant or variable volume
-        IF ((SameString(DesicDehum(DesicDehumNum)%RegenFanType,'FAN:CONSTANTVOLUME')) .OR. &
-            (SameString(DesicDehum(DesicDehumNum)%RegenFanType,'FAN:VARIABLEVOLUME'))) THEN
-          CALL ValidateComponent(DesicDehum(DesicDehumNum)%RegenFanType,DesicDehum(DesicDehumNum)%RegenFanName,  &
-                                 ErrorsFound2,TRIM(CurrentModuleObject)//' = '//TRIM(Alphas(1)))
-          IF (ErrorsFound2) ErrorsFound = .TRUE.
-        ELSE
-          CALL ShowSevereError(TRIM(CurrentModuleObject)//' = '//TRIM(Alphas(1)))
-          CALL ShowContinueError('Illegal '//TRIM(cAlphaFields(10))//' = '//TRIM(DesicDehum(DesicDehumNum)%RegenFanType))
-          ErrorsFound = .TRUE.
-        ENDIF
-    ELSE
-           ! If DEFAULT performance model, set operating limits curves.  Unit is off outside this range
-      DesicDehum(DesicDehumNum)%PerformanceModel_Num = PM_Default
-      DesicDehum%MinProcAirInTemp        =  1.67d0     !  35 F
-      DesicDehum%MaxProcAirInTemp        = 48.89d0     ! 120 F
-      DesicDehum%MinProcAirInHumRat      =  0.002857d0 !  20 gr/lb
-      DesicDehum%MaxProcAirInHumRat      =  0.02857d0  ! 200 gr/lb
-           !  If DEFAULT performance model, warn if curve names and nominal regen temp have values
-      IF ((.NOT. lAlphaBlanks(13)) .OR. (.NOT. lAlphaBlanks(14)) .OR. (.NOT. lAlphaBlanks(15)) .OR. &
-          (.NOT. lAlphaBlanks(16)) .OR. (.NOT. lAlphaBlanks(17)) .OR. (.NOT. lAlphaBlanks(18)) .OR. &
-          (.NOT. lAlphaBlanks(19)) .OR. (.NOT. lAlphaBlanks(20))) THEN
-        CALL ShowWarningError(TRIM(CurrentModuleObject)//' = '//TRIM(Alphas(1)))
-        CALL ShowContinueError('DEFAULT performance selected, curve names and nominal regen temp will be ignored.')
-      ENDIF
-      IF (DesicDehum(DesicDehumNum)%NomProcAirVel > 4.064d0) THEN
-        CALL ShowWarningError(TRIM(CurrentModuleObject)//' = '//TRIM(Alphas(1)))
-        CALL ShowContinueError(TRIM(cNumericFields(3))//' > 4.064 m/s.; Value in input='//  &
-                          TRIM(RoundSigDigits(DesicDehum(DesicDehumNum)%NomProcAirVel,3)))
-        CALL ShowContinueError('DEFAULT performance curves not valid outside 2.032 to 4.064 m/s (400 to 800 fpm).')
-      ENDIF
-      IF (DesicDehum(DesicDehumNum)%NomProcAirVel < 2.032d0) THEN
-        CALL ShowWarningError(TRIM(CurrentModuleObject)//' = '//TRIM(Alphas(1)))
-        CALL ShowContinueError(TRIM(cNumericFields(3))//' < 2.032 m/s.; Value in input='//  &
-                          TRIM(RoundSigDigits(DesicDehum(DesicDehumNum)%NomProcAirVel,3)))
-        CALL ShowContinueError('DEFAULT performance curves not valid outside 2.032 to 4.064 m/s (400 to 800 fpm).')
-      ENDIF
-           ! Validate regen fan type, for default curves, can only variable volume
-        IF (DesicDehum(DesicDehumNum)%RegenFanType == 'FAN:VARIABLEVOLUME') THEN
-          CALL ValidateComponent(DesicDehum(DesicDehumNum)%RegenFanType,DesicDehum(DesicDehumNum)%RegenFanName,  &
-                                 ErrorsFound2,TRIM(CurrentModuleObject)//' = '//TRIM(Alphas(1)))
-          IF (ErrorsFound2) ErrorsFound = .TRUE.
-        ELSE
-          CALL ShowSevereError(TRIM(CurrentModuleObject)//' = '//TRIM(Alphas(1)))
-          CALL ShowContinueError('Illegal '//TRIM(cAlphaFields(10))//' = '//TRIM(DesicDehum(DesicDehumNum)%RegenFanType))
-          CALL ShowContinueError('For DEFAULT performance model, the regen fan type must be Fan:VariableVolume')
-          ErrorsFound = .TRUE.
-        ENDIF
-    ENDIF
-  ENDDO
-
-  DO DesicDehumIndex = 1,NumGenericDesicDehums
-    RegenCoilAirInletNode = 0
-    RegenCoilAirOutletNode = 0
-
-    CurrentModuleObject = 'Dehumidifier:Desiccant:System'
-
-    DesicDehumNum = DesicDehumIndex + NumSolidDesicDehums
-    DesicDehum(DesicDehumNum)%DehumType = TRIM(CurrentModuleObject)
-    DesicDehum(DesicDehumNum)%DehumTypeCode = Generic
-    CALL GetObjectItem(DesicDehum(DesicDehumNum)%DehumType,DesicDehumIndex,Alphas,NumAlphas,Numbers,NumNumbers, &
-                       IOStatus,NumBlank=lNumericBlanks,AlphaBlank=lAlphaBlanks, &
-                       AlphaFieldNames=cAlphaFields,NumericFieldNames=cNumericFields)
-
-    IsNotOK=.FALSE.
-    IsBlank=.FALSE.
-    CALL VerifyName(Alphas(1),DesicDehum%Name,DesicDehumNum-1,IsNotOK,IsBlank,DesicDehum(DesicDehumNum)%DehumType//' Name')
-
-    IF (IsNotOK) THEN
-      ErrorsFoundGeneric=.true.
-      IF (IsBlank) Alphas(1)='xxxxx'
-    ENDIF
-    DesicDehum(DesicDehumNum)%Name = Alphas(1)
-
-    ErrorsFound2 = .FALSE.
-    CALL ValidateComponent(DesicDehum(DesicDehumNum)%DehumType,DesicDehum(DesicDehumNum)%Name, &
-                             ErrorsFound2,DesicDehum(DesicDehumNum)%DehumType//' = "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
-    IF (ErrorsFound2)  THEN
-      CALL ShowSevereError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "' &
-                         //TRIM(DesicDehum(DesicDehumNum)%Name)//'" is not unique')
-      ErrorsFoundGeneric=.TRUE.
-    ENDIF
-
-    DesicDehum(DesicDehumNum)%Sched = Alphas(2)
-    DesicDehum(DesicDehumNum)%SchedPtr = GetScheduleIndex(Alphas(2))  ! convert schedule name to pointer
-
-    IF (DesicDehum(DesicDehumNum)%SchedPtr .EQ. 0) THEN
-      IF (lAlphaBlanks(2)) THEN
-        CALL ShowSevereError(TRIM(CurrentModuleObject)//': '//TRIM(cAlphaFields(2))//  &
-             ' is required, missing for '//TRIM(cAlphaFields(1))//'='//TRIM(Alphas(1)))
-      ELSE
-        CALL ShowSevereError(TRIM(CurrentModuleObject)//': invalid '//TRIM(cAlphaFields(2))//  &
-           ' entered ='//TRIM(Alphas(2))// &
-           ' for '//TRIM(cAlphaFields(1))//'='//TRIM(Alphas(1)))
-      END IF
-      ErrorsFoundGeneric=.TRUE.
-    END IF
-
-    DesicDehum(DesicDehumNum)%HXType = Alphas(3)
-    DesicDehum(DesicDehumNum)%HXName = Alphas(4)
-
-    IF (.NOT. SameString(DesicDehum(DesicDehumNum)%HXType,'HeatExchanger:Desiccant:BalancedFlow')) THEN
-      CALL ShowWarningError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' = "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
-      CALL ShowContinueError('Invalid '//TRIM(cAlphaFields(3))//' = '//TRIM(DesicDehum(DesicDehumNum)%HXType))
-      ErrorsFoundGeneric=.TRUE.
-    ELSE
-      DesicDehum(DesicDehumNum)%HXTypeNum = BalancedHX
-    END IF
-
-    ErrorsFound2 = .FALSE.
-    CALL ValidateComponent(DesicDehum(DesicDehumNum)%HXType,DesicDehum(DesicDehumNum)%HXName, &
-                           ErrorsFound2,DesicDehum(DesicDehumNum)%DehumType//' = "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
-    IF (ErrorsFound2) ErrorsFoundGeneric = .TRUE.
-
-    ErrorsFound2 = .FALSE.
-    DesicDehum(DesicDehumNum)%HXProcInNode = &
-                    GetSecondaryInletNode(DesicDehum(DesicDehumNum)%HXName, ErrorsFound2)
-    IF(ErrorsFound2)THEN
-      CALL ShowContinueError('...occurs in '//TRIM(DesicDehum(DesicDehumNum)%DehumType)// &
-                                       ' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
-      ErrorsFoundGeneric=.TRUE.
-    END IF
-
-    ProcAirInlet = NodeID(DesicDehum(DesicDehumNum)%HXProcInNode)
-
-    DesicDehum(DesicDehumNum)%ProcAirInNode = GetOnlySingleNode(ProcAirInlet,ErrorsFound,&
-                   DesicDehum(DesicDehumNum)%DehumType,DesicDehum(DesicDehumNum)%Name, &
-                   NodeType_Air,NodeConnectionType_Inlet,1,ObjectIsParent)
-
-    ErrorsFound2 = .FALSE.
-    DesicDehum(DesicDehumNum)%HXProcOutNode = &
-                    GetSecondaryOutletNode(DesicDehum(DesicDehumNum)%HXName, ErrorsFound2)
-    IF(ErrorsFound2)THEN
-      CALL ShowContinueError('...occurs in '//TRIM(DesicDehum(DesicDehumNum)%DehumType)// &
-                                       ' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
-      ErrorsFoundGeneric=.TRUE.
-    END IF
-
-    ProcAirOutlet = NodeID(DesicDehum(DesicDehumNum)%HXProcOutNode)
-
-    DesicDehum(DesicDehumNum)%ProcAirOutNode = GetOnlySingleNode(ProcAirOutlet,ErrorsFound,&
-                   DesicDehum(DesicDehumNum)%DehumType,DesicDehum(DesicDehumNum)%Name, &
-                   NodeType_Air,NodeConnectionType_Outlet,1,ObjectIsParent)
-
-    CALL TestCompSet(DesicDehum(DesicDehumNum)%DehumType,DesicDehum(DesicDehumNum)%Name, &
-                     ProcAirInlet,ProcAirOutlet,'Process Air Nodes')
-
-    ErrorsFound2 = .FALSE.
-    DesicDehum(DesicDehumNum)%HXRegenInNode = &
-                    GetSupplyInletNode(DesicDehum(DesicDehumNum)%HXName, ErrorsFound2)
-    IF(ErrorsFound2)THEN
-      CALL ShowContinueError('...occurs in '//TRIM(DesicDehum(DesicDehumNum)%DehumType)// &
-                                       ' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
-      ErrorsFoundGeneric=.TRUE.
-    END IF
-
-    ErrorsFound2 = .FALSE.
-    DesicDehum(DesicDehumNum)%HXRegenOutNode = &
-                    GetSupplyOutletNode(DesicDehum(DesicDehumNum)%HXName, ErrorsFound2)
-    IF(ErrorsFound2)THEN
-      CALL ShowContinueError('...occurs in '//TRIM(DesicDehum(DesicDehumNum)%DehumType)// &
-                                       ' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
-      ErrorsFoundGeneric=.TRUE.
-    END IF
-
-    DesicDehum(DesicDehumNum)%ControlNodeNum =        &
-        GetOnlySingleNode(Alphas(5),ErrorsFound,DesicDehum(DesicDehumNum)%DehumType,DesicDehum(DesicDehumNum)%Name, &
-        NodeType_Air,NodeConnectionType_Sensor,1,ObjectIsNotParent)
-
-    IF (DesicDehum(DesicDehumNum)%ControlNodeNum .EQ. 0) THEN
-      CALL ShowContinueError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' = "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
-      CALL ShowSevereError(TRIM(cAlphaFields(5))//' must be specified.')
-      ErrorsFoundGeneric=.TRUE.
-    ENDIF
-
-
-    DesicDehum(DesicDehumNum)%RegenFanType = Alphas(6)
-    DesicDehum(DesicDehumNum)%RegenFanName = Alphas(7)
-
-    IF (SameString(DesicDehum(DesicDehumNum)%RegenFanType,'Fan:OnOff') .OR. &
-           SameString(DesicDehum(DesicDehumNum)%RegenFanType,'Fan:ConstantVolume')) THEN
-      ErrorsFound2 = .FALSE.
-      CALL ValidateComponent(DesicDehum(DesicDehumNum)%RegenFanType,DesicDehum(DesicDehumNum)%RegenFanName, &
-                             ErrorsFound2,DesicDehum(DesicDehumNum)%DehumType// ' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
-      IF (ErrorsFound2) ErrorsFoundGeneric = .TRUE.
-    ELSE
-      CALL ShowSevereError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
-      CALL ShowContinueError('Illegal '//TRIM(cAlphaFields(6))//' = '//TRIM(DesicDehum(DesicDehumNum)%RegenFanType))
-           ErrorsFoundGeneric = .TRUE.
-    ENDIF
-
-    IF (SameString(Alphas(8),'DrawThrough') ) THEN
-       DesicDehum(DesicDehumNum)%RegenFanPlacement = DrawThru
-    ELSEIF (SameString(Alphas(8),'BlowThrough') ) THEN
-       DesicDehum(DesicDehumNum)%RegenFanPlacement = BlowThru
-    ELSE
-       CALL ShowWarningError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
-       CALL ShowContinueError('Illegal '//TRIM(cAlphaFields(8))//' = '//TRIM(Alphas(8)))
-       CALL ShowContinueError('...resetting to DEFAULT of DRAW THROUGH')
-       DesicDehum(DesicDehumNum)%RegenFanPlacement = DrawThru
-    END IF
-
-    ErrorsFound2 = .FALSE.
-    DesicDehum(DesicDehumNum)%RegenFanInNode = &
-                          GetFanInletNode(DesicDehum(DesicDehumNum)%RegenFanType, &
-                          DesicDehum(DesicDehumNum)%RegenFanName,ErrorsFound2)
-    IF(ErrorsFound2)THEN
-      CALL ShowContinueError('...occurs in '//TRIM(DesicDehum(DesicDehumNum)%DehumType)// &
-                                       ' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
-      ErrorsFoundGeneric=.TRUE.
-    END IF
-
-    ErrorsFound2 = .FALSE.
-    DesicDehum(DesicDehumNum)%RegenFanOutNode = &
-                          GetFanOutletNode(DesicDehum(DesicDehumNum)%RegenFanType, &
-                          DesicDehum(DesicDehumNum)%RegenFanName,ErrorsFound2)
-    CALL GetFanIndex(DesicDehum(DesicDehumNum)%RegenFanName,DesicDehum(DesicDehumNum)%RegenFanIndex,ErrorsFound2, &
-                                        DesicDehum(DesicDehumNum)%RegenFanType)
-    IF(ErrorsFound2)THEN
-      CALL ShowContinueError('...occurs in '//TRIM(DesicDehum(DesicDehumNum)%DehumType)// &
-                                       ' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
-      ErrorsFoundGeneric = .TRUE.
-    END IF
-
-    DesicDehum(DesicDehumNum)%RegenCoilType = Alphas(9)
-    DesicDehum(DesicDehumNum)%RegenCoilName = Alphas(10)
-    RegenCoilType = Alphas(9)
-    RegenCoilName = Alphas(10)
-    DesicDehum(DesicDehumNum)%RegenSetPointTemp = Numbers(1)
-
-    IF (.NOT. lAlphaBlanks(10))Then
-      IF (SameString(DesicDehum(DesicDehumNum)%RegenCoilType,'Coil:Heating:Electric') .OR. &
-          SameString(DesicDehum(DesicDehumNum)%RegenCoilType,'Coil:Heating:Gas')) THEN
-      IF (SameString(DesicDehum(DesicDehumNum)%RegenCoilType,'Coil:Heating:Electric')) &
-                        DesicDehum(DesicDehumNum)%RegenCoilType_Num = Coil_HeatingElectric
-      IF (SameString(DesicDehum(DesicDehumNum)%RegenCoilType,'Coil:Heating:Gas')) &
-                        DesicDehum(DesicDehumNum)%RegenCoilType_Num = Coil_HeatingGas
-        ErrorsFound2 = .FALSE.
-        CALL ValidateComponent(RegenCoilType,RegenCoilName,ErrorsFound2, &
-                               DesicDehum(DesicDehumNum)%DehumType//' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
-        IF (ErrorsFound2) ErrorsFoundGeneric = .TRUE.
-
-        IF(DesicDehum(DesicDehumNum)%RegenSetPointTemp .LE. 0.0)THEN
-          CALL ShowSevereError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
-          CALL ShowContinueError(TRIM(cNumericFields(1))//' must be greater than 0.')
-          ErrorsFoundGeneric = .TRUE.
-        END IF
-
-        ErrorsFound2 = .FALSE.
-        DesicDehum(DesicDehumNum)%RegenCoilInletNode = GetHeatingCoilInletNode(RegenCoilType,RegenCoilName,ErrorsFound2)
-        IF(ErrorsFound2)THEN
-          CALL ShowContinueError('...occurs in '//TRIM(DesicDehum(DesicDehumNum)%DehumType)// &
-                                            ' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
-          ErrorsFoundGeneric=.TRUE.
-        END IF
-
-        ErrorsFound2 = .FALSE.
-        DesicDehum(DesicDehumNum)%RegenCoilOutletNode = GetHeatingCoilOutletNode(RegenCoilType,RegenCoilName,ErrorsFound2)
-        IF(ErrorsFound2)THEN
-          CALL ShowContinueError('...occurs in '//TRIM(DesicDehum(DesicDehumNum)%DehumType)// &
-                                            ' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
-          ErrorsFoundGeneric=.TRUE.
-        END IF
-
-        ErrorsFound2=.FALSE.
-        CALL GetHeatingCoilIndex(RegenCoilName,DesicDehum(DesicDehumNum)%RegenCoilIndex,ErrorsFound2)
-        IF(ErrorsFound2)THEN
-          CALL ShowContinueError('...occurs in '//TRIM(DesicDehum(DesicDehumNum)%DehumType)// &
-                                            ' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
-          ErrorsFoundGeneric=.TRUE.
-        END IF
-
-        ErrorsFound2=.FALSE.
-        RegenCoilControlNodeNum = GetHeatingCoilControlNodeNum(RegenCoilType,RegenCoilName,ErrorsFound2)
-        IF(ErrorsFound2)THEN
-          CALL ShowContinueError('...occurs in '//TRIM(DesicDehum(DesicDehumNum)%DehumType)// &
-                                            ' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
-          ErrorsFoundGeneric=.TRUE.
-        END IF
-
-        IF(RegenCoilControlNodeNum .GT. 0)THEN
-          CALL ShowSevereError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
-          CALL ShowContinueError(TRIM(cNumericFields(1))//' is specified as '// &
-                                 TRIM(RoundSigDigits(DesicDehum(DesicDehumNum)%RegenSetPointTemp,3))//' C in this object.')
-          CALL ShowContinueError(' Do not specify a coil temperature setpoint node name in the regeneration air heater object.')
-          CALL ShowContinueError('...'//TRIM(cAlphaFields(9))//' = '//TRIM(DesicDehum(DesicDehumNum)%RegenCoilType))
-          CALL ShowContinueError('...'//TRIM(cAlphaFields(10))//' = '//TRIM(DesicDehum(DesicDehumNum)%RegenCoilName))
-          CALL ShowContinueError('...heating coil temperature setpoint node = '//TRIM(NodeID(RegenCoilControlNodeNum)))
-          CALL ShowContinueError('...leave the heating coil temperature setpoint node name blank in the regen heater object.')
-          ErrorsFoundGeneric = .TRUE.
-        END IF
-
-    ELSEIF (SameString(DesicDehum(DesicDehumNum)%RegenCoilType,'Coil:Heating:Water')) THEN
-      DesicDehum(DesicDehumNum)%RegenCoilType_Num = Coil_HeatingWater
-      CALL ValidateComponent(RegenCoilType,RegenCoilName,IsNotOK,TRIM(CurrentModuleObject))
-      IF (IsNotOK) THEN
-          CALL ShowContinueError('...occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(Alphas(1)))
-          ErrorsFound=.TRUE.
-      ELSE ! mine data from heating coil object
-          ErrFlag = .FALSE.
-          DesicDehum(DesicDehumNum)%RegenCoilIndex = GetWaterCoilIndex('COIL:HEATING:WATER',RegenCoilName,ErrFlag)
-          IF (DesicDehum(DesicDehumNum)%RegenCoilIndex .EQ. 0) THEN
-              CALL ShowSevereError(TRIM(CurrentModuleObject)//' illegal '//TRIM(cAlphaFields(9))//' = ' &
-                              //TRIM(RegenCoilName))
-              CALL ShowContinueError('Occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(DesicDehum(DesicDehumNum)%Name))
-              ErrorsFound = .TRUE.
-          END IF
-
-          IF(DesicDehum(DesicDehumNum)%RegenSetPointTemp .LE. 0.0)THEN
-            CALL ShowSevereError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
-            CALL ShowContinueError(TRIM(cNumericFields(1))//' must be greater than 0.')
-            ErrorsFoundGeneric = .TRUE.
-          END IF
-
-           ! Get the Heating Coil Hot water Inlet or control Node number
-          ErrFlag = .FALSE.
-          DesicDehum(DesicDehumNum)%CoilControlNode = GetCoilWaterInletNode('Coil:Heating:Water', &
-                                                         RegenCoilName,ErrFlag)
-          IF(ErrFlag)THEN
-              CALL ShowContinueError('Occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(DesicDehum(DesicDehumNum)%Name))
-              ErrorsFound = .TRUE.
-          END IF
-
-          ! Get the Regeneration Heating Coil hot water max volume flow rate
-          ErrFlag = .FALSE.
-          DesicDehum(DesicDehumNum)%MaxCoilFluidFlow = GetCoilMaxWaterFlowRate('Coil:Heating:Water',  &
-                                                       RegenCoilName,ErrFlag)
-          IF(ErrFlag)THEN
-              CALL ShowContinueError('Occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(DesicDehum(DesicDehumNum)%Name))
-              ErrorsFound = .TRUE.
-          END IF
-
-          ! Get the Regeneration Heating Coil Inlet Node
-          ErrFlag = .FALSE.
-          RegenCoilAirInletNode =  GetWaterCoilInletNode('Coil:Heating:Water',RegenCoilName,ErrFlag)
-          DesicDehum(DesicDehumNum)%RegenCoilInletNode = RegenCoilAirInletNode
-          IF(ErrFlag)THEN
-              CALL ShowContinueError('Occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(DesicDehum(DesicDehumNum)%Name))
-              ErrorsFound = .TRUE.
-          END IF
-
-          ! Get the Regeneration Heating Coil Outlet Node
-          ErrFlag = .FALSE.
-          RegenCoilAirOutletNode = GetWaterCoilOutletNode('Coil:Heating:Water',RegenCoilName,ErrFlag)
-          DesicDehum(DesicDehumNum)%RegenCoilOutletNode = RegenCoilAirOutletNode
-          IF(ErrFlag)THEN
-              CALL ShowContinueError('Occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(DesicDehum(DesicDehumNum)%Name))
-              ErrorsFound = .TRUE.
-          END IF
-
-        ENDIF
-    ELSEIF (SameString(DesicDehum(DesicDehumNum)%RegenCoilType,'Coil:Heating:Steam')) THEN
-        DesicDehum(DesicDehumNum)%RegenCoilType_Num = Coil_HeatingSteam
-        CALL ValidateComponent(RegenCoilType,RegenCoilName,IsNotOK,TRIM(CurrentModuleObject))
-        IF (IsNotOK) THEN
-             CALL ShowContinueError('...occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(Alphas(1)))
-             ErrorsFound=.TRUE.
-        ELSE ! mine data from the regeneration heating coil object
-            IF(DesicDehum(DesicDehumNum)%RegenSetPointTemp .LE. 0.0)THEN
-              CALL ShowSevereError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
-              CALL ShowContinueError(TRIM(cNumericFields(1))//' must be greater than 0.')
-              ErrorsFoundGeneric = .TRUE.
-            END IF
-
-            ErrFlag = .FALSE.
-            DesicDehum(DesicDehumNum)%RegenCoilIndex = GetSTeamCoilIndex('COIL:HEATING:STEAM',RegenCoilName,ErrFlag)
-            IF (DesicDehum(DesicDehumNum)%RegenCoilIndex .EQ. 0) THEN
-                CALL ShowSevereError(TRIM(CurrentModuleObject)//' illegal '//TRIM(cAlphaFields(9))//' = ' &
-                                //TRIM(RegenCoilName))
-                CALL ShowContinueError('Occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(DesicDehum(DesicDehumNum)%Name))
-                ErrorsFound = .TRUE.
-            END IF
-
-            ! Get the regeneration Heating Coil steam inlet node number
-            ErrFlag = .FALSE.
-            DesicDehum(DesicDehumNum)%CoilControlNode = GetSteamCoilSteamInletNode('Coil:Heating:Steam',RegenCoilName,ErrFlag)
-            IF(ErrFlag)THEN
-                CALL ShowContinueError('Occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(DesicDehum(DesicDehumNum)%Name))
-                ErrorsFound = .TRUE.
-            END IF
-
-            ! Get the regeneration heating Coil steam max volume flow rate
-            DesicDehum(DesicDehumNum)%MaxCoilFluidFlow = &
-                                    GetCoilMaxSteamFlowRate(DesicDehum(DesicDehumNum)%RegenCoilIndex,ErrFlag)
-            IF (DesicDehum(DesicDehumNum)%MaxCoilFluidFlow .GT. 0.0)THEN
-                SteamIndex = 0      ! Function GetSatDensityRefrig will look up steam index if 0 is passed
-                SteamDensity=GetSatDensityRefrig("STEAM",TempSteamIn,1.0d0,SteamIndex,'Dehumidifier:Desiccant:NoFans')
-                DesicDehum(DesicDehumNum)%MaxCoilFluidFlow = DesicDehum(DesicDehumNum)%MaxCoilFluidFlow * SteamDensity
-            END IF
-
-            ! Get the regeneration heating Coil Inlet Node
-            ErrFlag = .FALSE.
-            RegenCoilAirInletNode = &
-                        GetSteamCoilAirInletNode(DesicDehum(DesicDehumNum)%RegenCoilIndex,RegenCoilName,ErrFlag)
-            DesicDehum(DesicDehumNum)%RegenCoilInletNode = RegenCoilAirInletNode
-            IF(ErrFlag)THEN
-                CALL ShowContinueError('Occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(DesicDehum(DesicDehumNum)%Name))
-                ErrorsFound = .TRUE.
-            END IF
-
-            ! Get the regeneration heating Coil Outlet Node
-            ErrFlag = .FALSE.
-            RegenCoilAirOutletNode = &
-                        GetSteamCoilAirOutletNode(DesicDehum(DesicDehumNum)%RegenCoilIndex,RegenCoilName,ErrFlag)
-            DesicDehum(DesicDehumNum)%RegenCoilOutletNode = RegenCoilAirOutletNode
-            IF(ErrFlag)THEN
-                CALL ShowContinueError('Occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(DesicDehum(DesicDehumNum)%Name))
-                ErrorsFound = .TRUE.
-            END IF
-        ENDIF
-
-        ErrorsFound2=.FALSE.
-        RegenCoilControlNodeNum = GetSteamCoilControlNodeNum(RegenCoilType,RegenCoilName,ErrorsFound2)
-
-        IF(ErrorsFound2)THEN
-          CALL ShowContinueError('...occurs in '//TRIM(DesicDehum(DesicDehumNum)%DehumType)// &
-                                            ' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
-          ErrorsFoundGeneric=.TRUE.
-        END IF
-
-        IF(RegenCoilControlNodeNum .GT. 0)THEN
-          CALL ShowSevereError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
-          CALL ShowContinueError(TRIM(cNumericFields(1))//' is specified as '// &
-                                 TRIM(RoundSigDigits(DesicDehum(DesicDehumNum)%RegenSetPointTemp,3))//' C in this object.')
-          CALL ShowContinueError(' Do not specify a coil temperature setpoint node name in the regeneration air heater object.')
-          CALL ShowContinueError('...'//TRIM(cAlphaFields(9))//' = '//TRIM(DesicDehum(DesicDehumNum)%RegenCoilType))
-          CALL ShowContinueError('...'//TRIM(cAlphaFields(10))//' = '//TRIM(DesicDehum(DesicDehumNum)%RegenCoilName))
-          CALL ShowContinueError('...heating coil temperature setpoint node = '//TRIM(NodeID(RegenCoilControlNodeNum)))
-          CALL ShowContinueError('...leave the heating coil temperature setpoint node name blank in the regen heater object.')
-          ErrorsFoundGeneric = .TRUE.
-        END IF
-
-      ELSE
-        CALL ShowSevereError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
-        CALL ShowContinueError('Illegal '//TRIM(cAlphaFields(9))//' = '//TRIM(DesicDehum(DesicDehumNum)%RegenCoilType))
-        ErrorsFoundGeneric = .TRUE.
-      END IF
-
-    ENDIF
-
-    RegenAirInlet =  NodeID(DesicDehum(DesicDehumNum)%HXRegenInNode)
-
-    RegenAirOutlet = NodeID(DesicDehum(DesicDehumNum)%HXRegenOutNode)
-
-    RegenFanInlet = NodeID(DesicDehum(DesicDehumNum)%RegenFanInNode)
-
-    RegenFanOutlet = NodeID(DesicDehum(DesicDehumNum)%RegenFanOutNode)
-
-    IF (.NOT. lAlphaBlanks(10))Then
-      RegenCoilInlet = NodeID(DesicDehum(DesicDehumNum)%RegenCoilInletNode)
-
-      RegenCoilOutlet = NodeID(DesicDehum(DesicDehumNum)%RegenCoilOutletNode)
-    ENDIF
-
-    CALL SetUpCompSets(DesicDehum(DesicDehumNum)%DehumType, DesicDehum(DesicDehumNum)%Name, &
-           DesicDehum(DesicDehumNum)%HXType,DesicDehum(DesicDehumNum)%HXName, &
-           ProcAirInlet,ProcAirOutlet)
-
-    CALL SetUpCompSets(DesicDehum(DesicDehumNum)%DehumType, DesicDehum(DesicDehumNum)%Name, &
-           DesicDehum(DesicDehumNum)%RegenFanType,DesicDehum(DesicDehumNum)%RegenFanName, &
-           RegenFanInlet,RegenFanOutlet)
-
-    IF (.NOT. lAlphaBlanks(10))THEN
-      CALL SetUpCompSets(DesicDehum(DesicDehumNum)%DehumType, DesicDehum(DesicDehumNum)%Name, &
-           DesicDehum(DesicDehumNum)%RegenCoilType,DesicDehum(DesicDehumNum)%RegenCoilName, &
-           RegenCoilInlet,RegenCoilOutlet)
-    ENDIF
-
-    IF (DesicDehum(DesicDehumNum)%RegenFanPlacement == BlowThru)THEN
-      DesicDehum(DesicDehumNum)%RegenAirInNode = GetOnlySingleNode(RegenFanInlet,ErrorsFound,&
-                 DesicDehum(DesicDehumNum)%DehumType,DesicDehum(DesicDehumNum)%Name, &
-                 NodeType_Air,NodeConnectionType_Inlet,1,ObjectIsParent)
-      DesicDehum(DesicDehumNum)%RegenAirOutNode = GetOnlySingleNode(RegenAirOutlet,ErrorsFound,&
-                 DesicDehum(DesicDehumNum)%DehumType,DesicDehum(DesicDehumNum)%Name, &
-                 NodeType_Air,NodeConnectionType_Outlet,1,ObjectIsParent)
-      IF (.NOT. lAlphaBlanks(10))THEN
-        IF (DesicDehum(DesicDehumNum)%RegenFanOutNode /= DesicDehum(DesicDehumNum)%RegenCoilInletNode)THEN
-          CALL ShowSevereError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
-          CALL ShowContinueError('Regen fan outlet node name and regen heater inlet node name do not match for fan ' &
-                 //'placement: Blow Through')
-          CALL ShowContinueError('...Regen fan outlet node   = '//TRIM(NodeID(DesicDehum(DesicDehumNum)%RegenFanOutNode)))
-          CALL ShowContinueError('...Regen heater inlet node = '//TRIM(NodeID(DesicDehum(DesicDehumNum)%RegenCoilInletNode)))
-          ErrorsFoundGeneric = .TRUE.
-        ENDIF
-        IF (DesicDehum(DesicDehumNum)%RegenCoilOutletNode /= DesicDehum(DesicDehumNum)%HXRegenInNode)THEN
-          CALL ShowSevereError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
-          CALL ShowContinueError('Regen heater outlet node name and desiccant heat exchanger regen inlet node name do not ' &
-                 //'match for fan placement: Blow Through')
-          CALL ShowContinueError('...Regen heater outlet node = '//TRIM(NodeID(DesicDehum(DesicDehumNum)%RegenCoilOutletNode)))
-          CALL ShowContinueError('...HX regen inlet node      = '//TRIM(NodeID(DesicDehum(DesicDehumNum)%HXRegenInNode)))
-          ErrorsFoundGeneric = .TRUE.
-        ENDIF
-      ELSE
-        IF (DesicDehum(DesicDehumNum)%RegenFanOutNode /= DesicDehum(DesicDehumNum)%HXRegenInNode)THEN
-          CALL ShowSevereError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
-          CALL ShowContinueError('Regen fan outlet node name and desiccant heat exchanger inlet node name do not match for fan ' &
-                 //'placement: Blow Through')
-          CALL ShowContinueError('...Regen fan outlet node   = '//TRIM(NodeID(DesicDehum(DesicDehumNum)%RegenFanOutNode)))
-          CALL ShowContinueError('...Desiccant HX inlet node = '//TRIM(NodeID(DesicDehum(DesicDehumNum)%HXRegenInNode)))
-          ErrorsFoundGeneric = .TRUE.
-        ENDIF
-      ENDIF
-    ELSE ! ELSE for IF (DesicDehum(DesicDehumNum)%RegenFanPlacement == BlowThru)THEN
-      DesicDehum(DesicDehumNum)%RegenAirOutNode = GetOnlySingleNode(RegenFanOutlet,ErrorsFound,&
-                 DesicDehum(DesicDehumNum)%DehumType,DesicDehum(DesicDehumNum)%Name, &
-                 NodeType_Air,NodeConnectionType_Outlet,1,ObjectIsParent)
-      IF (.NOT. lAlphaBlanks(10)) THEN
-        DesicDehum(DesicDehumNum)%RegenAirInNode =  GetOnlySingleNode(RegenCoilInlet,ErrorsFound,&
-                      DesicDehum(DesicDehumNum)%DehumType,DesicDehum(DesicDehumNum)%Name, &
-                      NodeType_Air,NodeConnectionType_Inlet,1,ObjectIsParent)
-        IF (DesicDehum(DesicDehumNum)%RegenCoilOutletNode /= DesicDehum(DesicDehumNum)%HXRegenInNode)THEN
-          CALL ShowSevereError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
-          CALL ShowContinueError('Regen heater outlet node name and desiccant heat exchanger regen inlet node name do not ' &
-                  //'match for fan placement: Draw Through')
-          CALL ShowContinueError('...Regen heater outlet node = '//TRIM(NodeID(DesicDehum(DesicDehumNum)%RegenCoilOutletNode)))
-          CALL ShowContinueError('...HX regen inlet node      = '//TRIM(NodeID(DesicDehum(DesicDehumNum)%HXRegenInNode)))
-          ErrorsFoundGeneric = .TRUE.
-        ENDIF
-      ELSE
-        DesicDehum(DesicDehumNum)%RegenAirInNode =  GetOnlySingleNode(RegenAirInlet,ErrorsFound,&
-                      DesicDehum(DesicDehumNum)%DehumType,DesicDehum(DesicDehumNum)%Name, &
-                      NodeType_Air,NodeConnectionType_Inlet,1,ObjectIsParent)
-      ENDIF
-      IF (DesicDehum(DesicDehumNum)%RegenFanInNode /= DesicDehum(DesicDehumNum)%HXRegenOutNode)THEN
-        CALL ShowSevereError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
-        CALL ShowContinueError('Regen fan inlet node name and desiccant heat exchanger regen outlet node name do not match ' &
-                //'for fan placement: Draw Through')
-        CALL ShowContinueError('...Regen fan inlet node = '//TRIM(NodeID(DesicDehum(DesicDehumNum)%RegenFanInNode)))
-        CALL ShowContinueError('...HX regen outlet node = '//TRIM(NodeID(DesicDehum(DesicDehumNum)%HXRegenOutNode)))
-        ErrorsFoundGeneric = .TRUE.
-      ENDIF
-    ENDIF
-
-    DesicDehum(DesicDehumNum)%CoolingCoilType = Alphas(11)
-    DesicDehum(DesicDehumNum)%CoolingCoilName = Alphas(12)
-
-    IF (.NOT. lAlphaBlanks(12))THEN
-      IF ((SameString(DesicDehum(DesicDehumNum)%CoolingCoilType,'COIL:COOLING:DX:SINGLESPEED')) .OR. &
-          (SameString(DesicDehum(DesicDehumNum)%CoolingCoilType,'COIL:COOLING:DX:TWOSTAGEWITHHUMIDITYCONTROLMODE'))) THEN
-        ErrorsFound2 = .FALSE.
-        CALL ValidateComponent(DesicDehum(DesicDehumNum)%CoolingCoilType,DesicDehum(DesicDehumNum)%CoolingCoilName, &
-                               ErrorsFound2,DesicDehum(DesicDehumNum)%DehumType//' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
-        IF (ErrorsFound2) ErrorsFoundGeneric = .TRUE.
-      ELSE !ELSE for IF (DesicDehum(DesicDehumNum)%CoolingCoilType == 'COIL:COOLING:DX:SINGLESPEED' or MultiMode)THEN
-        CALL ShowSevereError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//'='//TRIM(DesicDehum(DesicDehumNum)%Name))
-        CALL ShowContinueError('Illegal '//TRIM(cAlphaFields(11))//' = '//TRIM(DesicDehum(DesicDehumNum)%CoolingCoilType))
-           ErrorsFoundGeneric = .TRUE.
-      END IF
-
-      ErrorsFound2 = .FALSE.
-      DesicDehum(DesicDehumNum)%CoolingCoilOutletNode = &
-                    GetDXCoilOutletNode(DesicDehum(DesicDehumNum)%CoolingCoilType, &
-                     DesicDehum(DesicDehumNum)%CoolingCoilName,ErrorsFound2)
-      DesicDehum(DesicDehumNum)%CompanionCoilCapacity = GetDXCoilCapacity(DesicDehum(DesicDehumNum)%CoolingCoilType, &
-                     DesicDehum(DesicDehumNum)%CoolingCoilName,ErrorsFound2)
-      IF(ErrorsFound2)CALL ShowContinueError('...occurs in '//TRIM(DesicDehum(DesicDehumNum)%DehumType)// &
-                                       ' "'//TRIM(DesicDehum(DesicDehumNum)%CoolingCoilName)//'"')
-
-      ErrorsFound2 = .FALSE.
-      CALL GetDXCoilIndex(DesicDehum(DesicDehumNum)%CoolingCoilName,DesicDehum(DesicDehumNum)%DXCoilIndex, &
-                              ErrorsFound2, DesicDehum(DesicDehumNum)%CoolingCoilType)
-      IF(ErrorsFound2)CALL ShowContinueError('...occurs in '//TRIM(DesicDehum(DesicDehumNum)%DehumType)// &
-                                                        ' "'//TRIM(DesicDehum(DesicDehumNum)%CoolingCoilName)//'"')
-
-    ENDIF !  (DesicDehum(DesicDehumNum)%CoolingCoilName /= Blank)THEN
-
-    IF (SameString(Alphas(13),'Yes')) THEN
-      DesicDehum(DesicDehumNum)%CoilUpstreamOfProcessSide = Yes
-    ELSE IF (lAlphaBlanks(13)) THEN
-      DesicDehum(DesicDehumNum)%CoilUpstreamOfProcessSide = No
-    ELSEIF (SameString(Alphas(13),'No')) THEN
-      DesicDehum(DesicDehumNum)%CoilUpstreamOfProcessSide = No
-    ELSE
-      CALL ShowWarningError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
-      CALL ShowContinueError('Invalid choice for '//TRIM(cAlphaFields(13))//' = ' &
-                              //TRIM(Alphas(13)))
-      CALL ShowContinueError('...resetting to the default value of No')
-      DesicDehum(DesicDehumNum)%CoilUpstreamOfProcessSide = No
-    END IF
-
-    IF (SameString(Alphas(14),'Yes')) THEN
-      DesicDehum(DesicDehumNum)%Preheat = Yes
-    ELSEIF (SameString(Alphas(14),'No')) THEN
-      DesicDehum(DesicDehumNum)%Preheat = No
-    ELSEIF (lAlphaBlanks(14)) THEN
-      DesicDehum(DesicDehumNum)%Preheat = No
-    ELSE
-      CALL ShowWarningError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
-      CALL ShowContinueError('Invalid choice for '//TRIM(cAlphaFields(14))//' = '//TRIM(Alphas(14)))
-      CALL ShowContinueError('...resetting to the default value of NO')
-      DesicDehum(DesicDehumNum)%Preheat = No
-    END IF
-
-    IF(DesicDehum(DesicDehumNum)%DXCoilIndex .GT. 0)THEN
-
-      IF(DesicDehum(DesicDehumNum)%Preheat == Yes)THEN ! Companion coil waste heat used for regeneration of desiccant
-        ErrorsFound2 = .FALSE.
-        DesuperHeaterIndex = GetHeatReclaimSourceIndexNum(DesicDehum(DesicDehumNum)%CoolingCoilType, &
-                                    DesicDehum(DesicDehumNum)%CoolingCoilName,ErrorsFound2)
-        IF (ErrorsFound2)THEN
-          CALL ShowContinueError('...occurs in '//TRIM(DesicDehum(DesicDehumNum)%DehumType)// &
-                                 ' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
-          ErrorsFoundGeneric = .TRUE.
-        END IF
-
-        IF(DesuperHeaterIndex .GT. 0) THEN
-          CALL ShowWarningError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//'='//TRIM(DesicDehum(DesicDehumNum)%Name))
-          CALL ShowContinueError('A Coil:Heating:Desuperheater object should not be used when condenser waste heat is '// &
-                               'reclaimed for desiccant regeneration.')
-          CALL ShowContinueError('A Coil:Heating:Desuperheater object was found using waste heat from the ' &
-                              //TRIM(DesicDehum(DesicDehumNum)%CoolingCoilType)//' "'//&
-                                TRIM(DesicDehum(DesicDehumNum)%CoolingCoilName)//'" object.')
-!          ErrorsFoundGeneric = .TRUE.
-        END IF
-      END IF
-
-      ErrorsFound2 = .FALSE.
-      DesicDehum(DesicDehumNum)%CondenserInletNode = GetCoilCondenserInletNode(DesicDehum(DesicDehumNum)%CoolingCoilType, &
-                   DesicDehum(DesicDehumNum)%CoolingCoilName,ErrorsFound2)
-      IF(DesicDehum(DesicDehumNum)%CondenserInletNode .EQ. 0 .AND. DesicDehum(DesicDehumNum)%Preheat .EQ. Yes)THEN
-         DesicDehum(DesicDehumNum)%CondenserInletNode = GetOnlySingleNode(&
-             TRIM(DesicDehum(DesicDehumNum)%CoolingCoilName)//' Condenser Inlet Node', &
-             ErrorsFound,TRIM(DesicDehum(DesicDehumNum)%DehumType),TRIM(DesicDehum(DesicDehumNum)%Name), &
-             NodeType_Air,NodeConnectionType_OutsideAirReference, 2, ObjectIsNotParent)
-        CALL CheckAndAddAirNodeNumber(DesicDehum(DesicDehumNum)%CondenserInletNode,OANodeError)
-        IF(.NOT. OANodeError)THEN
-          CALL ShowWarningError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
-          CALL ShowContinueError('The '//TRIM(cAlphaFields(14))//' input is specified as Yes and a condenser air'// &
-                                 ' inlet node name was not specified for the companion cooling coil.')
-          CALL ShowContinueError('Adding condenser inlet air node for '//TRIM(DesicDehum(DesicDehumNum)%CoolingCoilType)//' "'// &
-                                                                         TRIM(DesicDehum(DesicDehumNum)%CoolingCoilName)//'"')
-          CALL ShowContinueError('...condenser inlet air node name = '// &
-                                 TRIM(NodeID(DesicDehum(DesicDehumNum)%CondenserInletNode)))
-          CALL ShowContinueError('...this node name will be specified as an outdoor air node.')
-        END IF
-      ELSE IF(DesicDehum(DesicDehumNum)%Preheat .EQ. Yes)THEN
-        IF (.NOT. CheckOutAirNodeNumber(DesicDehum(DesicDehumNum)%CondenserInletNode)) THEN
-          CALL ShowSevereError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
-          CALL ShowContinueError('The regeneration air inlet node must be specified as an outdoor air node '// &
-                                 'when '//TRIM(cAlphaFields(14))//' is specified as Yes.')
-          ErrorsFoundGeneric = .TRUE.
-        END IF
-      END IF
-    END IF
-
-    IF (CheckOutAirNodeNumber(DesicDehum(DesicDehumNum)%RegenAirInNode)) THEN
-      DesicDehum(DesicDehumNum)%RegenInletIsOutsideAirNode = .TRUE.
-    END IF
-
-    IF(DesicDehum(DesicDehumNum)%DXCoilIndex .EQ. 0 .AND. DesicDehum(DesicDehumNum)%Preheat == Yes) THEN
-      CALL ShowWarningError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//'='//TRIM(DesicDehum(DesicDehumNum)%Name))
-      CALL ShowContinueError('A valid '//TRIM(cAlphaFields(12))//' must be used when condenser waste heat is '// &
-                             'reclaimed for desiccant regeneration.')
-      CALL ShowContinueError('... '//TRIM(cAlphaFields(11))//' = '//TRIM(DesicDehum(DesicDehumNum)%CoolingCoilType))
-      CALL ShowContinueError('... '//TRIM(cAlphaFields(12))//' = '//TRIM(DesicDehum(DesicDehumNum)%CoolingCoilName))
-      ErrorsFoundGeneric = .TRUE.
-    END IF
-
-    IF(DesicDehum(DesicDehumNum)%DXCoilIndex .GT. 0 .AND. DesicDehum(DesicDehumNum)%CoilUpstreamOfProcessSide == Yes) THEN
-      ErrorsFound2 = .FALSE.
-      CoilBypassedFlowFrac = GetDXCoilBypassedFlowFrac(DesicDehum(DesicDehumNum)%CoolingCoilType, &
-                                                       DesicDehum(DesicDehumNum)%CoolingCoilName, ErrorsFound2)
-      IF(ErrorsFound2)CALL ShowContinueError('...occurs in '//TRIM(DesicDehum(DesicDehumNum)%DehumType)// &
-                                                          ' "'//TRIM(DesicDehum(DesicDehumNum)%CoolingCoilName)//'"')
-      IF(CoilBypassedFlowFrac .GT. 0.0)THEN
-        CALL ShowWarningError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//'='//TRIM(DesicDehum(DesicDehumNum)%Name))
-        CALL ShowContinueError('A DX coil bypassed air flow fraction greater than 0 may not be used when the input for '// &
-                               TRIM(cAlphaFields(13))//' is specified as Yes.')
-        CALL ShowContinueError('A DX coil with a bypassed air flow fraction greater than 0 may be upstream of the process '// &
-                               'inlet however the input for '//TRIM(cAlphaFields(13))//' must be specified as No.')
-        CALL ShowContinueError('... '//TRIM(cAlphaFields(11))//' = '//TRIM(DesicDehum(DesicDehumNum)%CoolingCoilType))
-        CALL ShowContinueError('... '//TRIM(cAlphaFields(12))//' = '//TRIM(DesicDehum(DesicDehumNum)%CoolingCoilName))
-        ErrorsFoundGeneric = .TRUE.
-      END IF
-    ELSE IF(DesicDehum(DesicDehumNum)%DXCoilIndex .EQ. 0 .AND. DesicDehum(DesicDehumNum)%CoilUpstreamOfProcessSide == Yes) THEN
-        CALL ShowSevereError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
-        CALL ShowContinueError('A valid companion coil must be specified when '// &
-                               TRIM(cAlphaFields(13))//' is specified as Yes.')
-        ErrorsFoundGeneric = .TRUE.
-    END IF
-
-    IF(.NOT. DesicDehum(DesicDehumNum)%RegenInletIsOutsideAirNode .AND. DesicDehum(DesicDehumNum)%Preheat == Yes) THEN
-      CALL ShowWarningError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//'='//TRIM(DesicDehum(DesicDehumNum)%Name))
-      CALL ShowContinueError('The desiccant dehumidifier regeneration air inlet must be specified as an outdoor air node'// &
-                             ' when '//TRIM(cAlphaFields(14))//' is specified as Yes.')
-      CALL ShowContinueError('... desiccant dehumidifier regeneration air inlet node name = '// &
-                                  TRIM(NodeID(DesicDehum(DesicDehumNum)%RegenAirInNode)))
-      ErrorsFoundGeneric = .TRUE.
-    END IF
-
-    IF(DesicDehum(DesicDehumNum)%CoilUpstreamOfProcessSide == Yes)THEN
-      IF(DesicDehum(DesicDehumNum)%ProcAirInNode .NE. DesicDehum(DesicDehumNum)%CoolingCoilOutletNode)THEN
-         CALL ShowSevereError('For '//TRIM(DesicDehum(DesicDehumNum)%DehumType)// &
-                     ' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
-         CALL ShowContinueError('Node names are inconsistent in companion cooling coil and desiccant heat exchanger objects.')
-         CALL ShowContinueError('For companion cooling coil = '//TRIM(DesicDehum(DesicDehumNum)%CoolingCoilType)//' "'// &
-                                                    TRIM(DesicDehum(DesicDehumNum)%CoolingCoilName)//'"')
-         CALL ShowContinueError('The outlet node name in cooling coil = '// &
-                              TRIM(NodeID(DesicDehum(DesicDehumNum)%CoolingCoilOutletNode)))
-         CALL ShowContinueError('For desiccant heat exchanger = '//TRIM(DesicDehum(DesicDehumNum)%HXType)//' "'// &
-                                                    TRIM(DesicDehum(DesicDehumNum)%HXName)//'"')
-         CALL ShowContinueError('The process air inlet node name = '// &
-                              TRIM(NodeID(DesicDehum(DesicDehumNum)%ProcAirInNode)))
-         CALL ShowFatalError('...previous error causes program termination.')
-      END IF
-    END IF
-
-    !Exhaust Fan input
-    DesicDehum(DesicDehumNum)%ExhaustFanMaxVolFlowRate = Numbers(2)
-    DesicDehum(DesicDehumNum)%ExhaustFanMaxPower = Numbers(3)
-    DesicDehum(DesicDehumNum)%ExhaustFanCurveIndex = GetCurveIndex(Alphas(15))
-
-    IF(.NOT. SameString(GetCurveType(DesicDehum(DesicDehumNum)%ExhaustFanCurveIndex),' '))THEN
-      SELECT CASE(GetCurveType(DesicDehum(DesicDehumNum)%ExhaustFanCurveIndex))
-        CASE('CUBIC')
-
-        CASE('QUADRATIC')
-
-        CASE DEFAULT
-          CALL ShowSevereError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//', "'//TRIM(DesicDehum(DesicDehumNum)%Name)// &
-              '" illegal Part Load Fraction Correlation Curve (function of part-load ratio) type for this object = '// &
-             TRIM(GetCurveType(DesicDehum(DesicDehumNum)%ExhaustFanCurveIndex)))
-          ErrorsFoundGeneric=.true.
-      END SELECT
-    END IF
-
-    IF(DesicDehum(DesicDehumNum)%Preheat == Yes)THEN
-      ErrorsFound2 = .FALSE.
-      IF (DesicDehum(DesicDehumNum)%ExhaustFanMaxVolFlowRate <= 0)THEN
-         ErrorsFound2 =.TRUE.
-      ENDIF
-      IF (DesicDehum(DesicDehumNum)%ExhaustFanMaxPower <= 0)THEN
-         ErrorsFound2 =.TRUE.
-      ENDIF
-      IF(ErrorsFound2)THEN
-        CALL ShowSevereError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "'//TRIM(DesicDehum(DesicDehumNum)%Name//'"'))
-        CALL ShowContinueError(TRIM(cNumericFields(2))//' and '//TRIM(cNumericFields(3))// &
-                               ' must be defined if '//TRIM(cAlphaFields(14))//' field is "Yes".')
-      END IF
-    ELSE IF(DesicDehum(DesicDehumNum)%Preheat == No)THEN
-      IF(DesicDehum(DesicDehumNum)%ExhaustFanMaxVolFlowRate .GT. 0.0)THEN
-        CALL ShowWarningError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "'//TRIM(DesicDehum(DesicDehumNum)%Name//'"'))
-        CALL ShowContinueError(TRIM(cNumericFields(2))// &
-                               ' should be 0 if '//TRIM(cAlphaFields(14))//' field is "No".')
-        CALL ShowContinueError('...'//TRIM(cNumericFields(2))//' will not be used and is reset to 0.')
-        DesicDehum(DesicDehumNum)%ExhaustFanMaxVolFlowRate = 0.0
-      END IF
-    END IF
-
-  ENDDO
-
-! SET UP OUTPUTS
-  DO DesicDehumNum=1,NumSolidDesicDehums
-    ! Setup Report variables for the Desiccant Dehumidifiers
-    CALL SetupOutputVariable('Desiccant Dehumidifier Water Removed [kg]',DesicDehum(DesicDehumNum)%WaterRemove,&
-                             'System','Sum',DesicDehum(DesicDehumNum)%Name)
-    CALL SetupOutputVariable('Desiccant Dehumidifier Water Removal Rate[kg/s]',DesicDehum(DesicDehumNum)%WaterRemoveRate,&
-                             'System','Average',DesicDehum(DesicDehumNum)%Name)
-    CALL SetupOutputVariable('Desiccant Dehumidifier Part Load Ratio[]',DesicDehum(DesicDehumNum)%PartLoad,'System',&
-                             'Average',DesicDehum(DesicDehumNum)%Name)
-    CALL SetupOutputVariable('Desiccant Dehumidifier Electric Power[W]',DesicDehum(DesicDehumNum)%ElecUseRate,'System',&
-                             'Average',DesicDehum(DesicDehumNum)%Name)
-    CALL SetupOutputVariable('Desiccant Dehumidifier Electric Consumption[J]',DesicDehum(DesicDehumNum)%ElecUseEnergy,'System',&
-                             'Sum',DesicDehum(DesicDehumNum)%Name, &
-                             ResourceTypeKey='Electricity',GroupKey='System',EndUseKey='Cooling')
-    CALL SetupOutputVariable('Desiccant Dehumidifier Specific Regen Energy [J/kgWater]',&
-                             DesicDehum(DesicDehumNum)%SpecRegenEnergy,&
-                             'System','Average',DesicDehum(DesicDehumNum)%Name)
-    CALL SetupOutputVariable('Desiccant Dehumidifier Regen Energy Rate[W]',DesicDehum(DesicDehumNum)%QRegen,'System','Average',&
-                             DesicDehum(DesicDehumNum)%Name)
-    CALL SetupOutputVariable('Desiccant Dehumidifier Regen Energy[J]',DesicDehum(DesicDehumNum)%RegenEnergy,'System','Sum',&
-                             DesicDehum(DesicDehumNum)%Name)
-    CALL SetupOutputVariable('Desiccant Dehumidifier Regen Air Velocity[m/s]',DesicDehum(DesicDehumNum)%RegenAirVel,&
-                             'System','Average',DesicDehum(DesicDehumNum)%Name)
-    CALL SetupOutputVariable('Desiccant Dehumidifier Regen Air Mass Flow Rate[kg/s]',&
-                             DesicDehum(DesicDehumNum)%RegenAirInMassFlowRate,'System','Average',&
-                             DesicDehum(DesicDehumNum)%Name)
-    CALL SetupOutputVariable('Desiccant Dehumidifier Process Air Mass Flow Rate[kg/s]',&
-                             DesicDehum(DesicDehumNum)%ProcAirInMassFlowRate,'System','Average',&
-                             DesicDehum(DesicDehumNum)%Name)
-  END DO
-
-  DO DesicDehumNum=1,NumGenericDesicDehums
-    ! Setup Report variables for the Desiccant Dehumidifiers
-    CALL SetupOutputVariable('Desiccant Dehumidifier Water Removed [kg]',DesicDehum(DesicDehumNum)%WaterRemove,&
-                             'System','Sum',DesicDehum(DesicDehumNum)%Name)
-    CALL SetupOutputVariable('Desiccant Dehumidifier Water Removal Rate [kg/s]',DesicDehum(DesicDehumNum)%WaterRemoveRate,&
-                             'System','Average',DesicDehum(DesicDehumNum)%Name)
-    CALL SetupOutputVariable('Desiccant Dehumidifier Part Load Ratio []',DesicDehum(DesicDehumNum)%PartLoad,'System',&
-                             'Average',DesicDehum(DesicDehumNum)%Name)
-    IF(DesicDehum(DesicDehumNum)%ExhaustFanMaxVolFlowRate .GT. 0)THEN
-      CALL SetupOutputVariable('Desiccant Dehumidifier Exhaust Fan Electric Power [W]',DesicDehum(DesicDehumNum)%ExhaustFanPower,&
-                               'System','Average',DesicDehum(DesicDehumNum)%Name)
-      CALL SetupOutputVariable('Desiccant Dehumidifier Exhaust Fan Electric Consumption [J]', &
-                                DesicDehum(DesicDehumNum)%ExhaustFanElecConsumption,'System',&
-                               'Sum',DesicDehum(DesicDehumNum)%Name, &
-                                ResourceTypeKey='Electricity',GroupKey='System',EndUseKey='Cooling')
-    END IF
-  END DO
-
-  IF (ErrorsFound) THEN
-    CALL ShowFatalError('Errors found in getting Dehumidifier:Desiccant:NoFans input')
-  ELSEIF (ErrorsFoundGeneric) THEN
-    CALL ShowFatalError('Errors found in getting DESICCANT DEHUMIDIFIER input')
+    .AND. (SameString(Alphas(12),'UserCurves')) ) THEN
+    CALL ShowWarningError(RoutineName//TRIM(CurrentModuleObject)//': Invalid'//TRIM(cAlphaFields(12))//' = '//TRIM(Alphas(12)))
+    CALL ShowContinueError('resetting to Default')
+    DesicDehum(DesicDehumNum)%PerformanceModel_Num = PM_Default
   END IF
 
-  DEALLOCATE(Alphas)
-  DEALLOCATE(cAlphaFields)
-  DEALLOCATE(cNumericFields)
-  DEALLOCATE(Numbers)
-  DEALLOCATE(lAlphaBlanks)
-  DEALLOCATE(lNumericBlanks)
+  IF (SameString(Alphas(12),'UserCurves')) THEN
+    DesicDehum(DesicDehumNum)%PerformanceModel_Num = PM_UserCurves
+    DesicDehum(DesicDehumNum)%ProcDryBulbCurvefTW= GetCurveIndex(Alphas(13))
+    IF (DesicDehum(DesicDehumNum)%ProcDryBulbCurvefTW .EQ. 0) THEN
+      CALL ShowSevereError(RoutineName//'Curve object='//TRIM(Alphas(13))//' not found.')
+      ErrorsFound2 = .TRUE.
+    ENDIF
+    DesicDehum(DesicDehumNum)%ProcDryBulbCurvefV = GetCurveIndex(Alphas(14))
+    IF (DesicDehum(DesicDehumNum)%ProcDryBulbCurvefV .EQ. 0) THEN
+      CALL ShowSevereError(RoutineName//'Curve object='//TRIM(Alphas(14))//' not found.')
+      ErrorsFound2 = .TRUE.
+    ENDIF
+    DesicDehum(DesicDehumNum)%ProcHumRatCurvefTW = GetCurveIndex(Alphas(15))
+    IF (DesicDehum(DesicDehumNum)%ProcHumRatCurvefTW .EQ. 0) THEN
+      CALL ShowSevereError(RoutineName//'Curve object='//TRIM(Alphas(15))//' not found.')
+      ErrorsFound2 = .TRUE.
+    ENDIF
+    DesicDehum(DesicDehumNum)%ProcHumRatCurvefV  = GetCurveIndex(Alphas(16))
+    IF (DesicDehum(DesicDehumNum)%ProcHumRatCurvefV .EQ. 0) THEN
+      CALL ShowSevereError(RoutineName//'Curve object='//TRIM(Alphas(16))//' not found.')
+      ErrorsFound2 = .TRUE.
+    ENDIF
+    DesicDehum(DesicDehumNum)%RegenEnergyCurvefTW= GetCurveIndex(Alphas(17))
+    IF (DesicDehum(DesicDehumNum)%RegenEnergyCurvefTW .EQ. 0) THEN
+      CALL ShowSevereError(RoutineName//'Curve object='//TRIM(Alphas(17))//' not found.')
+      ErrorsFound2 = .TRUE.
+    ENDIF
+    DesicDehum(DesicDehumNum)%RegenEnergyCurvefV = GetCurveIndex(Alphas(18))
+    IF (DesicDehum(DesicDehumNum)%RegenEnergyCurvefV .EQ. 0) THEN
+      CALL ShowSevereError(RoutineName//'Curve object='//TRIM(Alphas(18))//' not found.')
+      ErrorsFound2 = .TRUE.
+    ENDIF
+    DesicDehum(DesicDehumNum)%RegenVelCurvefTW   = GetCurveIndex(Alphas(19))
+    IF (DesicDehum(DesicDehumNum)%RegenVelCurvefTW .EQ. 0) THEN
+      CALL ShowSevereError(RoutineName//'Curve object='//TRIM(Alphas(19))//' not found.')
+      ErrorsFound2 = .TRUE.
+    ENDIF
+    DesicDehum(DesicDehumNum)%RegenVelCurvefV    = GetCurveIndex(Alphas(20))
+    IF (DesicDehum(DesicDehumNum)%RegenVelCurvefV .EQ. 0) THEN
+      CALL ShowSevereError(RoutineName//'Curve object='//TRIM(Alphas(20))//' not found.')
+      ErrorsFound2 = .TRUE.
+    ENDIF
+    IF (ErrorsFound2) THEN
+      CALL ShowSevereError(RoutineName//TRIM(CurrentModuleObject)//' = '//TRIM(Alphas(1)))
+      CALL ShowContinueError('Errors found in getting performance curves.')
+      ErrorsFound = .TRUE.
+    END IF
+    DesicDehum(DesicDehumNum)%NomRegenTemp      = Numbers(5)
+    ! Validate regen fan type, for user defined curves, can be constant or variable volume
+    IF ((SameString(DesicDehum(DesicDehumNum)%RegenFanType,'FAN:CONSTANTVOLUME')) .OR. &
+    (SameString(DesicDehum(DesicDehumNum)%RegenFanType,'FAN:VARIABLEVOLUME'))) THEN
+    CALL ValidateComponent(DesicDehum(DesicDehumNum)%RegenFanType,DesicDehum(DesicDehumNum)%RegenFanName,  &
+    ErrorsFound2,TRIM(CurrentModuleObject)//' = '//TRIM(Alphas(1)))
+    IF (ErrorsFound2) ErrorsFound = .TRUE.
+  ELSE
+    CALL ShowSevereError(TRIM(CurrentModuleObject)//' = '//TRIM(Alphas(1)))
+    CALL ShowContinueError('Illegal '//TRIM(cAlphaFields(10))//' = '//TRIM(DesicDehum(DesicDehumNum)%RegenFanType))
+    ErrorsFound = .TRUE.
+  ENDIF
+ELSE
+  ! If DEFAULT performance model, set operating limits curves.  Unit is off outside this range
+  DesicDehum(DesicDehumNum)%PerformanceModel_Num = PM_Default
+  DesicDehum%MinProcAirInTemp        =  1.67d0     !  35 F
+  DesicDehum%MaxProcAirInTemp        = 48.89d0     ! 120 F
+  DesicDehum%MinProcAirInHumRat      =  0.002857d0 !  20 gr/lb
+  DesicDehum%MaxProcAirInHumRat      =  0.02857d0  ! 200 gr/lb
+  !  If DEFAULT performance model, warn if curve names and nominal regen temp have values
+  IF ((.NOT. lAlphaBlanks(13)) .OR. (.NOT. lAlphaBlanks(14)) .OR. (.NOT. lAlphaBlanks(15)) .OR. &
+  (.NOT. lAlphaBlanks(16)) .OR. (.NOT. lAlphaBlanks(17)) .OR. (.NOT. lAlphaBlanks(18)) .OR. &
+  (.NOT. lAlphaBlanks(19)) .OR. (.NOT. lAlphaBlanks(20))) THEN
+  CALL ShowWarningError(TRIM(CurrentModuleObject)//' = '//TRIM(Alphas(1)))
+  CALL ShowContinueError('DEFAULT performance selected, curve names and nominal regen temp will be ignored.')
+ENDIF
+IF (DesicDehum(DesicDehumNum)%NomProcAirVel > 4.064d0) THEN
+  CALL ShowWarningError(TRIM(CurrentModuleObject)//' = '//TRIM(Alphas(1)))
+  CALL ShowContinueError(TRIM(cNumericFields(3))//' > 4.064 m/s.; Value in input='//  &
+  TRIM(RoundSigDigits(DesicDehum(DesicDehumNum)%NomProcAirVel,3)))
+  CALL ShowContinueError('DEFAULT performance curves not valid outside 2.032 to 4.064 m/s (400 to 800 fpm).')
+ENDIF
+IF (DesicDehum(DesicDehumNum)%NomProcAirVel < 2.032d0) THEN
+  CALL ShowWarningError(TRIM(CurrentModuleObject)//' = '//TRIM(Alphas(1)))
+  CALL ShowContinueError(TRIM(cNumericFields(3))//' < 2.032 m/s.; Value in input='//  &
+  TRIM(RoundSigDigits(DesicDehum(DesicDehumNum)%NomProcAirVel,3)))
+  CALL ShowContinueError('DEFAULT performance curves not valid outside 2.032 to 4.064 m/s (400 to 800 fpm).')
+ENDIF
+! Validate regen fan type, for default curves, can only variable volume
+IF (DesicDehum(DesicDehumNum)%RegenFanType == 'FAN:VARIABLEVOLUME') THEN
+  CALL ValidateComponent(DesicDehum(DesicDehumNum)%RegenFanType,DesicDehum(DesicDehumNum)%RegenFanName,  &
+  ErrorsFound2,TRIM(CurrentModuleObject)//' = '//TRIM(Alphas(1)))
+  IF (ErrorsFound2) ErrorsFound = .TRUE.
+ELSE
+  CALL ShowSevereError(TRIM(CurrentModuleObject)//' = '//TRIM(Alphas(1)))
+  CALL ShowContinueError('Illegal '//TRIM(cAlphaFields(10))//' = '//TRIM(DesicDehum(DesicDehumNum)%RegenFanType))
+  CALL ShowContinueError('For DEFAULT performance model, the regen fan type must be Fan:VariableVolume')
+  ErrorsFound = .TRUE.
+ENDIF
+ENDIF
+ENDDO
 
-  RETURN
+DO DesicDehumIndex = 1,NumGenericDesicDehums
+  RegenCoilAirInletNode = 0
+  RegenCoilAirOutletNode = 0
+
+  CurrentModuleObject = 'Dehumidifier:Desiccant:System'
+
+  DesicDehumNum = DesicDehumIndex + NumSolidDesicDehums
+  DesicDehum(DesicDehumNum)%DehumType = TRIM(CurrentModuleObject)
+  DesicDehum(DesicDehumNum)%DehumTypeCode = Generic
+  CALL GetObjectItem(DesicDehum(DesicDehumNum)%DehumType,DesicDehumIndex,Alphas,NumAlphas,Numbers,NumNumbers, &
+  IOStatus,NumBlank=lNumericBlanks,AlphaBlank=lAlphaBlanks, &
+  AlphaFieldNames=cAlphaFields,NumericFieldNames=cNumericFields)
+
+  IsNotOK=.FALSE.
+  IsBlank=.FALSE.
+  CALL VerifyName(Alphas(1),DesicDehum%Name,DesicDehumNum-1,IsNotOK,IsBlank,DesicDehum(DesicDehumNum)%DehumType//' Name')
+
+  IF (IsNotOK) THEN
+    ErrorsFoundGeneric=.true.
+    IF (IsBlank) Alphas(1)='xxxxx'
+  ENDIF
+  DesicDehum(DesicDehumNum)%Name = Alphas(1)
+
+  ErrorsFound2 = .FALSE.
+  CALL ValidateComponent(DesicDehum(DesicDehumNum)%DehumType,DesicDehum(DesicDehumNum)%Name, &
+  ErrorsFound2,DesicDehum(DesicDehumNum)%DehumType//' = "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
+  IF (ErrorsFound2)  THEN
+    CALL ShowSevereError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "' &
+    //TRIM(DesicDehum(DesicDehumNum)%Name)//'" is not unique')
+    ErrorsFoundGeneric=.TRUE.
+  ENDIF
+
+  DesicDehum(DesicDehumNum)%Sched = Alphas(2)
+  DesicDehum(DesicDehumNum)%SchedPtr = GetScheduleIndex(Alphas(2))  ! convert schedule name to pointer
+
+  IF (DesicDehum(DesicDehumNum)%SchedPtr .EQ. 0) THEN
+    IF (lAlphaBlanks(2)) THEN
+      CALL ShowSevereError(TRIM(CurrentModuleObject)//': '//TRIM(cAlphaFields(2))//  &
+      ' is required, missing for '//TRIM(cAlphaFields(1))//'='//TRIM(Alphas(1)))
+    ELSE
+      CALL ShowSevereError(TRIM(CurrentModuleObject)//': invalid '//TRIM(cAlphaFields(2))//  &
+      ' entered ='//TRIM(Alphas(2))// &
+      ' for '//TRIM(cAlphaFields(1))//'='//TRIM(Alphas(1)))
+    END IF
+    ErrorsFoundGeneric=.TRUE.
+  END IF
+
+  DesicDehum(DesicDehumNum)%HXType = Alphas(3)
+  DesicDehum(DesicDehumNum)%HXName = Alphas(4)
+
+  IF (.NOT. SameString(DesicDehum(DesicDehumNum)%HXType,'HeatExchanger:Desiccant:BalancedFlow')) THEN
+    CALL ShowWarningError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' = "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
+    CALL ShowContinueError('Invalid '//TRIM(cAlphaFields(3))//' = '//TRIM(DesicDehum(DesicDehumNum)%HXType))
+    ErrorsFoundGeneric=.TRUE.
+  ELSE
+    DesicDehum(DesicDehumNum)%HXTypeNum = BalancedHX
+  END IF
+
+  ErrorsFound2 = .FALSE.
+  CALL ValidateComponent(DesicDehum(DesicDehumNum)%HXType,DesicDehum(DesicDehumNum)%HXName, &
+  ErrorsFound2,DesicDehum(DesicDehumNum)%DehumType//' = "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
+  IF (ErrorsFound2) ErrorsFoundGeneric = .TRUE.
+
+  ErrorsFound2 = .FALSE.
+  DesicDehum(DesicDehumNum)%HXProcInNode = &
+  GetSecondaryInletNode(DesicDehum(DesicDehumNum)%HXName, ErrorsFound2)
+  IF(ErrorsFound2)THEN
+    CALL ShowContinueError('...occurs in '//TRIM(DesicDehum(DesicDehumNum)%DehumType)// &
+    ' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
+    ErrorsFoundGeneric=.TRUE.
+  END IF
+
+  ProcAirInlet = NodeID(DesicDehum(DesicDehumNum)%HXProcInNode)
+
+  DesicDehum(DesicDehumNum)%ProcAirInNode = GetOnlySingleNode(ProcAirInlet,ErrorsFound,&
+  DesicDehum(DesicDehumNum)%DehumType,DesicDehum(DesicDehumNum)%Name, &
+  NodeType_Air,NodeConnectionType_Inlet,1,ObjectIsParent)
+
+  ErrorsFound2 = .FALSE.
+  DesicDehum(DesicDehumNum)%HXProcOutNode = &
+  GetSecondaryOutletNode(DesicDehum(DesicDehumNum)%HXName, ErrorsFound2)
+  IF(ErrorsFound2)THEN
+    CALL ShowContinueError('...occurs in '//TRIM(DesicDehum(DesicDehumNum)%DehumType)// &
+    ' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
+    ErrorsFoundGeneric=.TRUE.
+  END IF
+
+  ProcAirOutlet = NodeID(DesicDehum(DesicDehumNum)%HXProcOutNode)
+
+  DesicDehum(DesicDehumNum)%ProcAirOutNode = GetOnlySingleNode(ProcAirOutlet,ErrorsFound,&
+  DesicDehum(DesicDehumNum)%DehumType,DesicDehum(DesicDehumNum)%Name, &
+  NodeType_Air,NodeConnectionType_Outlet,1,ObjectIsParent)
+
+  CALL TestCompSet(DesicDehum(DesicDehumNum)%DehumType,DesicDehum(DesicDehumNum)%Name, &
+  ProcAirInlet,ProcAirOutlet,'Process Air Nodes')
+
+  ErrorsFound2 = .FALSE.
+  DesicDehum(DesicDehumNum)%HXRegenInNode = &
+  GetSupplyInletNode(DesicDehum(DesicDehumNum)%HXName, ErrorsFound2)
+  IF(ErrorsFound2)THEN
+    CALL ShowContinueError('...occurs in '//TRIM(DesicDehum(DesicDehumNum)%DehumType)// &
+    ' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
+    ErrorsFoundGeneric=.TRUE.
+  END IF
+
+  ErrorsFound2 = .FALSE.
+  DesicDehum(DesicDehumNum)%HXRegenOutNode = &
+  GetSupplyOutletNode(DesicDehum(DesicDehumNum)%HXName, ErrorsFound2)
+  IF(ErrorsFound2)THEN
+    CALL ShowContinueError('...occurs in '//TRIM(DesicDehum(DesicDehumNum)%DehumType)// &
+    ' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
+    ErrorsFoundGeneric=.TRUE.
+  END IF
+
+  DesicDehum(DesicDehumNum)%ControlNodeNum =        &
+  GetOnlySingleNode(Alphas(5),ErrorsFound,DesicDehum(DesicDehumNum)%DehumType,DesicDehum(DesicDehumNum)%Name, &
+  NodeType_Air,NodeConnectionType_Sensor,1,ObjectIsNotParent)
+
+  IF (DesicDehum(DesicDehumNum)%ControlNodeNum .EQ. 0) THEN
+    CALL ShowContinueError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' = "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
+    CALL ShowSevereError(TRIM(cAlphaFields(5))//' must be specified.')
+    ErrorsFoundGeneric=.TRUE.
+  ENDIF
+
+
+  DesicDehum(DesicDehumNum)%RegenFanType = Alphas(6)
+  DesicDehum(DesicDehumNum)%RegenFanName = Alphas(7)
+
+  IF (SameString(DesicDehum(DesicDehumNum)%RegenFanType,'Fan:OnOff') .OR. &
+  SameString(DesicDehum(DesicDehumNum)%RegenFanType,'Fan:ConstantVolume')) THEN
+  ErrorsFound2 = .FALSE.
+  CALL ValidateComponent(DesicDehum(DesicDehumNum)%RegenFanType,DesicDehum(DesicDehumNum)%RegenFanName, &
+  ErrorsFound2,DesicDehum(DesicDehumNum)%DehumType// ' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
+  IF (ErrorsFound2) ErrorsFoundGeneric = .TRUE.
+ELSE
+  CALL ShowSevereError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
+  CALL ShowContinueError('Illegal '//TRIM(cAlphaFields(6))//' = '//TRIM(DesicDehum(DesicDehumNum)%RegenFanType))
+  ErrorsFoundGeneric = .TRUE.
+ENDIF
+
+IF (SameString(Alphas(8),'DrawThrough') ) THEN
+  DesicDehum(DesicDehumNum)%RegenFanPlacement = DrawThru
+ELSEIF (SameString(Alphas(8),'BlowThrough') ) THEN
+  DesicDehum(DesicDehumNum)%RegenFanPlacement = BlowThru
+ELSE
+  CALL ShowWarningError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
+  CALL ShowContinueError('Illegal '//TRIM(cAlphaFields(8))//' = '//TRIM(Alphas(8)))
+  CALL ShowContinueError('...resetting to DEFAULT of DRAW THROUGH')
+  DesicDehum(DesicDehumNum)%RegenFanPlacement = DrawThru
+END IF
+
+ErrorsFound2 = .FALSE.
+DesicDehum(DesicDehumNum)%RegenFanInNode = &
+GetFanInletNode(DesicDehum(DesicDehumNum)%RegenFanType, &
+DesicDehum(DesicDehumNum)%RegenFanName,ErrorsFound2)
+IF(ErrorsFound2)THEN
+  CALL ShowContinueError('...occurs in '//TRIM(DesicDehum(DesicDehumNum)%DehumType)// &
+  ' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
+  ErrorsFoundGeneric=.TRUE.
+END IF
+
+ErrorsFound2 = .FALSE.
+DesicDehum(DesicDehumNum)%RegenFanOutNode = &
+GetFanOutletNode(DesicDehum(DesicDehumNum)%RegenFanType, &
+DesicDehum(DesicDehumNum)%RegenFanName,ErrorsFound2)
+CALL GetFanIndex(DesicDehum(DesicDehumNum)%RegenFanName,DesicDehum(DesicDehumNum)%RegenFanIndex,ErrorsFound2, &
+DesicDehum(DesicDehumNum)%RegenFanType)
+IF(ErrorsFound2)THEN
+  CALL ShowContinueError('...occurs in '//TRIM(DesicDehum(DesicDehumNum)%DehumType)// &
+  ' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
+  ErrorsFoundGeneric = .TRUE.
+END IF
+
+DesicDehum(DesicDehumNum)%RegenCoilType = Alphas(9)
+DesicDehum(DesicDehumNum)%RegenCoilName = Alphas(10)
+RegenCoilType = Alphas(9)
+RegenCoilName = Alphas(10)
+DesicDehum(DesicDehumNum)%RegenSetPointTemp = Numbers(1)
+
+IF (.NOT. lAlphaBlanks(10))Then
+  IF (SameString(DesicDehum(DesicDehumNum)%RegenCoilType,'Coil:Heating:Electric') .OR. &
+  SameString(DesicDehum(DesicDehumNum)%RegenCoilType,'Coil:Heating:Gas')) THEN
+  IF (SameString(DesicDehum(DesicDehumNum)%RegenCoilType,'Coil:Heating:Electric')) &
+  DesicDehum(DesicDehumNum)%RegenCoilType_Num = Coil_HeatingElectric
+  IF (SameString(DesicDehum(DesicDehumNum)%RegenCoilType,'Coil:Heating:Gas')) &
+  DesicDehum(DesicDehumNum)%RegenCoilType_Num = Coil_HeatingGas
+  ErrorsFound2 = .FALSE.
+  CALL ValidateComponent(RegenCoilType,RegenCoilName,ErrorsFound2, &
+  DesicDehum(DesicDehumNum)%DehumType//' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
+  IF (ErrorsFound2) ErrorsFoundGeneric = .TRUE.
+
+  IF(DesicDehum(DesicDehumNum)%RegenSetPointTemp .LE. 0.0)THEN
+    CALL ShowSevereError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
+    CALL ShowContinueError(TRIM(cNumericFields(1))//' must be greater than 0.')
+    ErrorsFoundGeneric = .TRUE.
+  END IF
+
+  ErrorsFound2 = .FALSE.
+  DesicDehum(DesicDehumNum)%RegenCoilInletNode = GetHeatingCoilInletNode(RegenCoilType,RegenCoilName,ErrorsFound2)
+  IF(ErrorsFound2)THEN
+    CALL ShowContinueError('...occurs in '//TRIM(DesicDehum(DesicDehumNum)%DehumType)// &
+    ' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
+    ErrorsFoundGeneric=.TRUE.
+  END IF
+
+  ErrorsFound2 = .FALSE.
+  DesicDehum(DesicDehumNum)%RegenCoilOutletNode = GetHeatingCoilOutletNode(RegenCoilType,RegenCoilName,ErrorsFound2)
+  IF(ErrorsFound2)THEN
+    CALL ShowContinueError('...occurs in '//TRIM(DesicDehum(DesicDehumNum)%DehumType)// &
+    ' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
+    ErrorsFoundGeneric=.TRUE.
+  END IF
+
+  ErrorsFound2=.FALSE.
+  CALL GetHeatingCoilIndex(RegenCoilName,DesicDehum(DesicDehumNum)%RegenCoilIndex,ErrorsFound2)
+  IF(ErrorsFound2)THEN
+    CALL ShowContinueError('...occurs in '//TRIM(DesicDehum(DesicDehumNum)%DehumType)// &
+    ' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
+    ErrorsFoundGeneric=.TRUE.
+  END IF
+
+  ErrorsFound2=.FALSE.
+  RegenCoilControlNodeNum = GetHeatingCoilControlNodeNum(RegenCoilType,RegenCoilName,ErrorsFound2)
+  IF(ErrorsFound2)THEN
+    CALL ShowContinueError('...occurs in '//TRIM(DesicDehum(DesicDehumNum)%DehumType)// &
+    ' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
+    ErrorsFoundGeneric=.TRUE.
+  END IF
+
+  IF(RegenCoilControlNodeNum .GT. 0)THEN
+    CALL ShowSevereError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
+    CALL ShowContinueError(TRIM(cNumericFields(1))//' is specified as '// &
+    TRIM(RoundSigDigits(DesicDehum(DesicDehumNum)%RegenSetPointTemp,3))//' C in this object.')
+    CALL ShowContinueError(' Do not specify a coil temperature setpoint node name in the regeneration air heater object.')
+    CALL ShowContinueError('...'//TRIM(cAlphaFields(9))//' = '//TRIM(DesicDehum(DesicDehumNum)%RegenCoilType))
+    CALL ShowContinueError('...'//TRIM(cAlphaFields(10))//' = '//TRIM(DesicDehum(DesicDehumNum)%RegenCoilName))
+    CALL ShowContinueError('...heating coil temperature setpoint node = '//TRIM(NodeID(RegenCoilControlNodeNum)))
+    CALL ShowContinueError('...leave the heating coil temperature setpoint node name blank in the regen heater object.')
+    ErrorsFoundGeneric = .TRUE.
+  END IF
+
+ELSEIF (SameString(DesicDehum(DesicDehumNum)%RegenCoilType,'Coil:Heating:Water')) THEN
+  DesicDehum(DesicDehumNum)%RegenCoilType_Num = Coil_HeatingWater
+  CALL ValidateComponent(RegenCoilType,RegenCoilName,IsNotOK,TRIM(CurrentModuleObject))
+  IF (IsNotOK) THEN
+    CALL ShowContinueError('...occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(Alphas(1)))
+    ErrorsFound=.TRUE.
+  ELSE ! mine data from heating coil object
+    ErrFlag = .FALSE.
+    DesicDehum(DesicDehumNum)%RegenCoilIndex = GetWaterCoilIndex('COIL:HEATING:WATER',RegenCoilName,ErrFlag)
+    IF (DesicDehum(DesicDehumNum)%RegenCoilIndex .EQ. 0) THEN
+      CALL ShowSevereError(TRIM(CurrentModuleObject)//' illegal '//TRIM(cAlphaFields(9))//' = ' &
+      //TRIM(RegenCoilName))
+      CALL ShowContinueError('Occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(DesicDehum(DesicDehumNum)%Name))
+      ErrorsFound = .TRUE.
+    END IF
+
+    IF(DesicDehum(DesicDehumNum)%RegenSetPointTemp .LE. 0.0)THEN
+      CALL ShowSevereError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
+      CALL ShowContinueError(TRIM(cNumericFields(1))//' must be greater than 0.')
+      ErrorsFoundGeneric = .TRUE.
+    END IF
+
+    ! Get the Heating Coil Hot water Inlet or control Node number
+    ErrFlag = .FALSE.
+    DesicDehum(DesicDehumNum)%CoilControlNode = GetCoilWaterInletNode('Coil:Heating:Water', &
+    RegenCoilName,ErrFlag)
+    IF(ErrFlag)THEN
+      CALL ShowContinueError('Occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(DesicDehum(DesicDehumNum)%Name))
+      ErrorsFound = .TRUE.
+    END IF
+
+    ! Get the Regeneration Heating Coil hot water max volume flow rate
+    ErrFlag = .FALSE.
+    DesicDehum(DesicDehumNum)%MaxCoilFluidFlow = GetCoilMaxWaterFlowRate('Coil:Heating:Water',  &
+    RegenCoilName,ErrFlag)
+    IF(ErrFlag)THEN
+      CALL ShowContinueError('Occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(DesicDehum(DesicDehumNum)%Name))
+      ErrorsFound = .TRUE.
+    END IF
+
+    ! Get the Regeneration Heating Coil Inlet Node
+    ErrFlag = .FALSE.
+    RegenCoilAirInletNode =  GetWaterCoilInletNode('Coil:Heating:Water',RegenCoilName,ErrFlag)
+    DesicDehum(DesicDehumNum)%RegenCoilInletNode = RegenCoilAirInletNode
+    IF(ErrFlag)THEN
+      CALL ShowContinueError('Occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(DesicDehum(DesicDehumNum)%Name))
+      ErrorsFound = .TRUE.
+    END IF
+
+    ! Get the Regeneration Heating Coil Outlet Node
+    ErrFlag = .FALSE.
+    RegenCoilAirOutletNode = GetWaterCoilOutletNode('Coil:Heating:Water',RegenCoilName,ErrFlag)
+    DesicDehum(DesicDehumNum)%RegenCoilOutletNode = RegenCoilAirOutletNode
+    IF(ErrFlag)THEN
+      CALL ShowContinueError('Occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(DesicDehum(DesicDehumNum)%Name))
+      ErrorsFound = .TRUE.
+    END IF
+
+  ENDIF
+ELSEIF (SameString(DesicDehum(DesicDehumNum)%RegenCoilType,'Coil:Heating:Steam')) THEN
+  DesicDehum(DesicDehumNum)%RegenCoilType_Num = Coil_HeatingSteam
+  CALL ValidateComponent(RegenCoilType,RegenCoilName,IsNotOK,TRIM(CurrentModuleObject))
+  IF (IsNotOK) THEN
+    CALL ShowContinueError('...occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(Alphas(1)))
+    ErrorsFound=.TRUE.
+  ELSE ! mine data from the regeneration heating coil object
+    IF(DesicDehum(DesicDehumNum)%RegenSetPointTemp .LE. 0.0)THEN
+      CALL ShowSevereError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
+      CALL ShowContinueError(TRIM(cNumericFields(1))//' must be greater than 0.')
+      ErrorsFoundGeneric = .TRUE.
+    END IF
+
+    ErrFlag = .FALSE.
+    DesicDehum(DesicDehumNum)%RegenCoilIndex = GetSTeamCoilIndex('COIL:HEATING:STEAM',RegenCoilName,ErrFlag)
+    IF (DesicDehum(DesicDehumNum)%RegenCoilIndex .EQ. 0) THEN
+      CALL ShowSevereError(TRIM(CurrentModuleObject)//' illegal '//TRIM(cAlphaFields(9))//' = ' &
+      //TRIM(RegenCoilName))
+      CALL ShowContinueError('Occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(DesicDehum(DesicDehumNum)%Name))
+      ErrorsFound = .TRUE.
+    END IF
+
+    ! Get the regeneration Heating Coil steam inlet node number
+    ErrFlag = .FALSE.
+    DesicDehum(DesicDehumNum)%CoilControlNode = GetSteamCoilSteamInletNode('Coil:Heating:Steam',RegenCoilName,ErrFlag)
+    IF(ErrFlag)THEN
+      CALL ShowContinueError('Occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(DesicDehum(DesicDehumNum)%Name))
+      ErrorsFound = .TRUE.
+    END IF
+
+    ! Get the regeneration heating Coil steam max volume flow rate
+    DesicDehum(DesicDehumNum)%MaxCoilFluidFlow = &
+    GetCoilMaxSteamFlowRate(DesicDehum(DesicDehumNum)%RegenCoilIndex,ErrFlag)
+    IF (DesicDehum(DesicDehumNum)%MaxCoilFluidFlow .GT. 0.0)THEN
+      SteamIndex = 0      ! Function GetSatDensityRefrig will look up steam index if 0 is passed
+      SteamDensity=GetSatDensityRefrig("STEAM",TempSteamIn,1.0d0,SteamIndex,'Dehumidifier:Desiccant:NoFans')
+      DesicDehum(DesicDehumNum)%MaxCoilFluidFlow = DesicDehum(DesicDehumNum)%MaxCoilFluidFlow * SteamDensity
+    END IF
+
+    ! Get the regeneration heating Coil Inlet Node
+    ErrFlag = .FALSE.
+    RegenCoilAirInletNode = &
+    GetSteamCoilAirInletNode(DesicDehum(DesicDehumNum)%RegenCoilIndex,RegenCoilName,ErrFlag)
+    DesicDehum(DesicDehumNum)%RegenCoilInletNode = RegenCoilAirInletNode
+    IF(ErrFlag)THEN
+      CALL ShowContinueError('Occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(DesicDehum(DesicDehumNum)%Name))
+      ErrorsFound = .TRUE.
+    END IF
+
+    ! Get the regeneration heating Coil Outlet Node
+    ErrFlag = .FALSE.
+    RegenCoilAirOutletNode = &
+    GetSteamCoilAirOutletNode(DesicDehum(DesicDehumNum)%RegenCoilIndex,RegenCoilName,ErrFlag)
+    DesicDehum(DesicDehumNum)%RegenCoilOutletNode = RegenCoilAirOutletNode
+    IF(ErrFlag)THEN
+      CALL ShowContinueError('Occurs in '//TRIM(CurrentModuleObject)//' = '//TRIM(DesicDehum(DesicDehumNum)%Name))
+      ErrorsFound = .TRUE.
+    END IF
+  ENDIF
+
+  ErrorsFound2=.FALSE.
+  RegenCoilControlNodeNum = GetSteamCoilControlNodeNum(RegenCoilType,RegenCoilName,ErrorsFound2)
+
+  IF(ErrorsFound2)THEN
+    CALL ShowContinueError('...occurs in '//TRIM(DesicDehum(DesicDehumNum)%DehumType)// &
+    ' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
+    ErrorsFoundGeneric=.TRUE.
+  END IF
+
+  IF(RegenCoilControlNodeNum .GT. 0)THEN
+    CALL ShowSevereError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
+    CALL ShowContinueError(TRIM(cNumericFields(1))//' is specified as '// &
+    TRIM(RoundSigDigits(DesicDehum(DesicDehumNum)%RegenSetPointTemp,3))//' C in this object.')
+    CALL ShowContinueError(' Do not specify a coil temperature setpoint node name in the regeneration air heater object.')
+    CALL ShowContinueError('...'//TRIM(cAlphaFields(9))//' = '//TRIM(DesicDehum(DesicDehumNum)%RegenCoilType))
+    CALL ShowContinueError('...'//TRIM(cAlphaFields(10))//' = '//TRIM(DesicDehum(DesicDehumNum)%RegenCoilName))
+    CALL ShowContinueError('...heating coil temperature setpoint node = '//TRIM(NodeID(RegenCoilControlNodeNum)))
+    CALL ShowContinueError('...leave the heating coil temperature setpoint node name blank in the regen heater object.')
+    ErrorsFoundGeneric = .TRUE.
+  END IF
+
+ELSE
+  CALL ShowSevereError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
+  CALL ShowContinueError('Illegal '//TRIM(cAlphaFields(9))//' = '//TRIM(DesicDehum(DesicDehumNum)%RegenCoilType))
+  ErrorsFoundGeneric = .TRUE.
+END IF
+
+ENDIF
+
+RegenAirInlet =  NodeID(DesicDehum(DesicDehumNum)%HXRegenInNode)
+
+RegenAirOutlet = NodeID(DesicDehum(DesicDehumNum)%HXRegenOutNode)
+
+RegenFanInlet = NodeID(DesicDehum(DesicDehumNum)%RegenFanInNode)
+
+RegenFanOutlet = NodeID(DesicDehum(DesicDehumNum)%RegenFanOutNode)
+
+IF (.NOT. lAlphaBlanks(10))Then
+  RegenCoilInlet = NodeID(DesicDehum(DesicDehumNum)%RegenCoilInletNode)
+
+  RegenCoilOutlet = NodeID(DesicDehum(DesicDehumNum)%RegenCoilOutletNode)
+ENDIF
+
+CALL SetUpCompSets(DesicDehum(DesicDehumNum)%DehumType, DesicDehum(DesicDehumNum)%Name, &
+DesicDehum(DesicDehumNum)%HXType,DesicDehum(DesicDehumNum)%HXName, &
+ProcAirInlet,ProcAirOutlet)
+
+CALL SetUpCompSets(DesicDehum(DesicDehumNum)%DehumType, DesicDehum(DesicDehumNum)%Name, &
+DesicDehum(DesicDehumNum)%RegenFanType,DesicDehum(DesicDehumNum)%RegenFanName, &
+RegenFanInlet,RegenFanOutlet)
+
+IF (.NOT. lAlphaBlanks(10))THEN
+  CALL SetUpCompSets(DesicDehum(DesicDehumNum)%DehumType, DesicDehum(DesicDehumNum)%Name, &
+  DesicDehum(DesicDehumNum)%RegenCoilType,DesicDehum(DesicDehumNum)%RegenCoilName, &
+  RegenCoilInlet,RegenCoilOutlet)
+ENDIF
+
+IF (DesicDehum(DesicDehumNum)%RegenFanPlacement == BlowThru)THEN
+  DesicDehum(DesicDehumNum)%RegenAirInNode = GetOnlySingleNode(RegenFanInlet,ErrorsFound,&
+  DesicDehum(DesicDehumNum)%DehumType,DesicDehum(DesicDehumNum)%Name, &
+  NodeType_Air,NodeConnectionType_Inlet,1,ObjectIsParent)
+  DesicDehum(DesicDehumNum)%RegenAirOutNode = GetOnlySingleNode(RegenAirOutlet,ErrorsFound,&
+  DesicDehum(DesicDehumNum)%DehumType,DesicDehum(DesicDehumNum)%Name, &
+  NodeType_Air,NodeConnectionType_Outlet,1,ObjectIsParent)
+  IF (.NOT. lAlphaBlanks(10))THEN
+    IF (DesicDehum(DesicDehumNum)%RegenFanOutNode /= DesicDehum(DesicDehumNum)%RegenCoilInletNode)THEN
+      CALL ShowSevereError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
+      CALL ShowContinueError('Regen fan outlet node name and regen heater inlet node name do not match for fan ' &
+      //'placement: Blow Through')
+      CALL ShowContinueError('...Regen fan outlet node   = '//TRIM(NodeID(DesicDehum(DesicDehumNum)%RegenFanOutNode)))
+      CALL ShowContinueError('...Regen heater inlet node = '//TRIM(NodeID(DesicDehum(DesicDehumNum)%RegenCoilInletNode)))
+      ErrorsFoundGeneric = .TRUE.
+    ENDIF
+    IF (DesicDehum(DesicDehumNum)%RegenCoilOutletNode /= DesicDehum(DesicDehumNum)%HXRegenInNode)THEN
+      CALL ShowSevereError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
+      CALL ShowContinueError('Regen heater outlet node name and desiccant heat exchanger regen inlet node name do not ' &
+      //'match for fan placement: Blow Through')
+      CALL ShowContinueError('...Regen heater outlet node = '//TRIM(NodeID(DesicDehum(DesicDehumNum)%RegenCoilOutletNode)))
+      CALL ShowContinueError('...HX regen inlet node      = '//TRIM(NodeID(DesicDehum(DesicDehumNum)%HXRegenInNode)))
+      ErrorsFoundGeneric = .TRUE.
+    ENDIF
+  ELSE
+    IF (DesicDehum(DesicDehumNum)%RegenFanOutNode /= DesicDehum(DesicDehumNum)%HXRegenInNode)THEN
+      CALL ShowSevereError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
+      CALL ShowContinueError('Regen fan outlet node name and desiccant heat exchanger inlet node name do not match for fan ' &
+      //'placement: Blow Through')
+      CALL ShowContinueError('...Regen fan outlet node   = '//TRIM(NodeID(DesicDehum(DesicDehumNum)%RegenFanOutNode)))
+      CALL ShowContinueError('...Desiccant HX inlet node = '//TRIM(NodeID(DesicDehum(DesicDehumNum)%HXRegenInNode)))
+      ErrorsFoundGeneric = .TRUE.
+    ENDIF
+  ENDIF
+ELSE ! ELSE for IF (DesicDehum(DesicDehumNum)%RegenFanPlacement == BlowThru)THEN
+  DesicDehum(DesicDehumNum)%RegenAirOutNode = GetOnlySingleNode(RegenFanOutlet,ErrorsFound,&
+  DesicDehum(DesicDehumNum)%DehumType,DesicDehum(DesicDehumNum)%Name, &
+  NodeType_Air,NodeConnectionType_Outlet,1,ObjectIsParent)
+  IF (.NOT. lAlphaBlanks(10)) THEN
+    DesicDehum(DesicDehumNum)%RegenAirInNode =  GetOnlySingleNode(RegenCoilInlet,ErrorsFound,&
+    DesicDehum(DesicDehumNum)%DehumType,DesicDehum(DesicDehumNum)%Name, &
+    NodeType_Air,NodeConnectionType_Inlet,1,ObjectIsParent)
+    IF (DesicDehum(DesicDehumNum)%RegenCoilOutletNode /= DesicDehum(DesicDehumNum)%HXRegenInNode)THEN
+      CALL ShowSevereError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
+      CALL ShowContinueError('Regen heater outlet node name and desiccant heat exchanger regen inlet node name do not ' &
+      //'match for fan placement: Draw Through')
+      CALL ShowContinueError('...Regen heater outlet node = '//TRIM(NodeID(DesicDehum(DesicDehumNum)%RegenCoilOutletNode)))
+      CALL ShowContinueError('...HX regen inlet node      = '//TRIM(NodeID(DesicDehum(DesicDehumNum)%HXRegenInNode)))
+      ErrorsFoundGeneric = .TRUE.
+    ENDIF
+  ELSE
+    DesicDehum(DesicDehumNum)%RegenAirInNode =  GetOnlySingleNode(RegenAirInlet,ErrorsFound,&
+    DesicDehum(DesicDehumNum)%DehumType,DesicDehum(DesicDehumNum)%Name, &
+    NodeType_Air,NodeConnectionType_Inlet,1,ObjectIsParent)
+  ENDIF
+  IF (DesicDehum(DesicDehumNum)%RegenFanInNode /= DesicDehum(DesicDehumNum)%HXRegenOutNode)THEN
+    CALL ShowSevereError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
+    CALL ShowContinueError('Regen fan inlet node name and desiccant heat exchanger regen outlet node name do not match ' &
+    //'for fan placement: Draw Through')
+    CALL ShowContinueError('...Regen fan inlet node = '//TRIM(NodeID(DesicDehum(DesicDehumNum)%RegenFanInNode)))
+    CALL ShowContinueError('...HX regen outlet node = '//TRIM(NodeID(DesicDehum(DesicDehumNum)%HXRegenOutNode)))
+    ErrorsFoundGeneric = .TRUE.
+  ENDIF
+ENDIF
+
+DesicDehum(DesicDehumNum)%CoolingCoilType = Alphas(11)
+DesicDehum(DesicDehumNum)%CoolingCoilName = Alphas(12)
+
+IF (.NOT. lAlphaBlanks(12))THEN
+  IF ((SameString(DesicDehum(DesicDehumNum)%CoolingCoilType,'COIL:COOLING:DX:SINGLESPEED')) .OR. &
+  (SameString(DesicDehum(DesicDehumNum)%CoolingCoilType,'COIL:COOLING:DX:TWOSTAGEWITHHUMIDITYCONTROLMODE'))) THEN
+  ErrorsFound2 = .FALSE.
+  CALL ValidateComponent(DesicDehum(DesicDehumNum)%CoolingCoilType,DesicDehum(DesicDehumNum)%CoolingCoilName, &
+  ErrorsFound2,DesicDehum(DesicDehumNum)%DehumType//' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
+  IF (ErrorsFound2) ErrorsFoundGeneric = .TRUE.
+ELSE !ELSE for IF (DesicDehum(DesicDehumNum)%CoolingCoilType == 'COIL:COOLING:DX:SINGLESPEED' or MultiMode)THEN
+  CALL ShowSevereError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//'='//TRIM(DesicDehum(DesicDehumNum)%Name))
+  CALL ShowContinueError('Illegal '//TRIM(cAlphaFields(11))//' = '//TRIM(DesicDehum(DesicDehumNum)%CoolingCoilType))
+  ErrorsFoundGeneric = .TRUE.
+END IF
+
+ErrorsFound2 = .FALSE.
+DesicDehum(DesicDehumNum)%CoolingCoilOutletNode = &
+GetDXCoilOutletNode(DesicDehum(DesicDehumNum)%CoolingCoilType, &
+DesicDehum(DesicDehumNum)%CoolingCoilName,ErrorsFound2)
+DesicDehum(DesicDehumNum)%CompanionCoilCapacity = GetDXCoilCapacity(DesicDehum(DesicDehumNum)%CoolingCoilType, &
+DesicDehum(DesicDehumNum)%CoolingCoilName,ErrorsFound2)
+IF(ErrorsFound2)CALL ShowContinueError('...occurs in '//TRIM(DesicDehum(DesicDehumNum)%DehumType)// &
+' "'//TRIM(DesicDehum(DesicDehumNum)%CoolingCoilName)//'"')
+
+ErrorsFound2 = .FALSE.
+CALL GetDXCoilIndex(DesicDehum(DesicDehumNum)%CoolingCoilName,DesicDehum(DesicDehumNum)%DXCoilIndex, &
+ErrorsFound2, DesicDehum(DesicDehumNum)%CoolingCoilType)
+IF(ErrorsFound2)CALL ShowContinueError('...occurs in '//TRIM(DesicDehum(DesicDehumNum)%DehumType)// &
+' "'//TRIM(DesicDehum(DesicDehumNum)%CoolingCoilName)//'"')
+
+ENDIF !  (DesicDehum(DesicDehumNum)%CoolingCoilName /= Blank)THEN
+
+IF (SameString(Alphas(13),'Yes')) THEN
+  DesicDehum(DesicDehumNum)%CoilUpstreamOfProcessSide = Yes
+ELSE IF (lAlphaBlanks(13)) THEN
+  DesicDehum(DesicDehumNum)%CoilUpstreamOfProcessSide = No
+ELSEIF (SameString(Alphas(13),'No')) THEN
+  DesicDehum(DesicDehumNum)%CoilUpstreamOfProcessSide = No
+ELSE
+  CALL ShowWarningError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
+  CALL ShowContinueError('Invalid choice for '//TRIM(cAlphaFields(13))//' = ' &
+  //TRIM(Alphas(13)))
+  CALL ShowContinueError('...resetting to the default value of No')
+  DesicDehum(DesicDehumNum)%CoilUpstreamOfProcessSide = No
+END IF
+
+IF (SameString(Alphas(14),'Yes')) THEN
+  DesicDehum(DesicDehumNum)%Preheat = Yes
+ELSEIF (SameString(Alphas(14),'No')) THEN
+  DesicDehum(DesicDehumNum)%Preheat = No
+ELSEIF (lAlphaBlanks(14)) THEN
+  DesicDehum(DesicDehumNum)%Preheat = No
+ELSE
+  CALL ShowWarningError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
+  CALL ShowContinueError('Invalid choice for '//TRIM(cAlphaFields(14))//' = '//TRIM(Alphas(14)))
+  CALL ShowContinueError('...resetting to the default value of NO')
+  DesicDehum(DesicDehumNum)%Preheat = No
+END IF
+
+IF(DesicDehum(DesicDehumNum)%DXCoilIndex .GT. 0)THEN
+
+  IF(DesicDehum(DesicDehumNum)%Preheat == Yes)THEN ! Companion coil waste heat used for regeneration of desiccant
+    ErrorsFound2 = .FALSE.
+    DesuperHeaterIndex = GetHeatReclaimSourceIndexNum(DesicDehum(DesicDehumNum)%CoolingCoilType, &
+    DesicDehum(DesicDehumNum)%CoolingCoilName,ErrorsFound2)
+    IF (ErrorsFound2)THEN
+      CALL ShowContinueError('...occurs in '//TRIM(DesicDehum(DesicDehumNum)%DehumType)// &
+      ' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
+      ErrorsFoundGeneric = .TRUE.
+    END IF
+
+    IF(DesuperHeaterIndex .GT. 0) THEN
+      CALL ShowWarningError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//'='//TRIM(DesicDehum(DesicDehumNum)%Name))
+      CALL ShowContinueError('A Coil:Heating:Desuperheater object should not be used when condenser waste heat is '// &
+      'reclaimed for desiccant regeneration.')
+      CALL ShowContinueError('A Coil:Heating:Desuperheater object was found using waste heat from the ' &
+      //TRIM(DesicDehum(DesicDehumNum)%CoolingCoilType)//' "'//&
+      TRIM(DesicDehum(DesicDehumNum)%CoolingCoilName)//'" object.')
+      !          ErrorsFoundGeneric = .TRUE.
+    END IF
+  END IF
+
+  ErrorsFound2 = .FALSE.
+  DesicDehum(DesicDehumNum)%CondenserInletNode = GetCoilCondenserInletNode(DesicDehum(DesicDehumNum)%CoolingCoilType, &
+  DesicDehum(DesicDehumNum)%CoolingCoilName,ErrorsFound2)
+  IF(DesicDehum(DesicDehumNum)%CondenserInletNode .EQ. 0 .AND. DesicDehum(DesicDehumNum)%Preheat .EQ. Yes)THEN
+    DesicDehum(DesicDehumNum)%CondenserInletNode = GetOnlySingleNode(&
+    TRIM(DesicDehum(DesicDehumNum)%CoolingCoilName)//' Condenser Inlet Node', &
+    ErrorsFound,TRIM(DesicDehum(DesicDehumNum)%DehumType),TRIM(DesicDehum(DesicDehumNum)%Name), &
+    NodeType_Air,NodeConnectionType_OutsideAirReference, 2, ObjectIsNotParent)
+    CALL CheckAndAddAirNodeNumber(DesicDehum(DesicDehumNum)%CondenserInletNode,OANodeError)
+    IF(.NOT. OANodeError)THEN
+      CALL ShowWarningError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
+      CALL ShowContinueError('The '//TRIM(cAlphaFields(14))//' input is specified as Yes and a condenser air'// &
+      ' inlet node name was not specified for the companion cooling coil.')
+      CALL ShowContinueError('Adding condenser inlet air node for '//TRIM(DesicDehum(DesicDehumNum)%CoolingCoilType)//' "'// &
+      TRIM(DesicDehum(DesicDehumNum)%CoolingCoilName)//'"')
+      CALL ShowContinueError('...condenser inlet air node name = '// &
+      TRIM(NodeID(DesicDehum(DesicDehumNum)%CondenserInletNode)))
+      CALL ShowContinueError('...this node name will be specified as an outdoor air node.')
+    END IF
+  ELSE IF(DesicDehum(DesicDehumNum)%Preheat .EQ. Yes)THEN
+    IF (.NOT. CheckOutAirNodeNumber(DesicDehum(DesicDehumNum)%CondenserInletNode)) THEN
+      CALL ShowSevereError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
+      CALL ShowContinueError('The regeneration air inlet node must be specified as an outdoor air node '// &
+      'when '//TRIM(cAlphaFields(14))//' is specified as Yes.')
+      ErrorsFoundGeneric = .TRUE.
+    END IF
+  END IF
+END IF
+
+IF (CheckOutAirNodeNumber(DesicDehum(DesicDehumNum)%RegenAirInNode)) THEN
+  DesicDehum(DesicDehumNum)%RegenInletIsOutsideAirNode = .TRUE.
+END IF
+
+IF(DesicDehum(DesicDehumNum)%DXCoilIndex .EQ. 0 .AND. DesicDehum(DesicDehumNum)%Preheat == Yes) THEN
+  CALL ShowWarningError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//'='//TRIM(DesicDehum(DesicDehumNum)%Name))
+  CALL ShowContinueError('A valid '//TRIM(cAlphaFields(12))//' must be used when condenser waste heat is '// &
+  'reclaimed for desiccant regeneration.')
+  CALL ShowContinueError('... '//TRIM(cAlphaFields(11))//' = '//TRIM(DesicDehum(DesicDehumNum)%CoolingCoilType))
+  CALL ShowContinueError('... '//TRIM(cAlphaFields(12))//' = '//TRIM(DesicDehum(DesicDehumNum)%CoolingCoilName))
+  ErrorsFoundGeneric = .TRUE.
+END IF
+
+IF(DesicDehum(DesicDehumNum)%DXCoilIndex .GT. 0 .AND. DesicDehum(DesicDehumNum)%CoilUpstreamOfProcessSide == Yes) THEN
+  ErrorsFound2 = .FALSE.
+  CoilBypassedFlowFrac = GetDXCoilBypassedFlowFrac(DesicDehum(DesicDehumNum)%CoolingCoilType, &
+  DesicDehum(DesicDehumNum)%CoolingCoilName, ErrorsFound2)
+  IF(ErrorsFound2)CALL ShowContinueError('...occurs in '//TRIM(DesicDehum(DesicDehumNum)%DehumType)// &
+  ' "'//TRIM(DesicDehum(DesicDehumNum)%CoolingCoilName)//'"')
+  IF(CoilBypassedFlowFrac .GT. 0.0)THEN
+    CALL ShowWarningError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//'='//TRIM(DesicDehum(DesicDehumNum)%Name))
+    CALL ShowContinueError('A DX coil bypassed air flow fraction greater than 0 may not be used when the input for '// &
+    TRIM(cAlphaFields(13))//' is specified as Yes.')
+    CALL ShowContinueError('A DX coil with a bypassed air flow fraction greater than 0 may be upstream of the process '// &
+    'inlet however the input for '//TRIM(cAlphaFields(13))//' must be specified as No.')
+    CALL ShowContinueError('... '//TRIM(cAlphaFields(11))//' = '//TRIM(DesicDehum(DesicDehumNum)%CoolingCoilType))
+    CALL ShowContinueError('... '//TRIM(cAlphaFields(12))//' = '//TRIM(DesicDehum(DesicDehumNum)%CoolingCoilName))
+    ErrorsFoundGeneric = .TRUE.
+  END IF
+ELSE IF(DesicDehum(DesicDehumNum)%DXCoilIndex .EQ. 0 .AND. DesicDehum(DesicDehumNum)%CoilUpstreamOfProcessSide == Yes) THEN
+  CALL ShowSevereError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
+  CALL ShowContinueError('A valid companion coil must be specified when '// &
+  TRIM(cAlphaFields(13))//' is specified as Yes.')
+  ErrorsFoundGeneric = .TRUE.
+END IF
+
+IF(.NOT. DesicDehum(DesicDehumNum)%RegenInletIsOutsideAirNode .AND. DesicDehum(DesicDehumNum)%Preheat == Yes) THEN
+  CALL ShowWarningError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//'='//TRIM(DesicDehum(DesicDehumNum)%Name))
+  CALL ShowContinueError('The desiccant dehumidifier regeneration air inlet must be specified as an outdoor air node'// &
+  ' when '//TRIM(cAlphaFields(14))//' is specified as Yes.')
+  CALL ShowContinueError('... desiccant dehumidifier regeneration air inlet node name = '// &
+  TRIM(NodeID(DesicDehum(DesicDehumNum)%RegenAirInNode)))
+  ErrorsFoundGeneric = .TRUE.
+END IF
+
+IF(DesicDehum(DesicDehumNum)%CoilUpstreamOfProcessSide == Yes)THEN
+  IF(DesicDehum(DesicDehumNum)%ProcAirInNode .NE. DesicDehum(DesicDehumNum)%CoolingCoilOutletNode)THEN
+    CALL ShowSevereError('For '//TRIM(DesicDehum(DesicDehumNum)%DehumType)// &
+    ' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//'"')
+    CALL ShowContinueError('Node names are inconsistent in companion cooling coil and desiccant heat exchanger objects.')
+    CALL ShowContinueError('For companion cooling coil = '//TRIM(DesicDehum(DesicDehumNum)%CoolingCoilType)//' "'// &
+    TRIM(DesicDehum(DesicDehumNum)%CoolingCoilName)//'"')
+    CALL ShowContinueError('The outlet node name in cooling coil = '// &
+    TRIM(NodeID(DesicDehum(DesicDehumNum)%CoolingCoilOutletNode)))
+    CALL ShowContinueError('For desiccant heat exchanger = '//TRIM(DesicDehum(DesicDehumNum)%HXType)//' "'// &
+    TRIM(DesicDehum(DesicDehumNum)%HXName)//'"')
+    CALL ShowContinueError('The process air inlet node name = '// &
+    TRIM(NodeID(DesicDehum(DesicDehumNum)%ProcAirInNode)))
+    CALL ShowFatalError('...previous error causes program termination.')
+  END IF
+END IF
+
+!Exhaust Fan input
+DesicDehum(DesicDehumNum)%ExhaustFanMaxVolFlowRate = Numbers(2)
+DesicDehum(DesicDehumNum)%ExhaustFanMaxPower = Numbers(3)
+DesicDehum(DesicDehumNum)%ExhaustFanCurveIndex = GetCurveIndex(Alphas(15))
+
+IF(.NOT. SameString(GetCurveType(DesicDehum(DesicDehumNum)%ExhaustFanCurveIndex),' '))THEN
+  SELECT CASE(GetCurveType(DesicDehum(DesicDehumNum)%ExhaustFanCurveIndex))
+  CASE('CUBIC')
+
+  CASE('QUADRATIC')
+
+  CASE DEFAULT
+    CALL ShowSevereError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//', "'//TRIM(DesicDehum(DesicDehumNum)%Name)// &
+    '" illegal Part Load Fraction Correlation Curve (function of part-load ratio) type for this object = '// &
+    TRIM(GetCurveType(DesicDehum(DesicDehumNum)%ExhaustFanCurveIndex)))
+    ErrorsFoundGeneric=.true.
+  END SELECT
+END IF
+
+IF(DesicDehum(DesicDehumNum)%Preheat == Yes)THEN
+  ErrorsFound2 = .FALSE.
+  IF (DesicDehum(DesicDehumNum)%ExhaustFanMaxVolFlowRate <= 0)THEN
+    ErrorsFound2 =.TRUE.
+  ENDIF
+  IF (DesicDehum(DesicDehumNum)%ExhaustFanMaxPower <= 0)THEN
+    ErrorsFound2 =.TRUE.
+  ENDIF
+  IF(ErrorsFound2)THEN
+    CALL ShowSevereError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "'//TRIM(DesicDehum(DesicDehumNum)%Name//'"'))
+    CALL ShowContinueError(TRIM(cNumericFields(2))//' and '//TRIM(cNumericFields(3))// &
+    ' must be defined if '//TRIM(cAlphaFields(14))//' field is "Yes".')
+  END IF
+ELSE IF(DesicDehum(DesicDehumNum)%Preheat == No)THEN
+  IF(DesicDehum(DesicDehumNum)%ExhaustFanMaxVolFlowRate .GT. 0.0)THEN
+    CALL ShowWarningError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "'//TRIM(DesicDehum(DesicDehumNum)%Name//'"'))
+    CALL ShowContinueError(TRIM(cNumericFields(2))// &
+    ' should be 0 if '//TRIM(cAlphaFields(14))//' field is "No".')
+    CALL ShowContinueError('...'//TRIM(cNumericFields(2))//' will not be used and is reset to 0.')
+    DesicDehum(DesicDehumNum)%ExhaustFanMaxVolFlowRate = 0.0
+  END IF
+END IF
+
+ENDDO
+
+! SET UP OUTPUTS
+DO DesicDehumNum=1,NumSolidDesicDehums
+  ! Setup Report variables for the Desiccant Dehumidifiers
+  CALL SetupOutputVariable('Desiccant Dehumidifier Water Removed [kg]',DesicDehum(DesicDehumNum)%WaterRemove,&
+  'System','Sum',DesicDehum(DesicDehumNum)%Name)
+  CALL SetupOutputVariable('Desiccant Dehumidifier Water Removal Rate[kg/s]',DesicDehum(DesicDehumNum)%WaterRemoveRate,&
+  'System','Average',DesicDehum(DesicDehumNum)%Name)
+  CALL SetupOutputVariable('Desiccant Dehumidifier Part Load Ratio[]',DesicDehum(DesicDehumNum)%PartLoad,'System',&
+  'Average',DesicDehum(DesicDehumNum)%Name)
+  CALL SetupOutputVariable('Desiccant Dehumidifier Electric Power[W]',DesicDehum(DesicDehumNum)%ElecUseRate,'System',&
+  'Average',DesicDehum(DesicDehumNum)%Name)
+  CALL SetupOutputVariable('Desiccant Dehumidifier Electric Consumption[J]',DesicDehum(DesicDehumNum)%ElecUseEnergy,'System',&
+  'Sum',DesicDehum(DesicDehumNum)%Name, &
+  ResourceTypeKey='Electricity',GroupKey='System',EndUseKey='Cooling')
+  CALL SetupOutputVariable('Desiccant Dehumidifier Specific Regen Energy [J/kgWater]',&
+  DesicDehum(DesicDehumNum)%SpecRegenEnergy,&
+  'System','Average',DesicDehum(DesicDehumNum)%Name)
+  CALL SetupOutputVariable('Desiccant Dehumidifier Regen Energy Rate[W]',DesicDehum(DesicDehumNum)%QRegen,'System','Average',&
+  DesicDehum(DesicDehumNum)%Name)
+  CALL SetupOutputVariable('Desiccant Dehumidifier Regen Energy[J]',DesicDehum(DesicDehumNum)%RegenEnergy,'System','Sum',&
+  DesicDehum(DesicDehumNum)%Name)
+  CALL SetupOutputVariable('Desiccant Dehumidifier Regen Air Velocity[m/s]',DesicDehum(DesicDehumNum)%RegenAirVel,&
+  'System','Average',DesicDehum(DesicDehumNum)%Name)
+  CALL SetupOutputVariable('Desiccant Dehumidifier Regen Air Mass Flow Rate[kg/s]',&
+  DesicDehum(DesicDehumNum)%RegenAirInMassFlowRate,'System','Average',&
+  DesicDehum(DesicDehumNum)%Name)
+  CALL SetupOutputVariable('Desiccant Dehumidifier Process Air Mass Flow Rate[kg/s]',&
+  DesicDehum(DesicDehumNum)%ProcAirInMassFlowRate,'System','Average',&
+  DesicDehum(DesicDehumNum)%Name)
+END DO
+
+DO DesicDehumNum=1,NumGenericDesicDehums
+  ! Setup Report variables for the Desiccant Dehumidifiers
+  CALL SetupOutputVariable('Desiccant Dehumidifier Water Removed [kg]',DesicDehum(DesicDehumNum)%WaterRemove,&
+  'System','Sum',DesicDehum(DesicDehumNum)%Name)
+  CALL SetupOutputVariable('Desiccant Dehumidifier Water Removal Rate [kg/s]',DesicDehum(DesicDehumNum)%WaterRemoveRate,&
+  'System','Average',DesicDehum(DesicDehumNum)%Name)
+  CALL SetupOutputVariable('Desiccant Dehumidifier Part Load Ratio []',DesicDehum(DesicDehumNum)%PartLoad,'System',&
+  'Average',DesicDehum(DesicDehumNum)%Name)
+  IF(DesicDehum(DesicDehumNum)%ExhaustFanMaxVolFlowRate .GT. 0)THEN
+    CALL SetupOutputVariable('Desiccant Dehumidifier Exhaust Fan Electric Power [W]',DesicDehum(DesicDehumNum)%ExhaustFanPower,&
+    'System','Average',DesicDehum(DesicDehumNum)%Name)
+    CALL SetupOutputVariable('Desiccant Dehumidifier Exhaust Fan Electric Consumption [J]', &
+    DesicDehum(DesicDehumNum)%ExhaustFanElecConsumption,'System',&
+    'Sum',DesicDehum(DesicDehumNum)%Name, &
+    ResourceTypeKey='Electricity',GroupKey='System',EndUseKey='Cooling')
+  END IF
+END DO
+
+IF (ErrorsFound) THEN
+  CALL ShowFatalError('Errors found in getting Dehumidifier:Desiccant:NoFans input')
+ELSEIF (ErrorsFoundGeneric) THEN
+  CALL ShowFatalError('Errors found in getting DESICCANT DEHUMIDIFIER input')
+END IF
+
+DEALLOCATE(Alphas)
+DEALLOCATE(cAlphaFields)
+DEALLOCATE(cNumericFields)
+DEALLOCATE(Numbers)
+DEALLOCATE(lAlphaBlanks)
+DEALLOCATE(lNumericBlanks)
+
+RETURN
 
 END SUBROUTINE GetDesiccantDehumidifierInput
 
 SUBROUTINE InitDesiccantDehumidifier(DesicDehumNum,FirstHVACIteration)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Michael J. Witte, GARD Analytics, Inc.
-          !                      for Gas Research Institute
-          !       DATE WRITTEN   March 2001
-          !       MODIFIED       Jan 2005 M. J. Witte, GARD Analytics, Inc.
-          !                        Add setpoint validation for new control type option:
-          !                          NODE LEAVING HUMRAT SETPOINT:BYPASS
-          !                        Work supported by ASHRAE research project 1254-RP
-          !                      June 2007 R. Raustad, FSEC
-          !                        Added new dehumidifier type -- DESICCANT DEHUMIDIFIER
-          !                      May 2009, B. Griffith, NREL. added EMS node setpoint checks
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Michael J. Witte, GARD Analytics, Inc.
+  !                      for Gas Research Institute
+  !       DATE WRITTEN   March 2001
+  !       MODIFIED       Jan 2005 M. J. Witte, GARD Analytics, Inc.
+  !                        Add setpoint validation for new control type option:
+  !                          NODE LEAVING HUMRAT SETPOINT:BYPASS
+  !                        Work supported by ASHRAE research project 1254-RP
+  !                      June 2007 R. Raustad, FSEC
+  !                        Added new dehumidifier type -- DESICCANT DEHUMIDIFIER
+  !                      May 2009, B. Griffith, NREL. added EMS node setpoint checks
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine is for initializations of the dehumidifier Components.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine is for initializations of the dehumidifier Components.
 
-          ! METHODOLOGY EMPLOYED:
-          ! Uses the status flags to trigger initializations.
+  ! METHODOLOGY EMPLOYED:
+  ! Uses the status flags to trigger initializations.
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataHVACGlobals, ONLY: DoSetPointTest, SetPointErrorFlag
-!unused  USE DataEnvironment, ONLY: StdBaroPress
+  !unused  USE DataEnvironment, ONLY: StdBaroPress
   USE Psychrometrics,  ONLY: PsyRhoAirFnPbTdbW
   USE EMSManager ,     ONLY: CheckIfNodeSetpointManagedByEMS, iHumidityRatioMaxSetpoint
   USE SteamCoils,           ONLY: SimulateSteamCoilComponents, GetCoilMaxSteamFlowRate=>GetCoilMaxSteamFlowRate, &
-                                  GetSteamCoilCapacity=>GetCoilCapacity
+  GetSteamCoilCapacity=>GetCoilCapacity
   USE WaterCoils,           ONLY: GetCoilMaxWaterFlowRate, SimulateWaterCoilComponents
   USE DataPlant,            ONLY: TypeOf_CoilSteamAirHeating, ScanPlantLoopsForObject, TypeOf_CoilWaterSimpleHeating, &
-                                  PlantLoop
+  PlantLoop
   USE FluidProperties,      ONLY: GetDensityGlycol, GetSatDensityRefrig
   USE PlantUtilities,       ONLY: SetComponentFlowRate, InitComponentNodes
   USE DataGlobals_HPSimIntegrated,          ONLY: InitConvTemp, AnyPlantInModel
@@ -1586,20 +1586,20 @@ SUBROUTINE InitDesiccantDehumidifier(DesicDehumNum,FirstHVACIteration)
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   INTEGER, INTENT (IN) :: DesicDehumNum ! number of the current dehumidifier being simulated
   LOGICAL, INTENT (IN) :: FirstHVACIteration  ! TRUE if 1st HVAC simulation of system timestep
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER             :: ProcInNode ! inlet node number
   INTEGER             :: RegenInNode ! inlet node number
   INTEGER             :: ControlNode ! control node number
@@ -1614,8 +1614,8 @@ SUBROUTINE InitDesiccantDehumidifier(DesicDehumNum,FirstHVACIteration)
   REAL(r64)                      :: CoilMaxVolFlowRate   ! water or steam max volumetric water flow rate
   REAL(r64)                      :: QCoilActual          ! actual CBVAV steam heating coil load met (W)
   LOGICAL                        :: ErrorFlag            ! local error flag returned from data mining
-!unused  REAL(r64)                      :: mdot                 ! heating coil fluid mass flow rate, kg/s
-!unused  REAL(r64)                      :: QDelivered           ! regen heat actually delivered by regen coil [W]
+  !unused  REAL(r64)                      :: mdot                 ! heating coil fluid mass flow rate, kg/s
+  !unused  REAL(r64)                      :: QDelivered           ! regen heat actually delivered by regen coil [W]
 
   IF (MyOneTimeFlag) THEN
 
@@ -1631,28 +1631,28 @@ SUBROUTINE InitDesiccantDehumidifier(DesicDehumNum,FirstHVACIteration)
 
   IF (MyPlantScanFlag(DesicDehumNum) .AND. ALLOCATED(PlantLoop)) THEN
     IF ( (DesicDehum(DesicDehumNum)%RegenCoilType_Num == Coil_HeatingWater) .OR. &
-         (DesicDehum(DesicDehumNum)%RegenCoilType_Num == Coil_HeatingSteam) ) THEN
-      IF (DesicDehum(DesicDehumNum)%RegenCoilType_Num == Coil_HeatingWater) THEN
-        ErrorFlag=.false.
-        CALL ScanPlantLoopsForObject( DesicDehum(DesicDehumNum)%RegenCoilName, &
-                                          TypeOf_CoilWaterSimpleHeating , &
-                                          DesicDehum(DesicDehumNum)%LoopNum, &
-                                          DesicDehum(DesicDehumNum)%LoopSide, &
-                                          DesicDehum(DesicDehumNum)%BranchNum, &
-                                          DesicDehum(DesicDehumNum)%CompNum,   &
-                                          ErrFlag=ErrorFlag)
+    (DesicDehum(DesicDehumNum)%RegenCoilType_Num == Coil_HeatingSteam) ) THEN
+    IF (DesicDehum(DesicDehumNum)%RegenCoilType_Num == Coil_HeatingWater) THEN
+      ErrorFlag=.false.
+      CALL ScanPlantLoopsForObject( DesicDehum(DesicDehumNum)%RegenCoilName, &
+      TypeOf_CoilWaterSimpleHeating , &
+        DesicDehum(DesicDehumNum)%LoopNum, &
+        DesicDehum(DesicDehumNum)%LoopSide, &
+        DesicDehum(DesicDehumNum)%BranchNum, &
+        DesicDehum(DesicDehumNum)%CompNum,   &
+        ErrFlag=ErrorFlag)
         IF (ErrorFlag) THEN
           CALL ShowFatalError('InitDesiccantDehumidifier: Program terminated for previous conditions.')
         ENDIF
 
         ErrorFlag=.false.
         DesicDehum(DesicDehumNum)%MaxCoilFluidFlow = GetCoilMaxWaterFlowRate('Coil:Heating:Water',  &
-                                                     DesicDehum(DesicDehumNum)%RegenCoilName,ErrorFlag)
+        DesicDehum(DesicDehumNum)%RegenCoilName,ErrorFlag)
         IF(DesicDehum(DesicDehumNum)%MaxCoilFluidFlow .GT. 0.0)THEN
           FluidDensity = GetDensityGlycol(PlantLoop(DesicDehum(DesicDehumNum)%LoopNum)%FluidName, &
-                                InitConvTemp, &
-                                PlantLoop(DesicDehum(DesicDehumNum)%LoopNum)%FluidIndex, &
-                                'InitCBVAV')
+          InitConvTemp, &
+          PlantLoop(DesicDehum(DesicDehumNum)%LoopNum)%FluidIndex, &
+          'InitCBVAV')
           DesicDehum(DesicDehumNum)%MaxCoilFluidFlow = DesicDehum(DesicDehumNum)%MaxCoilFluidFlow * FluidDensity
         END IF
 
@@ -1660,77 +1660,77 @@ SUBROUTINE InitDesiccantDehumidifier(DesicDehumNum,FirstHVACIteration)
 
         ErrorFlag=.false.
         CALL ScanPlantLoopsForObject( DesicDehum(DesicDehumNum)%RegenCoilName, &
-                                      TypeOf_CoilSteamAirHeating , &
-                                      DesicDehum(DesicDehumNum)%LoopNum, &
-                                      DesicDehum(DesicDehumNum)%LoopSide, &
-                                      DesicDehum(DesicDehumNum)%BranchNum, &
-                                      DesicDehum(DesicDehumNum)%CompNum,   &
-                                      ErrFlag=ErrorFlag)
+        TypeOf_CoilSteamAirHeating , &
+          DesicDehum(DesicDehumNum)%LoopNum, &
+          DesicDehum(DesicDehumNum)%LoopSide, &
+          DesicDehum(DesicDehumNum)%BranchNum, &
+          DesicDehum(DesicDehumNum)%CompNum,   &
+          ErrFlag=ErrorFlag)
 
-        IF (ErrorFlag) THEN
-          CALL ShowFatalError('InitDesiccantDehumidifier: Program terminated for previous conditions.')
+          IF (ErrorFlag) THEN
+            CALL ShowFatalError('InitDesiccantDehumidifier: Program terminated for previous conditions.')
+          ENDIF
+          ErrorFlag=.false.
+          DesicDehum(DesicDehumNum)%MaxCoilFluidFlow = &
+          GetCoilMaxSteamFlowRate(DesicDehum(DesicDehumNum)%RegenCoilIndex,ErrorFlag)
+
+          IF(DesicDehum(DesicDehumNum)%MaxCoilFluidFlow .GT. 0.0)THEN
+            SteamIndex = 0 ! Function GetSatDensityRefrig will look up steam index if 0 is passed
+            FluidDensity=GetSatDensityRefrig('STEAM',TempSteamIn,1.0d0,SteamIndex,'InitDesiccantDehumidifier')
+            DesicDehum(DesicDehumNum)%MaxCoilFluidFlow = DesicDehum(DesicDehumNum)%MaxCoilFluidFlow  * FluidDensity
+          END IF
+
         ENDIF
-        ErrorFlag=.false.
-        DesicDehum(DesicDehumNum)%MaxCoilFluidFlow = &
-                            GetCoilMaxSteamFlowRate(DesicDehum(DesicDehumNum)%RegenCoilIndex,ErrorFlag)
 
-        IF(DesicDehum(DesicDehumNum)%MaxCoilFluidFlow .GT. 0.0)THEN
-          SteamIndex = 0 ! Function GetSatDensityRefrig will look up steam index if 0 is passed
-          FluidDensity=GetSatDensityRefrig('STEAM',TempSteamIn,1.0d0,SteamIndex,'InitDesiccantDehumidifier')
-          DesicDehum(DesicDehumNum)%MaxCoilFluidFlow = DesicDehum(DesicDehumNum)%MaxCoilFluidFlow  * FluidDensity
-        END IF
+        ! fill outlet node for regenartion hot water or steam heating coil
+        DesicDehum(DesicDehumNum)%CoilOutletNode =  &
+        PlantLoop(DesicDehum(DesicDehumNum)%LoopNum)%LoopSide(DesicDehum(DesicDehumNum)%LoopSide) &
+        %Branch(DesicDehum(DesicDehumNum)%BranchNum)%Comp(DesicDehum(DesicDehumNum)%CompNum)%NodeNumOut
+        MyPlantScanFlag(DesicDehumNum) = .FALSE.
 
+      ELSE ! DesicDehum is not connected to plant
+        MyPlantScanFlag(DesicDehumNum) = .FALSE.
       ENDIF
-
-      ! fill outlet node for regenartion hot water or steam heating coil
-      DesicDehum(DesicDehumNum)%CoilOutletNode =  &
-            PlantLoop(DesicDehum(DesicDehumNum)%LoopNum)%LoopSide(DesicDehum(DesicDehumNum)%LoopSide) &
-                      %Branch(DesicDehum(DesicDehumNum)%BranchNum)%Comp(DesicDehum(DesicDehumNum)%CompNum)%NodeNumOut
-      MyPlantScanFlag(DesicDehumNum) = .FALSE.
-
-    ELSE ! DesicDehum is not connected to plant
+    ELSEIF (MyPlantScanFlag(DesicDehumNum) .AND. .NOT. AnyPlantInModel) THEN
       MyPlantScanFlag(DesicDehumNum) = .FALSE.
     ENDIF
-  ELSEIF (MyPlantScanFlag(DesicDehumNum) .AND. .NOT. AnyPlantInModel) THEN
-    MyPlantScanFlag(DesicDehumNum) = .FALSE.
-  ENDIF
 
-  SELECT CASE ((DesicDehum(DesicDehumNum)%DehumTypeCode))
+    SELECT CASE ((DesicDehum(DesicDehumNum)%DehumTypeCode))
 
     CASE (Solid)
 
-       IF ( .NOT. SysSizingCalc .AND. MySetPointCheckFlag .AND. DoSetPointTest) THEN
+      IF ( .NOT. SysSizingCalc .AND. MySetPointCheckFlag .AND. DoSetPointTest) THEN
         IF (DesicDehum(DesicDehumNum)%ControlType == NodeHumratBypass) THEN
-        ControlNode = DesicDehum(DesicDehumNum)%ProcAirOutNode
-         IF (ControlNode > 0) THEN
-           IF (Node(ControlNode)%HumRatMax == SensedNodeFlagValue) THEN
-             IF (.NOT. AnyEnergyManagementSystemInModel) THEN
-               CALL ShowSevereError('Missing humidity ratio setpoint (HumRatMax) for ')
-               CALL ShowContinueError('Dehumidifier:Desiccant:NoFans: '//TRIM(DesicDehum(DesicDehumNum)%Name))
-               CALL ShowContinueError('Node Referenced='//TRIM(NodeID(ControlNode)))
-               CALL ShowContinueError('use a Setpoint Manager to establish a setpoint at the process air outlet node.')
-               SetPointErrorFlag = .TRUE.
-             ELSE
-               CALL CheckIfNodeSetpointManagedByEMS(ControlNode,iHumidityRatioMaxSetpoint, SetpointErrorFlag)
-               IF (SetPointErrorFlag) THEN
-                 CALL ShowSevereError('Missing humidity ratio setpoint (HumRatMax) for ')
-                 CALL ShowContinueError('Dehumidifier:Desiccant:NoFans: '//TRIM(DesicDehum(DesicDehumNum)%Name))
-                 CALL ShowContinueError('Node Referenced='//TRIM(NodeID(ControlNode)))
-                 CALL ShowContinueError('use a Setpoint Manager to establish a setpoint at the process air outlet node.')
-                 CALL ShowContinueError('Or use EMS Actuator to establish a setpoint at the process air outlet node.')
-               ENDIF
-             ENDIF
-           END IF
-         END IF
+          ControlNode = DesicDehum(DesicDehumNum)%ProcAirOutNode
+          IF (ControlNode > 0) THEN
+            IF (Node(ControlNode)%HumRatMax == SensedNodeFlagValue) THEN
+              IF (.NOT. AnyEnergyManagementSystemInModel) THEN
+                CALL ShowSevereError('Missing humidity ratio setpoint (HumRatMax) for ')
+                CALL ShowContinueError('Dehumidifier:Desiccant:NoFans: '//TRIM(DesicDehum(DesicDehumNum)%Name))
+                CALL ShowContinueError('Node Referenced='//TRIM(NodeID(ControlNode)))
+                CALL ShowContinueError('use a Setpoint Manager to establish a setpoint at the process air outlet node.')
+                SetPointErrorFlag = .TRUE.
+              ELSE
+                CALL CheckIfNodeSetpointManagedByEMS(ControlNode,iHumidityRatioMaxSetpoint, SetpointErrorFlag)
+                IF (SetPointErrorFlag) THEN
+                  CALL ShowSevereError('Missing humidity ratio setpoint (HumRatMax) for ')
+                  CALL ShowContinueError('Dehumidifier:Desiccant:NoFans: '//TRIM(DesicDehum(DesicDehumNum)%Name))
+                  CALL ShowContinueError('Node Referenced='//TRIM(NodeID(ControlNode)))
+                  CALL ShowContinueError('use a Setpoint Manager to establish a setpoint at the process air outlet node.')
+                  CALL ShowContinueError('Or use EMS Actuator to establish a setpoint at the process air outlet node.')
+                ENDIF
+              ENDIF
+            END IF
+          END IF
         END IF
         MySetPointCheckFlag = .FALSE.
-       END IF
-       ! always do these initializations every iteration
-       ProcInNode  = DesicDehum(DesicDehumNum)%ProcAirInNode
-       DesicDehum(DesicDehumNum)%ProcAirInTemp = Node(ProcInNode)%Temp
-       DesicDehum(DesicDehumNum)%ProcAirInHumRat = Node(ProcInNode)%HumRat
-       DesicDehum(DesicDehumNum)%ProcAirInEnthalpy = Node(ProcInNode)%Enthalpy
-       DesicDehum(DesicDehumNum)%ProcAirInMassFlowRate = Node(ProcInNode)%MassFlowRate
+      END IF
+      ! always do these initializations every iteration
+      ProcInNode  = DesicDehum(DesicDehumNum)%ProcAirInNode
+      DesicDehum(DesicDehumNum)%ProcAirInTemp = Node(ProcInNode)%Temp
+      DesicDehum(DesicDehumNum)%ProcAirInHumRat = Node(ProcInNode)%HumRat
+      DesicDehum(DesicDehumNum)%ProcAirInEnthalpy = Node(ProcInNode)%Enthalpy
+      DesicDehum(DesicDehumNum)%ProcAirInMassFlowRate = Node(ProcInNode)%MassFlowRate
 
       !  Determine heating coil inlet conditions by calling it with zero load
       !  Not sure if this is really a good way to do this, should revisit for next release.
@@ -1747,301 +1747,301 @@ SUBROUTINE InitDesiccantDehumidifier(DesicDehumNum,FirstHVACIteration)
 
     CASE (Generic)
 
-!      Do the Begin Environment initializations
-       IF (BeginEnvrnFlag .and. MyEnvrnFlag(DesicDehumNum)) THEN
-         !Change the Volume Flow Rates to Mass Flow Rates
-          DesicDehum(DesicDehumNum)%ExhaustFanMaxMassFlowRate = DesicDehum(DesicDehumNum)%ExhaustFanMaxVolFlowRate * &
-                                          StdRhoAir
+      !      Do the Begin Environment initializations
+      IF (BeginEnvrnFlag .and. MyEnvrnFlag(DesicDehumNum)) THEN
+        !Change the Volume Flow Rates to Mass Flow Rates
+        DesicDehum(DesicDehumNum)%ExhaustFanMaxMassFlowRate = DesicDehum(DesicDehumNum)%ExhaustFanMaxVolFlowRate * &
+        StdRhoAir
 
-         !   set fluid-side hardware limits
-         IF(DesicDehum(DesicDehumNum)%CoilControlNode .GT. 0)THEN
-           !    If water coil max water flow rate is autosized, simulate once in order to mine max water flow rate
-           IF(DesicDehum(DesicDehumNum)%MaxCoilFluidFlow .EQ. Autosize)THEN
-             IF (DesicDehum(DesicDehumNum)%RegenCoilType_Num == Coil_HeatingWater) THEN
-                CALL SimulateWaterCoilComponents(DesicDehum(DesicDehumNum)%RegenCoilName,FirstHVACIteration, &
-                                                 DesicDehum(DesicDehumNum)%RegenCoilIndex)
-                ErrorFlag = .FALSE.
-                CoilMaxVolFlowRate = GetCoilMaxWaterFlowRate('Coil:Heating:Water',  &
-                                                             DesicDehum(DesicDehumNum)%RegenCoilName,ErrorFlag)
-                IF (ErrorFlag) Then
-                  ErrorsFound = .TRUE.
-                ENDIF
-                IF(CoilMaxVolFlowRate .NE. Autosize) THEN
-                  FluidDensity = GetDensityGlycol(PlantLoop(DesicDehum(DesicDehumNum)%LoopNum)%fluidName, &
-                                                  InitConvTemp, &
-                                                  PlantLoop(DesicDehum(DesicDehumNum)%LoopNum)%fluidIndex, &
-                                                  'InitDesiccantDehumidifier')
-                  DesicDehum(DesicDehumNum)%MaxCoilFluidFlow = CoilMaxVolFlowRate * FluidDensity
-                ENDIF
+        !   set fluid-side hardware limits
+        IF(DesicDehum(DesicDehumNum)%CoilControlNode .GT. 0)THEN
+          !    If water coil max water flow rate is autosized, simulate once in order to mine max water flow rate
+          IF(DesicDehum(DesicDehumNum)%MaxCoilFluidFlow .EQ. Autosize)THEN
+            IF (DesicDehum(DesicDehumNum)%RegenCoilType_Num == Coil_HeatingWater) THEN
+              CALL SimulateWaterCoilComponents(DesicDehum(DesicDehumNum)%RegenCoilName,FirstHVACIteration, &
+              DesicDehum(DesicDehumNum)%RegenCoilIndex)
+              ErrorFlag = .FALSE.
+              CoilMaxVolFlowRate = GetCoilMaxWaterFlowRate('Coil:Heating:Water',  &
+              DesicDehum(DesicDehumNum)%RegenCoilName,ErrorFlag)
+              IF (ErrorFlag) Then
+                ErrorsFound = .TRUE.
+              ENDIF
+              IF(CoilMaxVolFlowRate .NE. Autosize) THEN
+                FluidDensity = GetDensityGlycol(PlantLoop(DesicDehum(DesicDehumNum)%LoopNum)%fluidName, &
+                InitConvTemp, &
+                PlantLoop(DesicDehum(DesicDehumNum)%LoopNum)%fluidIndex, &
+                'InitDesiccantDehumidifier')
+                DesicDehum(DesicDehumNum)%MaxCoilFluidFlow = CoilMaxVolFlowRate * FluidDensity
+              ENDIF
             ENDIF
             IF (DesicDehum(DesicDehumNum)%RegenCoilType_Num == Coil_HeatingSteam) THEN
-                CALL SimulateSteamCoilComponents(DesicDehum(DesicDehumNum)%RegenCoilName, &
-                                                 FirstHVACIteration,    &
-                                                 1.0d0, & !simulate any load > 0 to get max capacity of steam coil
-                                                 DesicDehum(DesicDehumNum)%RegenCoilIndex, QCoilActual)
-                ErrorFlag = .FALSE.
-                CoilMaxVolFlowRate = GetCoilMaxSteamFlowRate(DesicDehum(DesicDehumNum)%RegenCoilIndex,ErrorFlag)
-                IF (ErrorFlag) Then
-                  ErrorsFound = .TRUE.
-                ENDIF
-                IF(CoilMaxVolFlowRate .NE. Autosize) THEN
-                  SteamIndex = 0             ! Function GetSatDensityRefrig will look up steam index if 0 is passed
-                  FluidDensity=GetSatDensityRefrig('STEAM',TempSteamIn,1.0d0,SteamIndex,'InitDesiccantDehumidifier')
-                  DesicDehum(DesicDehumNum)%MaxCoilFluidFlow = CoilMaxVolFlowRate * FluidDensity
-                ENDIF
+              CALL SimulateSteamCoilComponents(DesicDehum(DesicDehumNum)%RegenCoilName, &
+              FirstHVACIteration,    &
+              1.0d0, & !simulate any load > 0 to get max capacity of steam coil
+              DesicDehum(DesicDehumNum)%RegenCoilIndex, QCoilActual)
+              ErrorFlag = .FALSE.
+              CoilMaxVolFlowRate = GetCoilMaxSteamFlowRate(DesicDehum(DesicDehumNum)%RegenCoilIndex,ErrorFlag)
+              IF (ErrorFlag) Then
+                ErrorsFound = .TRUE.
+              ENDIF
+              IF(CoilMaxVolFlowRate .NE. Autosize) THEN
+                SteamIndex = 0             ! Function GetSatDensityRefrig will look up steam index if 0 is passed
+                FluidDensity=GetSatDensityRefrig('STEAM',TempSteamIn,1.0d0,SteamIndex,'InitDesiccantDehumidifier')
+                DesicDehum(DesicDehumNum)%MaxCoilFluidFlow = CoilMaxVolFlowRate * FluidDensity
+              ENDIF
             ENDIF
-           ENDIF
-           Call InitComponentNodes(0.d0, DesicDehum(DesicDehumNum)%MaxCoilFluidFlow, &
-                                        DesicDehum(DesicDehumNum)%CoilControlNode, &
-                                        DesicDehum(DesicDehumNum)%CoilOutletNode, &
-                                        DesicDehum(DesicDehumNum)%LoopNum, &
-                                        DesicDehum(DesicDehumNum)%LoopSide, &
-                                        DesicDehum(DesicDehumNum)%BranchNum, &
-                                        DesicDehum(DesicDehumNum)%CompNum)
-         END IF
+          ENDIF
+          Call InitComponentNodes(0.d0, DesicDehum(DesicDehumNum)%MaxCoilFluidFlow, &
+          DesicDehum(DesicDehumNum)%CoilControlNode, &
+          DesicDehum(DesicDehumNum)%CoilOutletNode, &
+          DesicDehum(DesicDehumNum)%LoopNum, &
+          DesicDehum(DesicDehumNum)%LoopSide, &
+          DesicDehum(DesicDehumNum)%BranchNum, &
+          DesicDehum(DesicDehumNum)%CompNum)
+        END IF
 
-          MyEnvrnFlag(DesicDehumNum) = .FALSE.
-       END IF
+        MyEnvrnFlag(DesicDehumNum) = .FALSE.
+      END IF
 
-       IF ( .NOT. SysSizingCalc .AND. MySetPointCheckFlag .AND. DoSetPointTest) THEN
-         ControlNode = DesicDehum(DesicDehumNum)%ControlNodeNum
-         IF (ControlNode > 0) THEN
-           IF (Node(ControlNode)%HumRatMax == SensedNodeFlagValue) THEN
-             IF (.NOT. AnyEnergyManagementSystemInModel) THEN
-               CALL ShowSevereError('Missing maximum humidity ratio setpoint (MaxHumRat) for ')
-               CALL ShowContinueError(TRIM(DesicDehum(DesicDehumNum)%DehumType)// ': '//TRIM(DesicDehum(DesicDehumNum)%Name))
-               CALL ShowContinueError('Node Referenced='//TRIM(NodeID(ControlNode)))
-               CALL ShowContinueError('use a Setpoint Manager to establish a "MaxHumRat" setpoint'// &
-                                      ' at the process air control node.')
-               SetPointErrorFlag = .TRUE.
-             ELSE
-               CALL CheckIfNodeSetpointManagedByEMS(ControlNode,iHumidityRatioMaxSetpoint, SetpointErrorFlag)
-               IF (SetPointErrorFlag) THEN
-                 CALL ShowSevereError('Missing maximum humidity ratio setpoint (MaxHumRat) for ')
-                 CALL ShowContinueError(TRIM(DesicDehum(DesicDehumNum)%DehumType)// ': '//TRIM(DesicDehum(DesicDehumNum)%Name))
-                 CALL ShowContinueError('Node Referenced='//TRIM(NodeID(ControlNode)))
-                 CALL ShowContinueError('use a Setpoint Manager to establish a "MaxHumRat" setpoint'// &
-                                        ' at the process air control node.')
-                 CALL ShowContinueError('Or use EMS Actuator to establish a setpoint at the process air outlet node.')
-               ENDIF
-             ENDIF
-
-
-           END IF
-         END IF
-         MySetPointCheckFlag = .FALSE.
-       END IF
-       RegenInNode  = DesicDehum(DesicDehumNum)%RegenAirInNode
-       DesicDehum(DesicDehumNum)%RegenAirInTemp = Node(RegenInNode)%Temp
-       DesicDehum(DesicDehumNum)%RegenAirInMassFlowRate = Node(RegenInNode)%MassFlowRate
-
-       DesicDehum(DesicDehumNum)%ExhaustFanPower = 0.0
-       DesicDehum(DesicDehumNum)%WaterRemoveRate = 0.0
-
-  END SELECT
+      IF ( .NOT. SysSizingCalc .AND. MySetPointCheckFlag .AND. DoSetPointTest) THEN
+        ControlNode = DesicDehum(DesicDehumNum)%ControlNodeNum
+        IF (ControlNode > 0) THEN
+          IF (Node(ControlNode)%HumRatMax == SensedNodeFlagValue) THEN
+            IF (.NOT. AnyEnergyManagementSystemInModel) THEN
+              CALL ShowSevereError('Missing maximum humidity ratio setpoint (MaxHumRat) for ')
+              CALL ShowContinueError(TRIM(DesicDehum(DesicDehumNum)%DehumType)// ': '//TRIM(DesicDehum(DesicDehumNum)%Name))
+              CALL ShowContinueError('Node Referenced='//TRIM(NodeID(ControlNode)))
+              CALL ShowContinueError('use a Setpoint Manager to establish a "MaxHumRat" setpoint'// &
+              ' at the process air control node.')
+              SetPointErrorFlag = .TRUE.
+            ELSE
+              CALL CheckIfNodeSetpointManagedByEMS(ControlNode,iHumidityRatioMaxSetpoint, SetpointErrorFlag)
+              IF (SetPointErrorFlag) THEN
+                CALL ShowSevereError('Missing maximum humidity ratio setpoint (MaxHumRat) for ')
+                CALL ShowContinueError(TRIM(DesicDehum(DesicDehumNum)%DehumType)// ': '//TRIM(DesicDehum(DesicDehumNum)%Name))
+                CALL ShowContinueError('Node Referenced='//TRIM(NodeID(ControlNode)))
+                CALL ShowContinueError('use a Setpoint Manager to establish a "MaxHumRat" setpoint'// &
+                ' at the process air control node.')
+                CALL ShowContinueError('Or use EMS Actuator to establish a setpoint at the process air outlet node.')
+              ENDIF
+            ENDIF
 
 
-  RETURN
+          END IF
+        END IF
+        MySetPointCheckFlag = .FALSE.
+      END IF
+      RegenInNode  = DesicDehum(DesicDehumNum)%RegenAirInNode
+      DesicDehum(DesicDehumNum)%RegenAirInTemp = Node(RegenInNode)%Temp
+      DesicDehum(DesicDehumNum)%RegenAirInMassFlowRate = Node(RegenInNode)%MassFlowRate
 
-END SUBROUTINE InitDesiccantDehumidifier
+      DesicDehum(DesicDehumNum)%ExhaustFanPower = 0.0
+      DesicDehum(DesicDehumNum)%WaterRemoveRate = 0.0
 
-SUBROUTINE ControlDesiccantDehumidifier(DesicDehumNum,HumRatNeeded,FirstHVACIteration)
+    END SELECT
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Michael J. Witte, GARD Analytics, Inc.
-          !                      for Gas Research Institute
-          !       DATE WRITTEN   March 2001
-          !       MODIFIED       Jan 2005 M. J. Witte, GARD Analytics, Inc.
-          !                        Add new control type option:
-          !                          NODE LEAVING HUMRAT SETPOINT:BYPASS
-          !                        Change existing control type to:
-          !                          FIXED LEAVING HUMRAT SETPOINT:BYPASS
-          !                        Work supported by ASHRAE research project 1254-RP
-          !                      June 2007 R. Raustad, FSEC
-          !                        Added new dehumidifier type -- DESICCANT DEHUMIDIFIER
-          !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine sets the output required from the dehumidifier
+    RETURN
 
-          ! METHODOLOGY EMPLOYED:
-          ! Uses a maximum humidity ratio setpoint to calculate required process
-          ! leaving humidity ratio
+  END SUBROUTINE InitDesiccantDehumidifier
 
-          ! REFERENCES:
-          ! na
+  SUBROUTINE ControlDesiccantDehumidifier(DesicDehumNum,HumRatNeeded,FirstHVACIteration)
 
-          ! USE STATEMENTS:
-          ! na
+    ! SUBROUTINE INFORMATION:
+    !       AUTHOR         Michael J. Witte, GARD Analytics, Inc.
+    !                      for Gas Research Institute
+    !       DATE WRITTEN   March 2001
+    !       MODIFIED       Jan 2005 M. J. Witte, GARD Analytics, Inc.
+    !                        Add new control type option:
+    !                          NODE LEAVING HUMRAT SETPOINT:BYPASS
+    !                        Change existing control type to:
+    !                          FIXED LEAVING HUMRAT SETPOINT:BYPASS
+    !                        Work supported by ASHRAE research project 1254-RP
+    !                      June 2007 R. Raustad, FSEC
+    !                        Added new dehumidifier type -- DESICCANT DEHUMIDIFIER
+    !       RE-ENGINEERED  na
 
-  IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
+    ! PURPOSE OF THIS SUBROUTINE:
+    ! This subroutine sets the output required from the dehumidifier
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-  INTEGER, INTENT (IN) :: DesicDehumNum      ! number of the current dehumidifier being simulated
-  REAL(r64),    INTENT(OUT) :: HumRatNeeded       ! process air leaving humidity ratio set by controller [kg water/kg air]
-  LOGICAL, INTENT (IN) :: FirstHVACIteration ! TRUE if 1st HVAC simulation of system timestep !unused1208
+    ! METHODOLOGY EMPLOYED:
+    ! Uses a maximum humidity ratio setpoint to calculate required process
+    ! leaving humidity ratio
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+    ! REFERENCES:
+    ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+    ! USE STATEMENTS:
+    ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+    IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-  LOGICAL :: UnitOn               ! unit on flag
-  REAL(r64)    :: ProcAirMassFlowRate  ! process air mass flow rate [kg/s]
-  REAL(r64)    :: RegenAirMassFlowRate ! regen air mass flow rate [kg/s]
+    ! SUBROUTINE ARGUMENT DEFINITIONS:
+    INTEGER, INTENT (IN) :: DesicDehumNum      ! number of the current dehumidifier being simulated
+    REAL(r64),    INTENT(OUT) :: HumRatNeeded       ! process air leaving humidity ratio set by controller [kg water/kg air]
+    LOGICAL, INTENT (IN) :: FirstHVACIteration ! TRUE if 1st HVAC simulation of system timestep !unused1208
 
-  ProcAirMassFlowRate = 0.0
-  RegenAirMassFlowRate = 0.0
-  UnitOn = .TRUE.
+    ! SUBROUTINE PARAMETER DEFINITIONS:
+    ! na
 
-  SELECT CASE ((DesicDehum(DesicDehumNum)%DehumTypeCode))
+    ! INTERFACE BLOCK SPECIFICATIONS
+    ! na
+
+    ! DERIVED TYPE DEFINITIONS
+    ! na
+
+    ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+    LOGICAL :: UnitOn               ! unit on flag
+    REAL(r64)    :: ProcAirMassFlowRate  ! process air mass flow rate [kg/s]
+    REAL(r64)    :: RegenAirMassFlowRate ! regen air mass flow rate [kg/s]
+
+    ProcAirMassFlowRate = 0.0
+    RegenAirMassFlowRate = 0.0
+    UnitOn = .TRUE.
+
+    SELECT CASE ((DesicDehum(DesicDehumNum)%DehumTypeCode))
 
     CASE (Solid)
 
-       IF (DesicDehum(DesicDehumNum)%HumRatSet .LE. 0.0) UnitOn = .FALSE.
-       ProcAirMassFlowRate = DesicDehum(DesicDehumNum)%ProcAirInMassFlowRate
-       IF (ProcAirMassFlowRate .LE. SmallMassFlow) UnitOn = .FALSE.
+      IF (DesicDehum(DesicDehumNum)%HumRatSet .LE. 0.0) UnitOn = .FALSE.
+      ProcAirMassFlowRate = DesicDehum(DesicDehumNum)%ProcAirInMassFlowRate
+      IF (ProcAirMassFlowRate .LE. SmallMassFlow) UnitOn = .FALSE.
 
-       IF (GetCurrentScheduleValue(DesicDehum(DesicDehumNum)%SchedPtr) .LE. 0.0)  UnitOn = .FALSE.
+      IF (GetCurrentScheduleValue(DesicDehum(DesicDehumNum)%SchedPtr) .LE. 0.0)  UnitOn = .FALSE.
 
-       ! If incoming conditions are outside valid range for curve fits, then shut unit off, do not issue warnings
+      ! If incoming conditions are outside valid range for curve fits, then shut unit off, do not issue warnings
 
-       IF (UnitOn) THEN
-         IF((DesicDehum(DesicDehumNum)%ProcAirInTemp   .LT. DesicDehum(DesicDehumNum)%MinProcAirInTemp) .OR. &
-            (DesicDehum(DesicDehumNum)%ProcAirInTemp   .GT. DesicDehum(DesicDehumNum)%MaxProcAirInTemp)) THEN
-            UnitOn = .FALSE.
-         ENDIF
-         IF((DesicDehum(DesicDehumNum)%ProcAirInHumRat .LT. DesicDehum(DesicDehumNum)%MinProcAirInHumRat) .OR. &
-            (DesicDehum(DesicDehumNum)%ProcAirInHumRat .GT. DesicDehum(DesicDehumNum)%MaxProcAirInHumRat)) THEN
-            UnitOn = .FALSE.
-         ENDIF
-       ENDIF
+      IF (UnitOn) THEN
+        IF((DesicDehum(DesicDehumNum)%ProcAirInTemp   .LT. DesicDehum(DesicDehumNum)%MinProcAirInTemp) .OR. &
+        (DesicDehum(DesicDehumNum)%ProcAirInTemp   .GT. DesicDehum(DesicDehumNum)%MaxProcAirInTemp)) THEN
+        UnitOn = .FALSE.
+      ENDIF
+      IF((DesicDehum(DesicDehumNum)%ProcAirInHumRat .LT. DesicDehum(DesicDehumNum)%MinProcAirInHumRat) .OR. &
+      (DesicDehum(DesicDehumNum)%ProcAirInHumRat .GT. DesicDehum(DesicDehumNum)%MaxProcAirInHumRat)) THEN
+      UnitOn = .FALSE.
+    ENDIF
+  ENDIF
 
-       IF (UnitOn) THEN
+  IF (UnitOn) THEN
 
     ! perform the correct dehumidifier control strategy
-         SELECT CASE(DesicDehum(DesicDehumNum)%ControlType)
+    SELECT CASE(DesicDehum(DesicDehumNum)%ControlType)
 
-           CASE (FixedHumratBypass)
+    CASE (FixedHumratBypass)
 
-             HumRatNeeded = DesicDehum(DesicDehumNum)%HumRatSet
-             IF (HumRatNeeded <= 0.0) THEN
-               CALL ShowSevereError('Dehumidifier:Desiccant:NoFans: '//TRIM(DesicDehum(DesicDehumNum)%Name))
-               CALL ShowContinueError('Invalid Leaving Max Humidity Ratio Setpoint='//TRIM(TrimSigDigits(HumRatNeeded,8)))
-               CALL ShowFatalError('must be > 0.0')
-             END IF
+      HumRatNeeded = DesicDehum(DesicDehumNum)%HumRatSet
+      IF (HumRatNeeded <= 0.0) THEN
+        CALL ShowSevereError('Dehumidifier:Desiccant:NoFans: '//TRIM(DesicDehum(DesicDehumNum)%Name))
+        CALL ShowContinueError('Invalid Leaving Max Humidity Ratio Setpoint='//TRIM(TrimSigDigits(HumRatNeeded,8)))
+        CALL ShowFatalError('must be > 0.0')
+      END IF
 
-           CASE (NodeHumratBypass)
+    CASE (NodeHumratBypass)
 
-            HumRatNeeded = Node(DesicDehum(DesicDehumNum)%ProcAirOutNode)%HumRatMax
-
-           CASE DEFAULT
-
-             CALL ShowFatalError('Invalid control type in desiccant dehumidifier = '//TRIM(DesicDehum(DesicDehumNum)%Name))
-
-         END SELECT
-
-          ! Setpoint of zero indicates no load from setpoint manager max hum
-         IF ((HumRatNeeded == 0.0) .OR. &
-             (DesicDehum(DesicDehumNum)%ProcAirInHumRat .LE. HumRatNeeded)) THEN
-             UnitOn = .FALSE.
-             HumRatNeeded = DesicDehum(DesicDehumNum)%ProcAirInHumRat
-         ENDIF
-       ELSE
-         HumRatNeeded = DesicDehum(DesicDehumNum)%ProcAirInHumRat
-       END IF
-
-    CASE (Generic)
-
-       ProcAirMassFlowRate = Node(DesicDehum(DesicDehumNum)%ProcAirInNode)%MassFlowRate
-       IF (ProcAirMassFlowRate .LE. SmallMassFlow) UnitOn = .FALSE.
-
-       IF (GetCurrentScheduleValue(DesicDehum(DesicDehumNum)%SchedPtr) .LE. 0.0)  UnitOn = .FALSE.
-
-       IF (UnitOn) THEN
-         IF(DesicDehum(DesicDehumNum)%ControlNodeNum .EQ. DesicDehum(DesicDehumNum)%ProcAirOutNode)THEN
-           HumRatNeeded = Node(DesicDehum(DesicDehumNum)%ControlNodeNum)%HumRatMax
-         ELSE
-           IF(Node(DesicDehum(DesicDehumNum)%ControlNodeNum)%HumRatMax .GT. 0.0)THEN
-             HumRatNeeded = Node(DesicDehum(DesicDehumNum)%ControlNodeNum)%HumRatMax - &
-                (Node(DesicDehum(DesicDehumNum)%ControlNodeNum)%HumRat - Node(DesicDehum(DesicDehumNum)%ProcAirOutNode)%HumRat)
-           ELSE
-             HumRatNeeded = 0.0
-           END IF
-         END IF
-
-         ! Setpoint of zero indicates no load from setpoint manager max hum
-         IF ((HumRatNeeded == 0.0) .OR. &
-             (Node(DesicDehum(DesicDehumNum)%ProcAirInNode)%HumRat .LE. HumRatNeeded)) THEN
-             HumRatNeeded = Node(DesicDehum(DesicDehumNum)%ProcAirInNode)%HumRat
-         ENDIF
-       ELSE
-         HumRatNeeded = Node(DesicDehum(DesicDehumNum)%ProcAirInNode)%HumRat
-       END IF
+      HumRatNeeded = Node(DesicDehum(DesicDehumNum)%ProcAirOutNode)%HumRatMax
 
     CASE DEFAULT
 
+      CALL ShowFatalError('Invalid control type in desiccant dehumidifier = '//TRIM(DesicDehum(DesicDehumNum)%Name))
 
-  END SELECT
+    END SELECT
 
-  RETURN
+    ! Setpoint of zero indicates no load from setpoint manager max hum
+    IF ((HumRatNeeded == 0.0) .OR. &
+    (DesicDehum(DesicDehumNum)%ProcAirInHumRat .LE. HumRatNeeded)) THEN
+    UnitOn = .FALSE.
+    HumRatNeeded = DesicDehum(DesicDehumNum)%ProcAirInHumRat
+  ENDIF
+ELSE
+  HumRatNeeded = DesicDehum(DesicDehumNum)%ProcAirInHumRat
+END IF
+
+CASE (Generic)
+
+  ProcAirMassFlowRate = Node(DesicDehum(DesicDehumNum)%ProcAirInNode)%MassFlowRate
+  IF (ProcAirMassFlowRate .LE. SmallMassFlow) UnitOn = .FALSE.
+
+  IF (GetCurrentScheduleValue(DesicDehum(DesicDehumNum)%SchedPtr) .LE. 0.0)  UnitOn = .FALSE.
+
+  IF (UnitOn) THEN
+    IF(DesicDehum(DesicDehumNum)%ControlNodeNum .EQ. DesicDehum(DesicDehumNum)%ProcAirOutNode)THEN
+      HumRatNeeded = Node(DesicDehum(DesicDehumNum)%ControlNodeNum)%HumRatMax
+    ELSE
+      IF(Node(DesicDehum(DesicDehumNum)%ControlNodeNum)%HumRatMax .GT. 0.0)THEN
+        HumRatNeeded = Node(DesicDehum(DesicDehumNum)%ControlNodeNum)%HumRatMax - &
+        (Node(DesicDehum(DesicDehumNum)%ControlNodeNum)%HumRat - Node(DesicDehum(DesicDehumNum)%ProcAirOutNode)%HumRat)
+      ELSE
+        HumRatNeeded = 0.0
+      END IF
+    END IF
+
+    ! Setpoint of zero indicates no load from setpoint manager max hum
+    IF ((HumRatNeeded == 0.0) .OR. &
+    (Node(DesicDehum(DesicDehumNum)%ProcAirInNode)%HumRat .LE. HumRatNeeded)) THEN
+    HumRatNeeded = Node(DesicDehum(DesicDehumNum)%ProcAirInNode)%HumRat
+  ENDIF
+ELSE
+  HumRatNeeded = Node(DesicDehum(DesicDehumNum)%ProcAirInNode)%HumRat
+END IF
+
+CASE DEFAULT
+
+
+END SELECT
+
+RETURN
 
 END SUBROUTINE ControlDesiccantDehumidifier
 
 SUBROUTINE CalcSolidDesiccantDehumidifier(DesicDehumNum,HumRatNeeded,FirstHVACIteration)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Michael J. Witte, GARD Analytics, Inc.
-          !                      for Gas Research Institute
-          !       DATE WRITTEN   March 2001
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Michael J. Witte, GARD Analytics, Inc.
+  !                      for Gas Research Institute
+  !       DATE WRITTEN   March 2001
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Calculate the electricity consumption, regen heat requirements and the outlet
-          ! conditions for a solid desiccant dehumidifier, given the inlet conditions and
-          ! and the needed process leaving humidity ratio.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! Calculate the electricity consumption, regen heat requirements and the outlet
+  ! conditions for a solid desiccant dehumidifier, given the inlet conditions and
+  ! and the needed process leaving humidity ratio.
 
-          ! METHODOLOGY EMPLOYED:
-          ! Given the entering conditions, the full-load outlet conditions are calculated.
-          ! Adjust for part-load if required.
-          ! Caclulate required regen energy and call regen coil and regen fan.
-          ! Desiccant wheel leaving conditions and regen energy requirements are calculated
-          ! from empirical curve fits.  The user can select either default built-in
-          ! performance curves, or use custom user-defined curves.
+  ! METHODOLOGY EMPLOYED:
+  ! Given the entering conditions, the full-load outlet conditions are calculated.
+  ! Adjust for part-load if required.
+  ! Caclulate required regen energy and call regen coil and regen fan.
+  ! Desiccant wheel leaving conditions and regen energy requirements are calculated
+  ! from empirical curve fits.  The user can select either default built-in
+  ! performance curves, or use custom user-defined curves.
 
-          ! REFERENCES:
-          ! The default performance curves represent a commerical-grade solid desiccant
-          ! wheel typical of HVAC applications in the early 1990's.  These curves were
-          ! developed for Gas Research Institute by William W. Worek, University of Illinois
-          ! at Chicago.
+  ! REFERENCES:
+  ! The default performance curves represent a commerical-grade solid desiccant
+  ! wheel typical of HVAC applications in the early 1990's.  These curves were
+  ! developed for Gas Research Institute by William W. Worek, University of Illinois
+  ! at Chicago.
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE Psychrometrics, ONLY:PsyHFnTdbW, PsyRhoAirFnPbTdbW
-!unused  USE DataEnvironment, ONLY: StdBaroPress
+  !unused  USE DataEnvironment, ONLY: StdBaroPress
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   INTEGER, INTENT (IN) :: DesicDehumNum  ! number of the current dehumidifier being simulated
   REAL(r64), INTENT(IN)    :: HumRatNeeded ! process air leaving humidity ratio set by controller [kgWater/kgDryAir]
   LOGICAL,          INTENT (IN)  :: FirstHVACIteration  ! TRUE if 1st HVAC simulation of system timestep
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
 
   REAL(r64) :: ProcAirInHumRat        ! process inlet air humidity ratio [kgWater/kgDryAir]
   REAL(r64) :: ProcAirInTemp          ! process inlet air temperature [C]
@@ -2065,7 +2065,7 @@ SUBROUTINE CalcSolidDesiccantDehumidifier(DesicDehumNum,HumRatNeeded,FirstHVACIt
   LOGICAL, SAVE :: MyOneTimeFlag = .TRUE.     ! one time flag
   REAL(r64), SAVE    :: RhoAirStdInit
 
-! Variables for hardwired coefficients for default performance model
+  ! Variables for hardwired coefficients for default performance model
 
   REAL(r64) :: TC0
   REAL(r64) :: TC1
@@ -2135,7 +2135,7 @@ SUBROUTINE CalcSolidDesiccantDehumidifier(DesicDehumNum,HumRatNeeded,FirstHVACIt
   REAL(r64) :: RC14
   REAL(r64) :: RC15
 
-! Setup internal variables for calculations
+  ! Setup internal variables for calculations
 
   ProcAirInTemp         = DesicDehum(DesicDehumNum)%ProcAirInTemp
   ProcAirInHumRat       = DesicDehum(DesicDehumNum)%ProcAirInHumRat
@@ -2146,15 +2146,15 @@ SUBROUTINE CalcSolidDesiccantDehumidifier(DesicDehumNum,HumRatNeeded,FirstHVACIt
   RegenAirInTemp        = DesicDehum(DesicDehumNum)%RegenAirInTemp
   NomRegenTemp          = DesicDehum(DesicDehumNum)%NomRegenTemp
 
-! Calculate min available process out humrat
-UnitOn = .FALSE.
-MinProcAirOutHumRat = 0.0 ! max(MinProcAirOutHumRat,0.000857)
+  ! Calculate min available process out humrat
+  UnitOn = .FALSE.
+  MinProcAirOutHumRat = 0.0 ! max(MinProcAirOutHumRat,0.000857)
 
-IF (HumRatNeeded .lt. ProcAirInHumRat) THEN
+  IF (HumRatNeeded .lt. ProcAirInHumRat) THEN
 
-  UnitOn = .TRUE.
+    UnitOn = .TRUE.
 
-  SELECT CASE(DesicDehum(DesicDehumNum)%PerformanceModel_Num) ! Performance Model Part A
+    SELECT CASE(DesicDehum(DesicDehumNum)%PerformanceModel_Num) ! Performance Model Part A
 
     CASE (PM_Default)
 
@@ -2176,47 +2176,47 @@ IF (HumRatNeeded .lt. ProcAirInHumRat) THEN
       WC15 = 0.00132732844211593d0
 
       MinProcAirOutHumRat   =  WC0 &
-        + WC1*ProcAirInTemp + WC2*ProcAirInHumRat + WC3*ProcAirVel &
-        + WC4*ProcAirInTemp*ProcAirInHumRat + WC5*ProcAirInTemp*ProcAirVel &
-        + WC6*ProcAirInHumRat*ProcAirVel + WC7*ProcAirInTemp*ProcAirInTemp &
-        + WC8*ProcAirInHumRat*ProcAirInHumRat + WC9*ProcAirVel*ProcAirVel &
-        + WC10*ProcAirInTemp*ProcAirInTemp*ProcAirInHumRat*ProcAirInHumRat &
-        + WC11*ProcAirInTemp*ProcAirInTemp*ProcAirVel*ProcAirVel &
-        + WC12*ProcAirInHumRat*ProcAirInHumRat*ProcAirVel*ProcAirVel &
-        + WC13*LOG(ProcAirInTemp) + WC14*LOG(ProcAirInHumRat) &
-        + WC15*LOG(ProcAirVel)
+      + WC1*ProcAirInTemp + WC2*ProcAirInHumRat + WC3*ProcAirVel &
+      + WC4*ProcAirInTemp*ProcAirInHumRat + WC5*ProcAirInTemp*ProcAirVel &
+      + WC6*ProcAirInHumRat*ProcAirVel + WC7*ProcAirInTemp*ProcAirInTemp &
+      + WC8*ProcAirInHumRat*ProcAirInHumRat + WC9*ProcAirVel*ProcAirVel &
+      + WC10*ProcAirInTemp*ProcAirInTemp*ProcAirInHumRat*ProcAirInHumRat &
+      + WC11*ProcAirInTemp*ProcAirInTemp*ProcAirVel*ProcAirVel &
+      + WC12*ProcAirInHumRat*ProcAirInHumRat*ProcAirVel*ProcAirVel &
+      + WC13*LOG(ProcAirInTemp) + WC14*LOG(ProcAirInHumRat) &
+      + WC15*LOG(ProcAirVel)
 
       ! limit to 6 grains/lb (0.000857 kg/kg)
 
     CASE (PM_UserCurves)
 
       MinProcAirOutHumRat = CurveValue(DesicDehum(DesicDehumNum)%ProcHumRatCurvefTW,ProcAirInTemp,ProcAirInHumRat)&
-         * CurveValue(DesicDehum(DesicDehumNum)%ProcHumRatCurvefV,ProcAirVel)
+      * CurveValue(DesicDehum(DesicDehumNum)%ProcHumRatCurvefV,ProcAirVel)
 
 
     CASE DEFAULT
 
       CALL ShowFatalError('Invalid performance model in desiccant dehumidifier = '&
-           //TRIM(TrimSigDigits(DesicDehum(DesicDehumNum)%PerformanceModel_Num)))
+      //TRIM(TrimSigDigits(DesicDehum(DesicDehumNum)%PerformanceModel_Num)))
 
-  END SELECT ! Performance Model Part A
+    END SELECT ! Performance Model Part A
 
-  MinProcAirOutHumRat = max(MinProcAirOutHumRat,0.000857d0)
+    MinProcAirOutHumRat = max(MinProcAirOutHumRat,0.000857d0)
 
-ENDIF
+  ENDIF
 
-IF (MinProcAirOutHumRat .GE. ProcAirInHumRat) UnitOn=.FALSE.
+  IF (MinProcAirOutHumRat .GE. ProcAirInHumRat) UnitOn=.FALSE.
 
-IF (UnitOn) THEN
+  IF (UnitOn) THEN
 
-  ! Calculate partload fraction of dehumidification capacity required to meet setpoint
-  PartLoad = 1.0
-  IF (MinProcAirOutHumRat .LT. HumRatNeeded) &
+    ! Calculate partload fraction of dehumidification capacity required to meet setpoint
+    PartLoad = 1.0
+    IF (MinProcAirOutHumRat .LT. HumRatNeeded) &
     PartLoad = (ProcAirInHumRat - HumRatNeeded) / (ProcAirInHumRat - MinProcAirOutHumRat)
-  PartLoad = MAX(0.0d0,PartLoad)
-  PartLoad = MIN(1.0d0,PartLoad)
+    PartLoad = MAX(0.0d0,PartLoad)
+    PartLoad = MIN(1.0d0,PartLoad)
 
-  SELECT CASE(DesicDehum(DesicDehumNum)%PerformanceModel_Num) ! Performance Model Part B
+    SELECT CASE(DesicDehum(DesicDehumNum)%PerformanceModel_Num) ! Performance Model Part B
 
     CASE (PM_Default)
 
@@ -2239,15 +2239,15 @@ IF (UnitOn) THEN
       TC15 = -15.2034386065714d0
 
       ProcAirOutTemp   =  TC0 &
-        + TC1*ProcAirInTemp + TC2*ProcAirInHumRat + TC3*ProcAirVel &
-        + TC4*ProcAirInTemp*ProcAirInHumRat + TC5*ProcAirInTemp*ProcAirVel &
-        + TC6*ProcAirInHumRat*ProcAirVel + TC7*ProcAirInTemp*ProcAirInTemp &
-        + TC8*ProcAirInHumRat*ProcAirInHumRat + TC9*ProcAirVel*ProcAirVel &
-        + TC10*ProcAirInTemp*ProcAirInTemp*ProcAirInHumRat*ProcAirInHumRat &
-        + TC11*ProcAirInTemp*ProcAirInTemp*ProcAirVel*ProcAirVel &
-        + TC12*ProcAirInHumRat*ProcAirInHumRat*ProcAirVel*ProcAirVel &
-        + TC13*LOG(ProcAirInTemp) + TC14*LOG(ProcAirInHumRat) &
-        + TC15*LOG(ProcAirVel)
+      + TC1*ProcAirInTemp + TC2*ProcAirInHumRat + TC3*ProcAirVel &
+      + TC4*ProcAirInTemp*ProcAirInHumRat + TC5*ProcAirInTemp*ProcAirVel &
+      + TC6*ProcAirInHumRat*ProcAirVel + TC7*ProcAirInTemp*ProcAirInTemp &
+      + TC8*ProcAirInHumRat*ProcAirInHumRat + TC9*ProcAirVel*ProcAirVel &
+      + TC10*ProcAirInTemp*ProcAirInTemp*ProcAirInHumRat*ProcAirInHumRat &
+      + TC11*ProcAirInTemp*ProcAirInTemp*ProcAirVel*ProcAirVel &
+      + TC12*ProcAirInHumRat*ProcAirInHumRat*ProcAirVel*ProcAirVel &
+      + TC13*LOG(ProcAirInTemp) + TC14*LOG(ProcAirInHumRat) &
+      + TC15*LOG(ProcAirVel)
 
       ! Regen energy
       QC0  = -27794046.6291107d0
@@ -2268,15 +2268,15 @@ IF (UnitOn) THEN
       QC15 = 1220523.39525162d0
 
       SpecRegenEnergy   =  QC0 &
-        + QC1*ProcAirInTemp + QC2*ProcAirInHumRat + QC3*ProcAirVel &
-        + QC4*ProcAirInTemp*ProcAirInHumRat + QC5*ProcAirInTemp*ProcAirVel &
-        + QC6*ProcAirInHumRat*ProcAirVel + QC7*ProcAirInTemp*ProcAirInTemp &
-        + QC8*ProcAirInHumRat*ProcAirInHumRat + QC9*ProcAirVel*ProcAirVel &
-        + QC10*ProcAirInTemp*ProcAirInTemp*ProcAirInHumRat*ProcAirInHumRat &
-        + QC11*ProcAirInTemp*ProcAirInTemp*ProcAirVel*ProcAirVel &
-        + QC12*ProcAirInHumRat*ProcAirInHumRat*ProcAirVel*ProcAirVel &
-        + QC13*LOG(ProcAirInTemp) + QC14*LOG(ProcAirInHumRat) &
-        + QC15*LOG(ProcAirVel)
+      + QC1*ProcAirInTemp + QC2*ProcAirInHumRat + QC3*ProcAirVel &
+      + QC4*ProcAirInTemp*ProcAirInHumRat + QC5*ProcAirInTemp*ProcAirVel &
+      + QC6*ProcAirInHumRat*ProcAirVel + QC7*ProcAirInTemp*ProcAirInTemp &
+      + QC8*ProcAirInHumRat*ProcAirInHumRat + QC9*ProcAirVel*ProcAirVel &
+      + QC10*ProcAirInTemp*ProcAirInTemp*ProcAirInHumRat*ProcAirInHumRat &
+      + QC11*ProcAirInTemp*ProcAirInTemp*ProcAirVel*ProcAirVel &
+      + QC12*ProcAirInHumRat*ProcAirInHumRat*ProcAirVel*ProcAirVel &
+      + QC13*LOG(ProcAirInTemp) + QC14*LOG(ProcAirInHumRat) &
+      + QC15*LOG(ProcAirVel)
 
       ! Regen face velocity
       RC0 = -4.67358908091488d0
@@ -2297,116 +2297,116 @@ IF (UnitOn) THEN
       RC15 = -0.972715425435447d0
 
       RegenAirVel   =  RC0 &
-        + RC1*ProcAirInTemp + RC2*ProcAirInHumRat + RC3*ProcAirVel &
-        + RC4*ProcAirInTemp*ProcAirInHumRat + RC5*ProcAirInTemp*ProcAirVel &
-        + RC6*ProcAirInHumRat*ProcAirVel + RC7*ProcAirInTemp*ProcAirInTemp &
-        + RC8*ProcAirInHumRat*ProcAirInHumRat + RC9*ProcAirVel*ProcAirVel &
-        + RC10*ProcAirInTemp*ProcAirInTemp*ProcAirInHumRat*ProcAirInHumRat &
-        + RC11*ProcAirInTemp*ProcAirInTemp*ProcAirVel*ProcAirVel &
-        + RC12*ProcAirInHumRat*ProcAirInHumRat*ProcAirVel*ProcAirVel &
-        + RC13*LOG(ProcAirInTemp) + RC14*LOG(ProcAirInHumRat) &
-        + RC15*LOG(ProcAirVel)
+      + RC1*ProcAirInTemp + RC2*ProcAirInHumRat + RC3*ProcAirVel &
+      + RC4*ProcAirInTemp*ProcAirInHumRat + RC5*ProcAirInTemp*ProcAirVel &
+      + RC6*ProcAirInHumRat*ProcAirVel + RC7*ProcAirInTemp*ProcAirInTemp &
+      + RC8*ProcAirInHumRat*ProcAirInHumRat + RC9*ProcAirVel*ProcAirVel &
+      + RC10*ProcAirInTemp*ProcAirInTemp*ProcAirInHumRat*ProcAirInHumRat &
+      + RC11*ProcAirInTemp*ProcAirInTemp*ProcAirVel*ProcAirVel &
+      + RC12*ProcAirInHumRat*ProcAirInHumRat*ProcAirVel*ProcAirVel &
+      + RC13*LOG(ProcAirInTemp) + RC14*LOG(ProcAirInHumRat) &
+      + RC15*LOG(ProcAirVel)
 
     CASE (PM_UserCurves)
 
       ProcAirOutTemp = CurveValue(DesicDehum(DesicDehumNum)%ProcDryBulbCurvefTW,ProcAirInTemp,ProcAirInHumRat)&
-         * CurveValue(DesicDehum(DesicDehumNum)%ProcDryBulbCurvefV,ProcAirVel)
+      * CurveValue(DesicDehum(DesicDehumNum)%ProcDryBulbCurvefV,ProcAirVel)
 
       SpecRegenEnergy = CurveValue(DesicDehum(DesicDehumNum)%RegenEnergyCurvefTW,ProcAirInTemp,ProcAirInHumRat)&
-         * CurveValue(DesicDehum(DesicDehumNum)%RegenEnergyCurvefV,ProcAirVel)
+      * CurveValue(DesicDehum(DesicDehumNum)%RegenEnergyCurvefV,ProcAirVel)
 
       RegenAirVel = CurveValue(DesicDehum(DesicDehumNum)%RegenVelCurvefTW,ProcAirInTemp,ProcAirInHumRat)&
-         * CurveValue(DesicDehum(DesicDehumNum)%RegenVelCurvefV,ProcAirVel)
+      * CurveValue(DesicDehum(DesicDehumNum)%RegenVelCurvefV,ProcAirVel)
 
 
     CASE DEFAULT
 
       CALL ShowFatalError('Invalid performance model in desiccant dehumidifier = '&
-            //TRIM(TrimSigDigits(DesicDehum(DesicDehumNum)%PerformanceModel_Num)))
+      //TRIM(TrimSigDigits(DesicDehum(DesicDehumNum)%PerformanceModel_Num)))
 
-  END SELECT ! Performance Model Part B
+    END SELECT ! Performance Model Part B
 
 
-  ProcAirOutTemp = (1-PartLoad)*ProcAirInTemp + (PartLoad)*ProcAirOutTemp
+    ProcAirOutTemp = (1-PartLoad)*ProcAirInTemp + (PartLoad)*ProcAirOutTemp
 
-  ProcAirOutHumRat =  (1-PartLoad)*ProcAirInHumRat + (PartLoad)*MinProcAirOutHumRat
+    ProcAirOutHumRat =  (1-PartLoad)*ProcAirInHumRat + (PartLoad)*MinProcAirOutHumRat
 
-  ! Calculate water removal
-  DesicDehum(DesicDehumNum)%WaterRemoveRate = ProcAirMassFlowRate * (ProcAirInHumRat - ProcAirOutHumRat)
+    ! Calculate water removal
+    DesicDehum(DesicDehumNum)%WaterRemoveRate = ProcAirMassFlowRate * (ProcAirInHumRat - ProcAirOutHumRat)
 
-  ! Adjust for regen inlet temperature
-  SpecRegenEnergy = SpecRegenEnergy * (NomRegenTemp - RegenAirInTemp) / (NomRegenTemp - ProcAirInTemp)
-  SpecRegenEnergy = MAX(SpecRegenEnergy, 0.0d0)
-  QRegen = SpecRegenEnergy*DesicDehum(DesicDehumNum)%WaterRemoveRate
+    ! Adjust for regen inlet temperature
+    SpecRegenEnergy = SpecRegenEnergy * (NomRegenTemp - RegenAirInTemp) / (NomRegenTemp - ProcAirInTemp)
+    SpecRegenEnergy = MAX(SpecRegenEnergy, 0.0d0)
+    QRegen = SpecRegenEnergy*DesicDehum(DesicDehumNum)%WaterRemoveRate
 
-  ! Above curves are based on a 90deg regen angle and 245deg process air angle
-  RegenAirMassFlowRate = ProcAirMassFlowRate * 90.d0/245.d0 * RegenAirVel/ProcAirVel
+    ! Above curves are based on a 90deg regen angle and 245deg process air angle
+    RegenAirMassFlowRate = ProcAirMassFlowRate * 90.d0/245.d0 * RegenAirVel/ProcAirVel
 
-  ElecUseRate = DesicDehum(DesicDehumNum)%NomRotorPower
+    ElecUseRate = DesicDehum(DesicDehumNum)%NomRotorPower
 
-ELSE  ! Unit is off
+  ELSE  ! Unit is off
 
-  ProcAirOutTemp   = ProcAirInTemp
-  ProcAirOutHumRat = ProcAirInHumRat
-  SpecRegenEnergy = 0
-  QRegen = 0
-  ElecUseRate = 0
-  RegenAirVel = 0
-  RegenAirMassFlowRate = 0
-  DesicDehum(DesicDehumNum)%WaterRemoveRate = 0
-  PartLoad = 0
+    ProcAirOutTemp   = ProcAirInTemp
+    ProcAirOutHumRat = ProcAirInHumRat
+    SpecRegenEnergy = 0
+    QRegen = 0
+    ElecUseRate = 0
+    RegenAirVel = 0
+    RegenAirMassFlowRate = 0
+    DesicDehum(DesicDehumNum)%WaterRemoveRate = 0
+    PartLoad = 0
 
-ENDIF ! UnitOn/Off
+  ENDIF ! UnitOn/Off
 
-! Set regen mass flow
+  ! Set regen mass flow
   Node(DesicDehum(DesicDehumNum)%RegenFanInNode)%MassFlowRate = RegenAirMassFlowRate
   Node(DesicDehum(DesicDehumNum)%RegenFanInNode)%MassFlowRateMaxAvail = RegenAirMassFlowRate
-! Call regen fan
+  ! Call regen fan
   CALL SimulateFanComponents(DesicDehum(DesicDehumNum)%RegenFanName,FirstHVACIteration, &
-                             DesicDehum(DesicDehumNum)%RegenFanIndex)
-! Call regen heating coil
+  DesicDehum(DesicDehumNum)%RegenFanIndex)
+  ! Call regen heating coil
   CALL CalcNonDXHeatingCoils(DesicDehumNum,FirstHVACIteration,QRegen,QDelivered)
 
-! Verify is requestd flow was delivered (must do after heating coil has executed to pass flow to RegenAirInNode)
+  ! Verify is requestd flow was delivered (must do after heating coil has executed to pass flow to RegenAirInNode)
   IF (Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%MassFlowRate .NE. RegenAirMassFlowRate) THEN
     ! Initialize standard air density
     IF (MyOneTimeFlag) THEN
       RhoAirStdInit = StdRhoAir
     ENDIF
     CALL ShowRecurringSevereErrorAtEnd( &
-           'Improper flow delivered by desiccant regen fan - RESULTS INVALID! Check regen fan capacity and schedule.', &
-           DesicDehum(DesicDehumNum)%RegenFanErrorIndex1)
+    'Improper flow delivered by desiccant regen fan - RESULTS INVALID! Check regen fan capacity and schedule.', &
+    DesicDehum(DesicDehumNum)%RegenFanErrorIndex1)
     CALL ShowRecurringContinueErrorAtEnd( &
-           TRIM(DesicDehum(DesicDehumNum)%DehumType)//'='//TRIM(DesicDehum(DesicDehumNum)%Name), &
-           DesicDehum(DesicDehumNum)%RegenFanErrorIndex2)
+    TRIM(DesicDehum(DesicDehumNum)%DehumType)//'='//TRIM(DesicDehum(DesicDehumNum)%Name), &
+    DesicDehum(DesicDehumNum)%RegenFanErrorIndex2)
     RhoAirStdInit = StdRhoAir
     CALL ShowRecurringContinueErrorAtEnd( &
-           TRIM('Flow requested [m3/s] from '//DesicDehum(DesicDehumNum)%RegenFanType)//'='// &
-           TRIM(DesicDehum(DesicDehumNum)%RegenFanName), &
-           DesicDehum(DesicDehumNum)%RegenFanErrorIndex3, &
-           ReportMaxOf=(RegenAirMassFlowRate / RhoAirStdInit))
+    TRIM('Flow requested [m3/s] from '//DesicDehum(DesicDehumNum)%RegenFanType)//'='// &
+    TRIM(DesicDehum(DesicDehumNum)%RegenFanName), &
+    DesicDehum(DesicDehumNum)%RegenFanErrorIndex3, &
+    ReportMaxOf=(RegenAirMassFlowRate / RhoAirStdInit))
     CALL ShowRecurringContinueErrorAtEnd( &
-           'Flow request varied from delivered by [m3/s]', &
-           DesicDehum(DesicDehumNum)%RegenFanErrorIndex4, &
-           ReportMaxOf=((RegenAirMassFlowRate - Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%MassFlowRate)/ RhoAirStdInit), &
-           ReportMinOf=((RegenAirMassFlowRate - Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%MassFlowRate)/ RhoAirStdInit))
+    'Flow request varied from delivered by [m3/s]', &
+    DesicDehum(DesicDehumNum)%RegenFanErrorIndex4, &
+    ReportMaxOf=((RegenAirMassFlowRate - Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%MassFlowRate)/ RhoAirStdInit), &
+    ReportMinOf=((RegenAirMassFlowRate - Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%MassFlowRate)/ RhoAirStdInit))
   ENDIF
 
-! Verify is requestd heating was delivered
+  ! Verify is requestd heating was delivered
   IF (QDelivered .LT. QRegen) THEN
     CALL ShowRecurringSevereErrorAtEnd( &
-           'Inadequate heat delivered by desiccant regen coil - RESULTS INVALID! Check regen coil capacity and schedule.', &
-           DesicDehum(DesicDehumNum)%RegenCapErrorIndex1)
+    'Inadequate heat delivered by desiccant regen coil - RESULTS INVALID! Check regen coil capacity and schedule.', &
+    DesicDehum(DesicDehumNum)%RegenCapErrorIndex1)
     CALL ShowRecurringContinueErrorAtEnd( &
-           TRIM(DesicDehum(DesicDehumNum)%DehumType)//'='//TRIM(DesicDehum(DesicDehumNum)%Name), &
-           DesicDehum(DesicDehumNum)%RegenCapErrorIndex2)
+    TRIM(DesicDehum(DesicDehumNum)%DehumType)//'='//TRIM(DesicDehum(DesicDehumNum)%Name), &
+    DesicDehum(DesicDehumNum)%RegenCapErrorIndex2)
     CALL ShowRecurringContinueErrorAtEnd( &
-           TRIM('Load requested [W] from '//DesicDehum(DesicDehumNum)%RegenCoilType)//'='// &
-           TRIM(DesicDehum(DesicDehumNum)%RegenCoilName), &
-           DesicDehum(DesicDehumNum)%RegenCapErrorIndex3,ReportMaxOf=QRegen)
+    TRIM('Load requested [W] from '//DesicDehum(DesicDehumNum)%RegenCoilType)//'='// &
+    TRIM(DesicDehum(DesicDehumNum)%RegenCoilName), &
+    DesicDehum(DesicDehumNum)%RegenCapErrorIndex3,ReportMaxOf=QRegen)
     CALL ShowRecurringContinueErrorAtEnd( &
-           'Load request exceeded delivered by [W]', &
-           DesicDehum(DesicDehumNum)%RegenCapErrorIndex4,ReportMaxOf=(QRegen-QDelivered))
+    'Load request exceeded delivered by [W]', &
+    DesicDehum(DesicDehumNum)%RegenCapErrorIndex4,ReportMaxOf=(QRegen-QDelivered))
   ENDIF
 
   DesicDehum(DesicDehumNum)%SpecRegenEnergy = SpecRegenEnergy
@@ -2421,62 +2421,62 @@ ENDIF ! UnitOn/Off
   DesicDehum(DesicDehumNum)%RegenAirInMassFlowRate = RegenAirMassFlowRate
   DesicDehum(DesicDehumNum)%RegenAirVel = RegenAirVel
 
-!  DesicDehum(DesicDehumNum)%RegenAirOutTemp        = -999.
-!  DesicDehum(DesicDehumNum)%RegenAirOutHumRat      = -999.
-!  DesicDehum(DesicDehumNum)%RegenAirOutEnthalpy    = -999.
+  !  DesicDehum(DesicDehumNum)%RegenAirOutTemp        = -999.
+  !  DesicDehum(DesicDehumNum)%RegenAirOutHumRat      = -999.
+  !  DesicDehum(DesicDehumNum)%RegenAirOutEnthalpy    = -999.
   RETURN
-!
+  !
 
 END SUBROUTINE CalcSolidDesiccantDehumidifier
 
 SUBROUTINE CalcGenericDesiccantDehumidifier(DesicDehumNum,HumRatNeeded,FirstHVACIteration)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Mangesh Basarkar, FSEC
-          !       DATE WRITTEN   May 2007
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Mangesh Basarkar, FSEC
+  !       DATE WRITTEN   May 2007
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Calculate the electricity consumption, regen heat requirements and the outlet
-          ! conditions for a desiccant dehumidifier, given the inlet conditions,
-          ! DX coil part-load ratio, and/or the needed process leaving humidity ratio.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! Calculate the electricity consumption, regen heat requirements and the outlet
+  ! conditions for a desiccant dehumidifier, given the inlet conditions,
+  ! DX coil part-load ratio, and/or the needed process leaving humidity ratio.
 
-          ! METHODOLOGY EMPLOYED:
-          ! Given the entering conditions, the full-load outlet conditions are calculated.
-          ! Adjust for part-load if required.
-          ! Calculate the required regen energy and call the regen coil and the regen fan.
+  ! METHODOLOGY EMPLOYED:
+  ! Given the entering conditions, the full-load outlet conditions are calculated.
+  ! Adjust for part-load if required.
+  ! Calculate the required regen energy and call the regen coil and the regen fan.
 
-          ! REFERENCES:
-          ! Kosar, D. 2006. Dehumidification Enhancements, ASHRAE Journal, Vol. 48, No. 2, February 2006.
-          ! Kosar, D. et al. 2006. Dehumidification Enhancement of Direct Expansion Systems Through Component
-          !   Augmentation of the Cooling Coil. 15th Symposium on Improving Building Systems in Hot and Humid
-          !   Climates, July 24-26, 2006.
+  ! REFERENCES:
+  ! Kosar, D. 2006. Dehumidification Enhancements, ASHRAE Journal, Vol. 48, No. 2, February 2006.
+  ! Kosar, D. et al. 2006. Dehumidification Enhancement of Direct Expansion Systems Through Component
+  !   Augmentation of the Cooling Coil. 15th Symposium on Improving Building Systems in Hot and Humid
+  !   Climates, July 24-26, 2006.
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE Psychrometrics,  ONLY: PsyHFnTdbW, PsyRhoAirFnPbTdbW
-!unused  USE DataEnvironment, ONLY: StdBaroPress
+  !unused  USE DataEnvironment, ONLY: StdBaroPress
   USE HeatRecovery,    ONLY: SimHeatRecovery
   USE DXCoils,         ONLY: DXCoilPartLoadRatio, DXCoilFanOpMode
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   INTEGER, INTENT (IN) :: DesicDehumNum  ! number of the current dehumidifier being simulated
   REAL(r64),    INTENT (IN) :: HumRatNeeded ! process air leaving humidity ratio set by controller [kg water/kg air]
   LOGICAL, INTENT (IN) :: FirstHVACIteration  ! TRUE if 1st HVAC simulation of system timestep
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! SUBROUTINE PARAMETER DEFINITIONS:
   REAL(r64), PARAMETER :: MinVolFlowPerRatedTotQ = 0.00002684d0 ! m3/s per W = 200 cfm/ton,
-                                                                ! min vol flow per rated evaporator capacity
+  ! min vol flow per rated evaporator capacity
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   REAL(r64) :: DDPartLoadRatio        ! fraction of dehumidification capacity required to meet setpoint
   REAL(r64) :: QRegen = 0.0           ! required coil load passed to sim heating coil routine (W)
   REAL(r64) :: MassFlowRateNew        ! new required mass flow rate calculated to keep regen setpoint temperature (kg/s)
@@ -2497,123 +2497,123 @@ SUBROUTINE CalcGenericDesiccantDehumidifier(DesicDehumNum,HumRatNeeded,FirstHVAC
   LOGICAL, SAVE :: MyOneTimeFlag = .TRUE.     ! one time flag
   REAL(r64), SAVE    :: RhoAirStdInit              ! standard air density (kg/m3)
   LOGICAL       :: UnitOn                     ! unit on flag
-!  LOGICAL       :: SimFlag                    ! used to turn off additional simulation if DX Coil is off
+  !  LOGICAL       :: SimFlag                    ! used to turn off additional simulation if DX Coil is off
   REAL(r64)     :: QRegen_OASysFanAdjust      ! temporary variable used to adjust regen heater load during iteration
 
-UnitOn = .FALSE.
-DDPartLoadRatio = 0.0
-RegenCoilIndex = DesicDehum(DesicDehumNum)%RegenCoilIndex
-FanDeltaT = 0.0
-RegenSetPointTemp = DesicDehum(DesicDehumNum)%RegenSetPointTemp
-ExhaustFanMassFlowRate = 0.0
+  UnitOn = .FALSE.
+  DDPartLoadRatio = 0.0
+  RegenCoilIndex = DesicDehum(DesicDehumNum)%RegenCoilIndex
+  FanDeltaT = 0.0
+  RegenSetPointTemp = DesicDehum(DesicDehumNum)%RegenSetPointTemp
+  ExhaustFanMassFlowRate = 0.0
 
-! Save OnOffFanPartLoadFraction while performing exhaust fan calculations
-OnOffFanPLF = OnOffFanPartLoadFraction
-OnOffFanPartLoadFraction = 1.0
+  ! Save OnOffFanPartLoadFraction while performing exhaust fan calculations
+  OnOffFanPLF = OnOffFanPartLoadFraction
+  OnOffFanPartLoadFraction = 1.0
 
-IF(DesicDehum(DesicDehumNum)%CoilUpstreamOfProcessSide == Yes)THEN
-! Cooling coil directly upstream of desiccant dehumidifier, dehumidifier runs in tandem with DX coil
-  CompanionCoilIndexNum = DesicDehum(DesicDehumNum)%DXCoilIndex
-ELSE
-! desiccant dehumidifier determines its own PLR
-  CompanionCoilIndexNum = 0
-END IF
-
-IF(MyOneTimeFlag)THEN
-  RhoAirStdInit = StdRhoAir
-  MyOneTimeFlag = .FALSE.
-END IF
-
-IF (HumRatNeeded .LT. Node(DesicDehum(DesicDehumNum)%ProcAirInNode)%HumRat)THEN
-  UnitOn = .TRUE.
-ENDIF
-
-IF(DesicDehum(DesicDehumNum)%CoilUpstreamOfProcessSide == Yes) THEN
-  IF (DXCoilPartLoadRatio(DesicDehum(DesicDehumNum)%DXCoilIndex) .EQ. 0.0)THEN
-    UnitOn = .FALSE.
-  ENDIF
-ENDIF
-
-IF (UnitOn) THEN
-
-  IF (DesicDehum(DesicDehumNum)%RegenInletIsOutsideAirNode) THEN
-    IF (DesicDehum(DesicDehumNum)%HXTypeNum == BalancedHX) THEN
-      Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%MassFlowRate = &
-                       Node(DesicDehum(DesicDehumNum)%ProcAirInNode)%MassFlowRate
-      Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%MassFlowRateMaxAvail = &
-                       Node(DesicDehum(DesicDehumNum)%ProcAirInNode)%MassFlowRate
-    END IF
+  IF(DesicDehum(DesicDehumNum)%CoilUpstreamOfProcessSide == Yes)THEN
+    ! Cooling coil directly upstream of desiccant dehumidifier, dehumidifier runs in tandem with DX coil
+    CompanionCoilIndexNum = DesicDehum(DesicDehumNum)%DXCoilIndex
+  ELSE
+    ! desiccant dehumidifier determines its own PLR
+    CompanionCoilIndexNum = 0
   END IF
 
-! Get conditions from DX Coil condenser if present (DXCoilIndex verified > 0 in GetInput)
-  IF(DesicDehum(DesicDehumNum)%Preheat == Yes)THEN
+  IF(MyOneTimeFlag)THEN
+    RhoAirStdInit = StdRhoAir
+    MyOneTimeFlag = .FALSE.
+  END IF
 
-!     condenser waste heat is proportional to DX coil PLR
+  IF (HumRatNeeded .LT. Node(DesicDehum(DesicDehumNum)%ProcAirInNode)%HumRat)THEN
+    UnitOn = .TRUE.
+  ENDIF
+
+  IF(DesicDehum(DesicDehumNum)%CoilUpstreamOfProcessSide == Yes) THEN
+    IF (DXCoilPartLoadRatio(DesicDehum(DesicDehumNum)%DXCoilIndex) .EQ. 0.0)THEN
+      UnitOn = .FALSE.
+    ENDIF
+  ENDIF
+
+  IF (UnitOn) THEN
+
+    IF (DesicDehum(DesicDehumNum)%RegenInletIsOutsideAirNode) THEN
+      IF (DesicDehum(DesicDehumNum)%HXTypeNum == BalancedHX) THEN
+        Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%MassFlowRate = &
+        Node(DesicDehum(DesicDehumNum)%ProcAirInNode)%MassFlowRate
+        Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%MassFlowRateMaxAvail = &
+        Node(DesicDehum(DesicDehumNum)%ProcAirInNode)%MassFlowRate
+      END IF
+    END IF
+
+    ! Get conditions from DX Coil condenser if present (DXCoilIndex verified > 0 in GetInput)
+    IF(DesicDehum(DesicDehumNum)%Preheat == Yes)THEN
+
+      !     condenser waste heat is proportional to DX coil PLR
       CondenserWasteHeat = HeatReclaimDXCoil(DesicDehum(DesicDehumNum)%DXCoilIndex)%AvailCapacity
       HeatReclaimDXCoil(DesicDehum(DesicDehumNum)%DXCoilIndex)%AvailCapacity = 0.0
 
       CpAir = PsyCpAirFnWTdb(Node(DesicDehum(DesicDehumNum)%CondenserInletNode)%HumRat, &
-                             Node(DesicDehum(DesicDehumNum)%CondenserInletNode)%Temp)
+      Node(DesicDehum(DesicDehumNum)%CondenserInletNode)%Temp)
 
       IF (DesicDehum(DesicDehumNum)%RegenFanPlacement == BlowThru)THEN
         CALL SimulateFanComponents(DesicDehum(DesicDehumNum)%RegenFanName,FirstHVACIteration, &
-                                   DesicDehum(DesicDehumNum)%RegenFanIndex)
+        DesicDehum(DesicDehumNum)%RegenFanIndex)
         FanDeltaT = Node(DesicDehum(DesicDehumNum)%RegenFanOutNode)%Temp - &
-                    Node(DesicDehum(DesicDehumNum)%RegenFanInNode)%Temp
-!       Adjust setpoint to account for fan heat
+        Node(DesicDehum(DesicDehumNum)%RegenFanInNode)%Temp
+        !       Adjust setpoint to account for fan heat
         RegenSetPointTemp = RegenSetPointTemp - FanDeltaT
       ENDIF
 
-!     CompanionCoilIndexNum .GT. 0 means the same thing as DesicDehum(DesicDehumNum)%CoilUpstreamOfProcessSide == Yes
+      !     CompanionCoilIndexNum .GT. 0 means the same thing as DesicDehum(DesicDehumNum)%CoilUpstreamOfProcessSide == Yes
       IF(CompanionCoilIndexNum .GT. 0)THEN
 
         DDPartLoadRatio = DXCoilPartLoadRatio(DesicDehum(DesicDehumNum)%DXCoilIndex)
 
       END IF
 
-!     calculate actual condenser outlet node (regen inlet node) temperature
+      !     calculate actual condenser outlet node (regen inlet node) temperature
       IF(CompanionCoilIndexNum .GT. 0) THEN
         IF(DXCoilFanOpMode(DesicDehum(DesicDehumNum)%DXCoilIndex) == ContFanCycCoil) THEN
           NewRegenInTemp = Node(DesicDehum(DesicDehumNum)%CondenserInletNode)%Temp + &
-                    CondenserWasteHeat/(CpAir*(Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%MassFlowRate)* DDPartLoadRatio)
+          CondenserWasteHeat/(CpAir*(Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%MassFlowRate)* DDPartLoadRatio)
           CondenserWasteHeat = CondenserWasteHeat / DDPartLoadRatio
         ELSE
           NewRegenInTemp = Node(DesicDehum(DesicDehumNum)%CondenserInletNode)%Temp + &
-                  CondenserWasteHeat/(CpAir*(Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%MassFlowRate))
+          CondenserWasteHeat/(CpAir*(Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%MassFlowRate))
         END IF
       ELSE
         NewRegenInTemp = Node(DesicDehum(DesicDehumNum)%CondenserInletNode)%Temp + &
-                CondenserWasteHeat/(CpAir*(Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%MassFlowRate))
+        CondenserWasteHeat/(CpAir*(Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%MassFlowRate))
       END IF
 
       Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%Temp     = NewRegenInTemp
       Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%Enthalpy = PsyHFnTdbW(Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%Temp, &
-                                                                           Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%HumRat)
+      Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%HumRat)
       MassFlowRateNew = 0.0
 
       IF (DesicDehum(DesicDehumNum)%ExhaustFanMaxVolFlowRate .GT. 0)THEN
 
-!       calculate mass flow rate required to maintain regen inlet setpoint temp
+        !       calculate mass flow rate required to maintain regen inlet setpoint temp
         IF(NewRegenInTemp .GT. RegenSetPointTemp)THEN
           IF(RegenSetPointTemp - Node(DesicDehum(DesicDehumNum)%CondenserInletNode)%Temp .NE. 0.0)THEN
             MassFlowRateNew =  MAX(0.0d0, CondenserWasteHeat / &
-                (CpAir*(RegenSetPointTemp - Node(DesicDehum(DesicDehumNum)%CondenserInletNode)%Temp)))
+            (CpAir*(RegenSetPointTemp - Node(DesicDehum(DesicDehumNum)%CondenserInletNode)%Temp)))
           ELSE
             MassFlowRateNew =  Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%MassFlowRate
           ENDIF
         ENDIF
 
-!       calculate exhaust fan mass flow rate and new regen inlet temperature (may not be at setpoint)
+        !       calculate exhaust fan mass flow rate and new regen inlet temperature (may not be at setpoint)
         IF (MassFlowRateNew > Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%MassFlowRate)THEN
           ExhaustFanMassFlowRate = MassFlowRateNew - Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%MassFlowRate
           ExhaustFanMassFlowRate = MAX(0.0d0,MIN(ExhaustFanMassFlowRate,DesicDehum(DesicDehumNum)%ExhaustFanMaxMassFlowRate))
 
           Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%Temp = Node(DesicDehum(DesicDehumNum)%CondenserInletNode)%Temp &
-           + CondenserWasteHeat/(CpAir*(Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%MassFlowRate+ExhaustFanMassFlowRate))
+          + CondenserWasteHeat/(CpAir*(Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%MassFlowRate+ExhaustFanMassFlowRate))
           Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%HumRat = Node(DesicDehum(DesicDehumNum)%CondenserInletNode)%HumRat
           Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%Enthalpy = &
-                 PsyHFnTdbW(Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%Temp, &
-                 Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%HumRat)
+          PsyHFnTdbW(Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%Temp, &
+          Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%HumRat)
         END IF
 
       ENDIF
@@ -2621,14 +2621,14 @@ IF (UnitOn) THEN
       IF(RegenCoilIndex .GT. 0)THEN
         IF(NewRegenInTemp .LT. RegenSetPointTemp)THEN
           CpAir = PsyCpAirFnWTdb(Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%HumRat, &
-                           Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%Temp)
+          Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%Temp)
         END IF
         QRegen = MAX(0.0d0, (CpAir * Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%MassFlowRate * &
-                          (RegenSetPointTemp-Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%Temp)))
+        (RegenSetPointTemp-Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%Temp)))
         IF(QRegen .EQ. 0.0) QRegen = -1.0
       END IF
 
-!     CompanionCoilIndexNum .EQ. 0 means the same thing as DesicDehum(DesicDehumNum)%CoilUpstreamOfProcessSide == No
+      !     CompanionCoilIndexNum .EQ. 0 means the same thing as DesicDehum(DesicDehumNum)%CoilUpstreamOfProcessSide == No
       IF(CompanionCoilIndexNum .EQ. 0)THEN
 
         IF(RegenCoilIndex .GT. 0)THEN
@@ -2636,9 +2636,9 @@ IF (UnitOn) THEN
           QRegen_OASysFanAdjust = QRegen
           IF (DesicDehum(DesicDehumNum)%RegenFanPlacement == BlowThru)THEN
             IF(Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%MassFlowRate .GT. 0.0)THEN
-!             For VAV systems, fan may restrict air flow during iteration. Adjust QRegen proportional to Mdot reduction through fan
+              !             For VAV systems, fan may restrict air flow during iteration. Adjust QRegen proportional to Mdot reduction through fan
               QRegen_OASysFanAdjust = QRegen_OASysFanAdjust * Node(DesicDehum(DesicDehumNum)%RegenFanOutNode)%MassFlowRate / &
-                                                              Node(DesicDehum(DesicDehumNum)%RegenFanInNode)%MassFlowRate
+              Node(DesicDehum(DesicDehumNum)%RegenFanInNode)%MassFlowRate
             END IF
           END IF
 
@@ -2646,13 +2646,13 @@ IF (UnitOn) THEN
         END IF
 
         CALL SimHeatRecovery(DesicDehum(DesicDehumNum)%HXName,FirstHVACIteration,DesicDehum(DesicDehumNum)%CompIndex, &
-                 ContFanCycCoil, HXPartLoadRatio=1.0d0, HXUnitEnable=.TRUE., CompanionCoilIndex=CompanionCoilIndexNum, &
-                 RegenInletIsOANode=DesicDehum(DesicDehumNum)%RegenInletIsOutsideAirNode)
+        ContFanCycCoil, HXPartLoadRatio=1.0d0, HXUnitEnable=.TRUE., CompanionCoilIndex=CompanionCoilIndexNum, &
+        RegenInletIsOANode=DesicDehum(DesicDehumNum)%RegenInletIsOutsideAirNode)
 
-!       calculate desiccant part-load ratio
+        !       calculate desiccant part-load ratio
         IF(Node(DesicDehum(DesicDehumNum)%ProcAirInNode)%HumRat .NE. Node(DesicDehum(DesicDehumNum)%ProcAirOutNode)%HumRat) THEN
           DDPartLoadRatio = (Node(DesicDehum(DesicDehumNum)%ProcAirInNode)%HumRat - HumRatNeeded) / &
-                (Node(DesicDehum(DesicDehumNum)%ProcAirInNode)%HumRat - Node(DesicDehum(DesicDehumNum)%ProcAirOutNode)%HumRat)
+          (Node(DesicDehum(DesicDehumNum)%ProcAirInNode)%HumRat - Node(DesicDehum(DesicDehumNum)%ProcAirOutNode)%HumRat)
           DDPartLoadRatio = MAX(0.0d0, MIN(1.0d0, DDPartLoadRatio))
         ELSE
           DDPartLoadRatio = 1.0
@@ -2662,49 +2662,49 @@ IF (UnitOn) THEN
 
       IF(ExhaustFanMassFlowRate .GT. 0.0)THEN
 
-!       calculate exhaust fan mass flow rate due to desiccant system operation
+        !       calculate exhaust fan mass flow rate due to desiccant system operation
         ExhaustFanMassFlowRate = ExhaustFanMassFlowRate * DDPartLoadRatio
 
-!       calculate exhaust fan PLR due to desiccant system operation
+        !       calculate exhaust fan PLR due to desiccant system operation
         ExhaustFanPLR = ExhaustFanMassFlowRate/DesicDehum(DesicDehumNum)%ExhaustFanMaxMassFlowRate
 
-!       find exhaust fan power multiplier using exhaust fan part-load ratio
+        !       find exhaust fan power multiplier using exhaust fan part-load ratio
         IF(DesicDehum(DesicDehumNum)%ExhaustFanCurveIndex .GT. 0) THEN
-           ExhaustFanPowerMod = MIN(1.0d0,MAX(0.0d0,CurveValue(DesicDehum(DesicDehumNum)%ExhaustFanCurveIndex,ExhaustFanPLR)))
+          ExhaustFanPowerMod = MIN(1.0d0,MAX(0.0d0,CurveValue(DesicDehum(DesicDehumNum)%ExhaustFanCurveIndex,ExhaustFanPLR)))
         ELSE
-           ExhaustFanPowerMod = 1.0
+          ExhaustFanPowerMod = 1.0
         END IF
 
-!       calculate exhaust fan power due to desiccant operation
+        !       calculate exhaust fan power due to desiccant operation
         DesicDehum(DesicDehumNum)%ExhaustFanPower = DesicDehum(DesicDehumNum)%ExhaustFanMaxPower * ExhaustFanPowerMod
 
       END IF
 
-  ELSE ! ELSE for IF(DesicDehum(DesicDehumNum)%Preheat == Yes)THEN
+    ELSE ! ELSE for IF(DesicDehum(DesicDehumNum)%Preheat == Yes)THEN
 
       IF(Node(DesicDehum(DesicDehumNum)%ProcAirInNode)%HumRat .GT. HumRatNeeded)THEN
 
-!       Get Full load output of desiccant wheel
+        !       Get Full load output of desiccant wheel
         IF (DesicDehum(DesicDehumNum)%RegenFanPlacement == BlowThru)THEN
           CALL SimulateFanComponents(DesicDehum(DesicDehumNum)%RegenFanName,FirstHVACIteration, &
-                                     DesicDehum(DesicDehumNum)%RegenFanIndex)
+          DesicDehum(DesicDehumNum)%RegenFanIndex)
           FanDeltaT = Node(DesicDehum(DesicDehumNum)%RegenFanOutNode)%Temp - &
-                      Node(DesicDehum(DesicDehumNum)%RegenFanInNode)%Temp
+          Node(DesicDehum(DesicDehumNum)%RegenFanInNode)%Temp
           RegenSetPointTemp = RegenSetPointTemp - FanDeltaT
         ENDIF
 
         IF(RegenCoilIndex .GT. 0)THEN
           CpAir = PsyCpAirFnWTdb(Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%HumRat, &
-                                 Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%Temp)
+          Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%Temp)
           QRegen = MAX(0.0d0, (CpAir * Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%MassFlowRate * &
-                            (RegenSetPointTemp-Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%Temp)))
+          (RegenSetPointTemp-Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%Temp)))
 
           QRegen_OASysFanAdjust = QRegen
           IF (DesicDehum(DesicDehumNum)%RegenFanPlacement == BlowThru)THEN
             IF(Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%MassFlowRate .GT. 0.0)THEN
-!             For VAV systems, fan may restrict air flow during iteration. Adjust QRegen proportional to Mdot reduction through fan
+              !             For VAV systems, fan may restrict air flow during iteration. Adjust QRegen proportional to Mdot reduction through fan
               QRegen_OASysFanAdjust = QRegen_OASysFanAdjust * Node(DesicDehum(DesicDehumNum)%RegenFanOutNode)%MassFlowRate / &
-                                                              Node(DesicDehum(DesicDehumNum)%RegenFanInNode)%MassFlowRate
+              Node(DesicDehum(DesicDehumNum)%RegenFanInNode)%MassFlowRate
             END IF
           END IF
 
@@ -2712,16 +2712,16 @@ IF (UnitOn) THEN
           CALL CalcNonDXHeatingCoils(DesicDehumNum,FirstHVACIteration,QRegen_OASysFanAdjust)
         END IF
 
-!       CompanionCoilIndexNum .EQ. 0 means the same thing as DesicDehum(DesicDehumNum)%CoilUpstreamOfProcessSide == No
+        !       CompanionCoilIndexNum .EQ. 0 means the same thing as DesicDehum(DesicDehumNum)%CoilUpstreamOfProcessSide == No
         IF(CompanionCoilIndexNum .EQ. 0)THEN
           CALL SimHeatRecovery(DesicDehum(DesicDehumNum)%HXName,FirstHVACIteration,DesicDehum(DesicDehumNum)%CompIndex, &
-                 ContFanCycCoil, HXPartLoadRatio=1.0d0, HXUnitEnable=.TRUE., CompanionCoilIndex=CompanionCoilIndexNum, &
-                 RegenInletIsOANode=DesicDehum(DesicDehumNum)%RegenInletIsOutsideAirNode)
+          ContFanCycCoil, HXPartLoadRatio=1.0d0, HXUnitEnable=.TRUE., CompanionCoilIndex=CompanionCoilIndexNum, &
+          RegenInletIsOANode=DesicDehum(DesicDehumNum)%RegenInletIsOutsideAirNode)
 
-!         calculate desiccant part-load ratio
+          !         calculate desiccant part-load ratio
           IF(Node(DesicDehum(DesicDehumNum)%ProcAirInNode)%HumRat .NE. Node(DesicDehum(DesicDehumNum)%ProcAirOutNode)%HumRat) THEN
             DDPartLoadRatio = (Node(DesicDehum(DesicDehumNum)%ProcAirInNode)%HumRat - HumRatNeeded) / &
-                (Node(DesicDehum(DesicDehumNum)%ProcAirInNode)%HumRat - Node(DesicDehum(DesicDehumNum)%ProcAirOutNode)%HumRat)
+            (Node(DesicDehum(DesicDehumNum)%ProcAirInNode)%HumRat - Node(DesicDehum(DesicDehumNum)%ProcAirOutNode)%HumRat)
             DDPartLoadRatio = MAX(0.0d0, MIN(1.0d0, DDPartLoadRatio))
           ELSE
             DDPartLoadRatio = 1.0
@@ -2733,296 +2733,296 @@ IF (UnitOn) THEN
         DDPartLoadRatio = 0.0
       END IF ! END IF for IF(Node(DesicDehum(DesicDehumNum)%ProcAirInNode)%HumRat .GT. HumRatNeeded)THEN
 
-  ENDIF ! END IF for IF(DesicDehum(DesicDehumNum)%Preheat == Yes)THEN
+    ENDIF ! END IF for IF(DesicDehum(DesicDehumNum)%Preheat == Yes)THEN
 
-  DesicDehum(DesicDehumNum)%PartLoad = DDPartLoadRatio
-  QRegen_OASysFanAdjust = QRegen
+    DesicDehum(DesicDehumNum)%PartLoad = DDPartLoadRatio
+    QRegen_OASysFanAdjust = QRegen
 
-! set average regeneration air mass flow rate based on desiccant cycling ratio (DDPartLoadRatio)
-  IF (DesicDehum(DesicDehumNum)%RegenInletIsOutsideAirNode) THEN
-    Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%MassFlowRate = &
+    ! set average regeneration air mass flow rate based on desiccant cycling ratio (DDPartLoadRatio)
+    IF (DesicDehum(DesicDehumNum)%RegenInletIsOutsideAirNode) THEN
+      Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%MassFlowRate = &
       Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%MassFlowRate * DDPartLoadRatio
 
-! **RR moved to here, only adjust regen heater load if mass flow rate is changed
-!   adjust regen heating coil capacity based on desiccant cycling ratio (PLR)
-    QRegen_OASysFanAdjust = QRegen_OASysFanAdjust * DDPartLoadRatio
+      ! **RR moved to here, only adjust regen heater load if mass flow rate is changed
+      !   adjust regen heating coil capacity based on desiccant cycling ratio (PLR)
+      QRegen_OASysFanAdjust = QRegen_OASysFanAdjust * DDPartLoadRatio
 
-  END IF
+    END IF
 
-! Call regen fan, balanced desiccant HX and heating coil
-  IF (DesicDehum(DesicDehumNum)%RegenFanPlacement == BlowThru)THEN
-    CALL SimulateFanComponents(DesicDehum(DesicDehumNum)%RegenFanName,FirstHVACIteration, &
-                                      DesicDehum(DesicDehumNum)%RegenFanIndex)
-  ENDIF
+    ! Call regen fan, balanced desiccant HX and heating coil
+    IF (DesicDehum(DesicDehumNum)%RegenFanPlacement == BlowThru)THEN
+      CALL SimulateFanComponents(DesicDehum(DesicDehumNum)%RegenFanName,FirstHVACIteration, &
+      DesicDehum(DesicDehumNum)%RegenFanIndex)
+    ENDIF
 
-  IF(RegenCoilIndex .GT. 0)THEN
+    IF(RegenCoilIndex .GT. 0)THEN
 
-!!   adjust regen heating coil capacity based on desiccant cycling ratio (PLR)
-!    QRegen_OASysFanAdjust = QRegen * DDPartLoadRatio
+      !!   adjust regen heating coil capacity based on desiccant cycling ratio (PLR)
+      !    QRegen_OASysFanAdjust = QRegen * DDPartLoadRatio
+
+      IF (DesicDehum(DesicDehumNum)%RegenFanPlacement == BlowThru)THEN
+        IF(Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%MassFlowRate .GT. 0.0)THEN
+          !       For VAV systems, fan may restrict air flow during iteration. Adjust QRegen proportional to Mdot reduction through fan
+          QRegen_OASysFanAdjust = QRegen_OASysFanAdjust * Node(DesicDehum(DesicDehumNum)%RegenFanOutNode)%MassFlowRate / &
+          Node(DesicDehum(DesicDehumNum)%RegenFanInNode)%MassFlowRate
+        END IF
+      END IF
+
+      IF(QRegen_OASysFanAdjust .EQ. 0.0) QRegen_OASysFanAdjust = -1.0
+      CALL CalcNonDXHeatingCoils(DesicDehumNum,FirstHVACIteration,QRegen_OASysFanAdjust)
+    END IF
+
+    CALL SimHeatRecovery(DesicDehum(DesicDehumNum)%HXName,FirstHVACIteration,DesicDehum(DesicDehumNum)%CompIndex, &
+    ContFanCycCoil, HXPartLoadRatio=DDPartLoadRatio, HXUnitEnable=.TRUE., CompanionCoilIndex=CompanionCoilIndexNum, &
+    RegenInletIsOANode=DesicDehum(DesicDehumNum)%RegenInletIsOutsideAirNode)
+
+    IF (DesicDehum(DesicDehumNum)%RegenFanPlacement == DrawThru)THEN
+      CALL SimulateFanComponents(DesicDehum(DesicDehumNum)%RegenFanName,FirstHVACIteration, &
+      DesicDehum(DesicDehumNum)%RegenFanIndex)
+    ENDIF
+
+    ! Calculate water removal
+    DesicDehum(DesicDehumNum)%WaterRemoveRate = Node(DesicDehum(DesicDehumNum)%ProcAirInNode)%MassFlowRate* &
+    (Node(DesicDehum(DesicDehumNum)%ProcAirInNode)%HumRat - &
+    Node(DesicDehum(DesicDehumNum)%ProcAirOutNode)%HumRat)
+
+    ! If preheat is Yes, exhaust fan is condenser fan, if CoilUpstreamOfProcessSide is No, DD runs an its own PLR
+    IF(DesicDehum(DesicDehumNum)%Preheat == Yes .AND. DesicDehum(DesicDehumNum)%CoilUpstreamOfProcessSide == No)THEN
+      !    should actually use DX coil RTF instead of PLR since fan power is being calculated
+      DesicDehum(DesicDehumNum)%ExhaustFanPower = DesicDehum(DesicDehumNum)%ExhaustFanPower + &
+      MAX(0.0d0,(DesicDehum(DesicDehumNum)%ExhaustFanMaxPower * &
+      (DXCoilPartLoadRatio(DesicDehum(DesicDehumNum)%DXCoilIndex)-DDPartLoadRatio)))
+    END IF
+
+  ELSE ! unit must be off
+
+    DesicDehum(DesicDehumNum)%PartLoad = 0.0
+
+    IF(DesicDehum(DesicDehumNum)%RegenInletIsOutsideAirNode) THEN
+      Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%MassFlowRate = 0.0
+      Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%MassFlowRateMaxAvail = 0.0
+    END IF
 
     IF (DesicDehum(DesicDehumNum)%RegenFanPlacement == BlowThru)THEN
-      IF(Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%MassFlowRate .GT. 0.0)THEN
-!       For VAV systems, fan may restrict air flow during iteration. Adjust QRegen proportional to Mdot reduction through fan
-        QRegen_OASysFanAdjust = QRegen_OASysFanAdjust * Node(DesicDehum(DesicDehumNum)%RegenFanOutNode)%MassFlowRate / &
-                                                        Node(DesicDehum(DesicDehumNum)%RegenFanInNode)%MassFlowRate
+      CALL SimulateFanComponents(DesicDehum(DesicDehumNum)%RegenFanName,FirstHVACIteration, &
+      DesicDehum(DesicDehumNum)%RegenFanIndex)
+    ENDIF
+
+    IF(RegenCoilIndex .GT. 0)THEN
+      CALL CalcNonDXHeatingCoils(DesicDehumNum,FirstHVACIteration,-1.0d0)
+    END IF
+
+    CALL SimHeatRecovery(DesicDehum(DesicDehumNum)%HXName,FirstHVACIteration,DesicDehum(DesicDehumNum)%CompIndex, &
+    ContFanCycCoil,HXPartLoadRatio=0.0d0,HXUnitEnable=.FALSE.,CompanionCoilIndex=CompanionCoilIndexNum, &
+    RegenInletIsOANode=DesicDehum(DesicDehumNum)%RegenInletIsOutsideAirNode)
+
+    IF (DesicDehum(DesicDehumNum)%RegenFanPlacement == DrawThru)THEN
+      CALL SimulateFanComponents(DesicDehum(DesicDehumNum)%RegenFanName,FirstHVACIteration, &
+      DesicDehum(DesicDehumNum)%RegenFanIndex)
+    ENDIF
+
+    ! Turn on exhaust fan if DX Coil is operating
+    IF(DesicDehum(DesicDehumNum)%ExhaustFanMaxVolFlowRate .GT. 0)THEN
+      IF(DesicDehum(DesicDehumNum)%DXCoilIndex .GT. 0)THEN
+        DDPartLoadRatio = DXCoilPartLoadRatio(DesicDehum(DesicDehumNum)%DXCoilIndex)
+        DesicDehum(DesicDehumNum)%ExhaustFanPower = DesicDehum(DesicDehumNum)%ExhaustFanMaxPower * DDPartLoadRatio
+        ExhaustFanMassFlowRate = DesicDehum(DesicDehumNum)%ExhaustFanMaxMassFlowRate * DDPartLoadRatio
       END IF
     END IF
 
-    IF(QRegen_OASysFanAdjust .EQ. 0.0) QRegen_OASysFanAdjust = -1.0
-    CALL CalcNonDXHeatingCoils(DesicDehumNum,FirstHVACIteration,QRegen_OASysFanAdjust)
-  END IF
+  ENDIF  ! UnitOn/Off
 
-  CALL SimHeatRecovery(DesicDehum(DesicDehumNum)%HXName,FirstHVACIteration,DesicDehum(DesicDehumNum)%CompIndex, &
-           ContFanCycCoil, HXPartLoadRatio=DDPartLoadRatio, HXUnitEnable=.TRUE., CompanionCoilIndex=CompanionCoilIndexNum, &
-           RegenInletIsOANode=DesicDehum(DesicDehumNum)%RegenInletIsOutsideAirNode)
-
-  IF (DesicDehum(DesicDehumNum)%RegenFanPlacement == DrawThru)THEN
-    CALL SimulateFanComponents(DesicDehum(DesicDehumNum)%RegenFanName,FirstHVACIteration, &
-                                      DesicDehum(DesicDehumNum)%RegenFanIndex)
-  ENDIF
-
-! Calculate water removal
-  DesicDehum(DesicDehumNum)%WaterRemoveRate = Node(DesicDehum(DesicDehumNum)%ProcAirInNode)%MassFlowRate* &
-                     (Node(DesicDehum(DesicDehumNum)%ProcAirInNode)%HumRat - &
-                       Node(DesicDehum(DesicDehumNum)%ProcAirOutNode)%HumRat)
-
-! If preheat is Yes, exhaust fan is condenser fan, if CoilUpstreamOfProcessSide is No, DD runs an its own PLR
-  IF(DesicDehum(DesicDehumNum)%Preheat == Yes .AND. DesicDehum(DesicDehumNum)%CoilUpstreamOfProcessSide == No)THEN
-!    should actually use DX coil RTF instead of PLR since fan power is being calculated
-     DesicDehum(DesicDehumNum)%ExhaustFanPower = DesicDehum(DesicDehumNum)%ExhaustFanPower + &
-                                  MAX(0.0d0,(DesicDehum(DesicDehumNum)%ExhaustFanMaxPower * &
-                                  (DXCoilPartLoadRatio(DesicDehum(DesicDehumNum)%DXCoilIndex)-DDPartLoadRatio)))
-  END IF
-
-ELSE ! unit must be off
-
-  DesicDehum(DesicDehumNum)%PartLoad = 0.0
-
-  IF(DesicDehum(DesicDehumNum)%RegenInletIsOutsideAirNode) THEN
-    Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%MassFlowRate = 0.0
-    Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%MassFlowRateMaxAvail = 0.0
-  END IF
-
-  IF (DesicDehum(DesicDehumNum)%RegenFanPlacement == BlowThru)THEN
-    CALL SimulateFanComponents(DesicDehum(DesicDehumNum)%RegenFanName,FirstHVACIteration, &
-                                        DesicDehum(DesicDehumNum)%RegenFanIndex)
-  ENDIF
-
-  IF(RegenCoilIndex .GT. 0)THEN
-    CALL CalcNonDXHeatingCoils(DesicDehumNum,FirstHVACIteration,-1.0d0)
-  END IF
-
-  CALL SimHeatRecovery(DesicDehum(DesicDehumNum)%HXName,FirstHVACIteration,DesicDehum(DesicDehumNum)%CompIndex, &
-                       ContFanCycCoil,HXPartLoadRatio=0.0d0,HXUnitEnable=.FALSE.,CompanionCoilIndex=CompanionCoilIndexNum, &
-                       RegenInletIsOANode=DesicDehum(DesicDehumNum)%RegenInletIsOutsideAirNode)
-
-  IF (DesicDehum(DesicDehumNum)%RegenFanPlacement == DrawThru)THEN
-    CALL SimulateFanComponents(DesicDehum(DesicDehumNum)%RegenFanName,FirstHVACIteration, &
-                                        DesicDehum(DesicDehumNum)%RegenFanIndex)
-  ENDIF
-
-! Turn on exhaust fan if DX Coil is operating
-  IF(DesicDehum(DesicDehumNum)%ExhaustFanMaxVolFlowRate .GT. 0)THEN
-    IF(DesicDehum(DesicDehumNum)%DXCoilIndex .GT. 0)THEN
-      DDPartLoadRatio = DXCoilPartLoadRatio(DesicDehum(DesicDehumNum)%DXCoilIndex)
-      DesicDehum(DesicDehumNum)%ExhaustFanPower = DesicDehum(DesicDehumNum)%ExhaustFanMaxPower * DDPartLoadRatio
-      ExhaustFanMassFlowRate = DesicDehum(DesicDehumNum)%ExhaustFanMaxMassFlowRate * DDPartLoadRatio
-    END IF
-  END IF
-
-ENDIF  ! UnitOn/Off
-
-! check condenser minimum flow per rated total capacity
-IF(DDPartLoadRatio .GT. 0.0 .AND. DesicDehum(DesicDehumNum)%ExhaustFanMaxVolFlowRate .GT. 0.0) THEN
-  VolFlowperRatedTotQ = (Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%MassFlowRate+ExhaustFanMassFlowRate)/ &
-                        MAX(0.00001d0,(DesicDehum(DesicDehumNum)%CompanionCoilCapacity*DDPartLoadRatio*RhoAirStdInit))
-  IF(.NOT. WarmupFlag .AND. (VolFlowperRatedTotQ .LT. MinVolFlowPerRatedTotQ)) THEN
-    WRITE(VolFlowChar,*) VolFlowperRatedTotQ
-    DesicDehum(DesicDehumNum)%ErrCount=DesicDehum(DesicDehumNum)%ErrCount+1
-    IF (DesicDehum(DesicDehumNum)%ErrCount < 2) THEN
-      CALL ShowWarningError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//&
-      '" - Air volume flow rate per watt of total condenser waste heat is below the minimum recommended at ' &
-             //TRIM(VolFlowChar)//' m3/s/W.')
-      CALL ShowContinueErrorTimeStamp(' ')
-      WRITE(MinVol,*) MinVolFlowPerRatedTotQ
-      CALL ShowContinueError('Expected minimum for VolumeFlowperRatedTotalCondenserWasteHeat = ['//TRIM(MinVol)//']')
-      CALL ShowContinueError('Possible causes include inconsistent air flow rates in system components ')
-      CALL ShowContinueError('on the regeneration side of the desiccant dehumidifier.')
-    ELSE
-      CALL ShowRecurringWarningErrorAtEnd(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "' &
-             //TRIM(DesicDehum(DesicDehumNum)%Name)// &
+  ! check condenser minimum flow per rated total capacity
+  IF(DDPartLoadRatio .GT. 0.0 .AND. DesicDehum(DesicDehumNum)%ExhaustFanMaxVolFlowRate .GT. 0.0) THEN
+    VolFlowperRatedTotQ = (Node(DesicDehum(DesicDehumNum)%RegenAirInNode)%MassFlowRate+ExhaustFanMassFlowRate)/ &
+    MAX(0.00001d0,(DesicDehum(DesicDehumNum)%CompanionCoilCapacity*DDPartLoadRatio*RhoAirStdInit))
+    IF(.NOT. WarmupFlag .AND. (VolFlowperRatedTotQ .LT. MinVolFlowPerRatedTotQ)) THEN
+      WRITE(VolFlowChar,*) VolFlowperRatedTotQ
+      DesicDehum(DesicDehumNum)%ErrCount=DesicDehum(DesicDehumNum)%ErrCount+1
+      IF (DesicDehum(DesicDehumNum)%ErrCount < 2) THEN
+        CALL ShowWarningError(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "'//TRIM(DesicDehum(DesicDehumNum)%Name)//&
+        '" - Air volume flow rate per watt of total condenser waste heat is below the minimum recommended at ' &
+        //TRIM(VolFlowChar)//' m3/s/W.')
+        CALL ShowContinueErrorTimeStamp(' ')
+        WRITE(MinVol,*) MinVolFlowPerRatedTotQ
+        CALL ShowContinueError('Expected minimum for VolumeFlowperRatedTotalCondenserWasteHeat = ['//TRIM(MinVol)//']')
+        CALL ShowContinueError('Possible causes include inconsistent air flow rates in system components ')
+        CALL ShowContinueError('on the regeneration side of the desiccant dehumidifier.')
+      ELSE
+        CALL ShowRecurringWarningErrorAtEnd(TRIM(DesicDehum(DesicDehumNum)%DehumType)//' "' &
+        //TRIM(DesicDehum(DesicDehumNum)%Name)// &
         '" - Air volume flow rate per watt of rated total cooling capacity is out ' //&
         'of range error continues...',DesicDehum(DesicDehumNum)%ErrIndex1,VolFlowperRatedTotQ,VolFlowperRatedTotQ)
-    END IF
-  END IF ! flow per rated total capacity check ends
-END IF
+      END IF
+    END IF ! flow per rated total capacity check ends
+  END IF
 
-! Reset OnOffFanPartLoadFraction for process side fan calculations
-OnOffFanPartLoadFraction = OnOffFanPLF
+  ! Reset OnOffFanPartLoadFraction for process side fan calculations
+  OnOffFanPartLoadFraction = OnOffFanPLF
 
 
-RETURN
+  RETURN
 
 END SUBROUTINE CalcGenericDesiccantDehumidifier
 
 SUBROUTINE UpdateDesiccantDehumidifier(DesicDehumNum)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Michael J. Witte, GARD Analytics, Inc.
-          !                      for Gas Research Institute
-          !       DATE WRITTEN   March 2001
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Michael J. Witte, GARD Analytics, Inc.
+  !                      for Gas Research Institute
+  !       DATE WRITTEN   March 2001
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Moves dehumidifier output to the outlet nodes.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! Moves dehumidifier output to the outlet nodes.
 
-          ! METHODOLOGY EMPLOYED:
-          ! NA
+  ! METHODOLOGY EMPLOYED:
+  ! NA
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   INTEGER, INTENT (IN) :: DesicDehumNum ! number of the current dehumidifier being simulated
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER             :: ProcInNode   ! process air inlet node number
   INTEGER             :: ProcOutNode  ! process air outlet node number
 
-Select Case(DesicDehum(DesicDehumNum)%DehumTypeCode)
+  Select Case(DesicDehum(DesicDehumNum)%DehumTypeCode)
 
   Case (Solid)
-   ProcInNode =DesicDehum(DesicDehumNum)%ProcAirInNode
-   ProcOutNode = DesicDehum(DesicDehumNum)%ProcAirOutNode
-   ! Set the process outlet air node of the dehumidifier
-   Node(ProcOutNode)%Temp         = DesicDehum(DesicDehumNum)%ProcAirOutTemp
-   Node(ProcOutNode)%HumRat       = DesicDehum(DesicDehumNum)%ProcAirOutHumRat
-   Node(ProcOutNode)%Enthalpy     = DesicDehum(DesicDehumNum)%ProcAirOutEnthalpy
+    ProcInNode =DesicDehum(DesicDehumNum)%ProcAirInNode
+    ProcOutNode = DesicDehum(DesicDehumNum)%ProcAirOutNode
+    ! Set the process outlet air node of the dehumidifier
+    Node(ProcOutNode)%Temp         = DesicDehum(DesicDehumNum)%ProcAirOutTemp
+    Node(ProcOutNode)%HumRat       = DesicDehum(DesicDehumNum)%ProcAirOutHumRat
+    Node(ProcOutNode)%Enthalpy     = DesicDehum(DesicDehumNum)%ProcAirOutEnthalpy
 
-   ! Set the process outlet nodes for properties that just pass through & not used
-   Node(ProcOutNode)%Quality             = Node(ProcInNode)%Quality
-   Node(ProcOutNode)%Press               = Node(ProcInNode)%Press
-   Node(ProcOutNode)%MassFlowRate        = Node(ProcInNode)%MassFlowRate
-   Node(ProcOutNode)%MassFlowRateMin     = Node(ProcInNode)%MassFlowRateMin
-   Node(ProcOutNode)%MassFlowRateMax     = Node(ProcInNode)%MassFlowRateMax
-   Node(ProcOutNode)%MassFlowRateMinAvail= Node(ProcInNode)%MassFlowRateMinAvail
-   Node(ProcOutNode)%MassFlowRateMaxAvail= Node(ProcInNode)%MassFlowRateMaxAvail
+    ! Set the process outlet nodes for properties that just pass through & not used
+    Node(ProcOutNode)%Quality             = Node(ProcInNode)%Quality
+    Node(ProcOutNode)%Press               = Node(ProcInNode)%Press
+    Node(ProcOutNode)%MassFlowRate        = Node(ProcInNode)%MassFlowRate
+    Node(ProcOutNode)%MassFlowRateMin     = Node(ProcInNode)%MassFlowRateMin
+    Node(ProcOutNode)%MassFlowRateMax     = Node(ProcInNode)%MassFlowRateMax
+    Node(ProcOutNode)%MassFlowRateMinAvail= Node(ProcInNode)%MassFlowRateMinAvail
+    Node(ProcOutNode)%MassFlowRateMaxAvail= Node(ProcInNode)%MassFlowRateMaxAvail
 
-!   RegenInNode =DesicDehum(DesicDehumNum)%RegenAirInNode
-!   RegenOutNode = DesicDehum(DesicDehumNum)%RegenAirOutNode
-   ! Set the regen outlet air node of the dehumidifier
-!   Node(RegenOutNode)%Temp         = DesicDehum(DesicDehumNum)%RegenAirOutTemp
-!   Node(RegenOutNode)%HumRat       = DesicDehum(DesicDehumNum)%RegenAirOutHumRat
-!   Node(RegenOutNode)%Enthalpy     = DesicDehum(DesicDehumNum)%RegenAirOutEnthalpy
+    !   RegenInNode =DesicDehum(DesicDehumNum)%RegenAirInNode
+    !   RegenOutNode = DesicDehum(DesicDehumNum)%RegenAirOutNode
+    ! Set the regen outlet air node of the dehumidifier
+    !   Node(RegenOutNode)%Temp         = DesicDehum(DesicDehumNum)%RegenAirOutTemp
+    !   Node(RegenOutNode)%HumRat       = DesicDehum(DesicDehumNum)%RegenAirOutHumRat
+    !   Node(RegenOutNode)%Enthalpy     = DesicDehum(DesicDehumNum)%RegenAirOutEnthalpy
 
-   ! Set the regen outlet nodes for properties that just pass through & not used
-!   Node(RegenOutNode)%Quality             = Node(RegenInNode)%Quality
-!   Node(RegenOutNode)%Press               = Node(RegenInNode)%Press
-!   Node(RegenOutNode)%MassFlowRate        = Node(RegenInNode)%MassFlowRate
-!   Node(RegenOutNode)%MassFlowRateMin     = Node(RegenInNode)%MassFlowRateMin
-!   Node(RegenOutNode)%MassFlowRateMax     = Node(RegenInNode)%MassFlowRateMax
-!   Node(RegenOutNode)%MassFlowRateMinAvail= Node(RegenInNode)%MassFlowRateMinAvail
-!   Node(RegenOutNode)%MassFlowRateMaxAvail= Node(RegenInNode)%MassFlowRateMaxAvail
+    ! Set the regen outlet nodes for properties that just pass through & not used
+    !   Node(RegenOutNode)%Quality             = Node(RegenInNode)%Quality
+    !   Node(RegenOutNode)%Press               = Node(RegenInNode)%Press
+    !   Node(RegenOutNode)%MassFlowRate        = Node(RegenInNode)%MassFlowRate
+    !   Node(RegenOutNode)%MassFlowRateMin     = Node(RegenInNode)%MassFlowRateMin
+    !   Node(RegenOutNode)%MassFlowRateMax     = Node(RegenInNode)%MassFlowRateMax
+    !   Node(RegenOutNode)%MassFlowRateMinAvail= Node(RegenInNode)%MassFlowRateMinAvail
+    !   Node(RegenOutNode)%MassFlowRateMaxAvail= Node(RegenInNode)%MassFlowRateMaxAvail
 
-   Case (Generic)
+  Case (Generic)
 
     RETURN
 
   END SELECT
 
-RETURN
+  RETURN
 
 END SUBROUTINE UpdateDesiccantDehumidifier
 
 SUBROUTINE ReportDesiccantDehumidifier(DesicDehumNum)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Michael J. Witte, GARD Analytics, Inc.
-          !                      for Gas Research Institute
-          !       DATE WRITTEN   March 2001
-          !       MODIFIED       June 2007, R. Raustad, Added new dehumidifier type -- DESICCANT DEHUMIDIFIER
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Michael J. Witte, GARD Analytics, Inc.
+  !                      for Gas Research Institute
+  !       DATE WRITTEN   March 2001
+  !       MODIFIED       June 2007, R. Raustad, Added new dehumidifier type -- DESICCANT DEHUMIDIFIER
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Fill remaining report variables
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! Fill remaining report variables
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   Use DataHVACGlobals, ONLY: TimeStepSys
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   INTEGER, INTENT (IN) :: DesicDehumNum ! number of the current dehumidifier being simulated
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-    REAL(r64) :: ReportingConstant
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  REAL(r64) :: ReportingConstant
 
-ReportingConstant=TimeStepSys*SecInHour
+  ReportingConstant=TimeStepSys*SecInHour
 
-SELECT CASE (DesicDehum(DesicDehumNum)%DehumTypeCode)
+  SELECT CASE (DesicDehum(DesicDehumNum)%DehumTypeCode)
 
- Case(Solid)
-   DesicDehum(DesicDehumNum)%WaterRemove   = DesicDehum(DesicDehumNum)%WaterRemoveRate*ReportingConstant
-   DesicDehum(DesicDehumNum)%RegenEnergy   = DesicDehum(DesicDehumNum)%QRegen*ReportingConstant
-   DesicDehum(DesicDehumNum)%ElecUseEnergy = DesicDehum(DesicDehumNum)%ElecUseRate*ReportingConstant
- Case(Generic)
-   DesicDehum(DesicDehumNum)%WaterRemove     = DesicDehum(DesicDehumNum)%WaterRemoveRate*ReportingConstant
-   DesicDehum(DesicDehumNum)%ExhaustFanElecConsumption = DesicDehum(DesicDehumNum)%ExhaustFanPower*ReportingConstant
+  Case(Solid)
+    DesicDehum(DesicDehumNum)%WaterRemove   = DesicDehum(DesicDehumNum)%WaterRemoveRate*ReportingConstant
+    DesicDehum(DesicDehumNum)%RegenEnergy   = DesicDehum(DesicDehumNum)%QRegen*ReportingConstant
+    DesicDehum(DesicDehumNum)%ElecUseEnergy = DesicDehum(DesicDehumNum)%ElecUseRate*ReportingConstant
+  Case(Generic)
+    DesicDehum(DesicDehumNum)%WaterRemove     = DesicDehum(DesicDehumNum)%WaterRemoveRate*ReportingConstant
+    DesicDehum(DesicDehumNum)%ExhaustFanElecConsumption = DesicDehum(DesicDehumNum)%ExhaustFanPower*ReportingConstant
 
-END SELECT
+  END SELECT
 
-RETURN
+  RETURN
 END SUBROUTINE ReportDesiccantDehumidifier
 
 SUBROUTINE CalcNonDXHeatingCoils(DesicDehumNum,FirstHVACIteration,RegenCoilLoad,RegenCoilLoadmet)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Bereket Nigusse, FSEC/UCF
-          !       DATE WRITTEN   January 2012
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Bereket Nigusse, FSEC/UCF
+  !       DATE WRITTEN   January 2012
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine simulates the four non dx heating coil types: Gas, Electric, hot water and steam.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine simulates the four non dx heating coil types: Gas, Electric, hot water and steam.
 
-          ! METHODOLOGY EMPLOYED:
-          ! Simply calls the different heating coil component.  The hot water flow rate matching the coil load
-          ! is calculated iteratively.
+  ! METHODOLOGY EMPLOYED:
+  ! Simply calls the different heating coil component.  The hot water flow rate matching the coil load
+  ! is calculated iteratively.
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
 
   USE HeatingCoils,              ONLY: SimulateHeatingCoilComponents
   USE WaterCoils,                ONLY: SimulateWaterCoilComponents
@@ -3033,26 +3033,26 @@ SUBROUTINE CalcNonDXHeatingCoils(DesicDehumNum,FirstHVACIteration,RegenCoilLoad,
 
   IMPLICIT NONE     ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   INTEGER,      INTENT(IN)             :: DesicDehumNum        ! Desiccant dehumidifier unit index
   LOGICAL,      INTENT(IN)             :: FirstHVACIteration   ! flag for first HVAC iteration in the time step
   REAL(r64),    INTENT(IN)             :: RegenCoilLoad        ! heating coil load to be met (Watts)
   REAL(r64),    INTENT(OUT), OPTIONAL  :: RegenCoilLoadmet     ! heating load met
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! SUBROUTINE PARAMETER DEFINITIONS:
   REAL(r64), PARAMETER :: ErrTolerance = 0.001d0    ! convergence limit for hotwater coil
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   REAL(r64)      :: RegenCoilActual   ! actual heating load met
   REAL(r64)      :: mdot              ! heating coil steam or hot water mass flow rate
   REAL(r64)      :: MinWaterFlow      ! minimum hot water mass flow rate
-!unused  REAL(r64)      :: PartLoadFraction  ! heating or cooling part load fraction
+  !unused  REAL(r64)      :: PartLoadFraction  ! heating or cooling part load fraction
   REAL(r64)      :: MaxHotWaterFlow   ! maximum hot water mass flow rate, kg/s
   REAL(r64)      :: HotWaterMdot      ! actual hot water mass flow rate
   REAL(r64), DIMENSION(3) :: Par
@@ -3060,154 +3060,154 @@ SUBROUTINE CalcNonDXHeatingCoils(DesicDehumNum,FirstHVACIteration,RegenCoilLoad,
 
   RegenCoilActual=0.0d0
   IF (RegenCoilLoad > SmallLoad) THEN
-     Select Case (DesicDehum(DesicDehumNum)%RegenCoilType_Num)
-        Case (Coil_HeatingGas, Coil_HeatingElectric)
-          CALL SimulateHeatingCoilComponents(DesicDehum(DesicDehumNum)%RegenCoilName,FirstHVACIteration, &
-                                             RegenCoilLoad, DesicDehum(DesicDehumNum)%RegenCoilIndex, &
-                                             RegenCoilActual)
-        Case (Coil_HeatingWater)
-          MaxHotWaterFlow = DesicDehum(DesicDehumNum)%MaxCoilFluidFlow
-          Call SetComponentFlowRate(MaxHotWaterFlow, &
-                                    DesicDehum(DesicDehumNum)%CoilControlNode, &
-                                    DesicDehum(DesicDehumNum)%CoilOutletNode, &
-                                    DesicDehum(DesicDehumNum)%LoopNum, &
-                                    DesicDehum(DesicDehumNum)%LoopSide, &
-                                    DesicDehum(DesicDehumNum)%BranchNum, &
-                                    DesicDehum(DesicDehumNum)%CompNum)
-          RegenCoilActual = RegenCoilLoad
-          ! simulate the regenerator hot water heating coil
-          CALL SimulateWaterCoilComponents(DesicDehum(DesicDehumNum)%RegenCoilName,FirstHVACIteration, &
-                                            DesicDehum(DesicDehumNum)%RegenCoilIndex, RegenCoilActual)
+    Select Case (DesicDehum(DesicDehumNum)%RegenCoilType_Num)
+    Case (Coil_HeatingGas, Coil_HeatingElectric)
+      CALL SimulateHeatingCoilComponents(DesicDehum(DesicDehumNum)%RegenCoilName,FirstHVACIteration, &
+      RegenCoilLoad, DesicDehum(DesicDehumNum)%RegenCoilIndex, &
+      RegenCoilActual)
+    Case (Coil_HeatingWater)
+      MaxHotWaterFlow = DesicDehum(DesicDehumNum)%MaxCoilFluidFlow
+      Call SetComponentFlowRate(MaxHotWaterFlow, &
+      DesicDehum(DesicDehumNum)%CoilControlNode, &
+      DesicDehum(DesicDehumNum)%CoilOutletNode, &
+      DesicDehum(DesicDehumNum)%LoopNum, &
+      DesicDehum(DesicDehumNum)%LoopSide, &
+      DesicDehum(DesicDehumNum)%BranchNum, &
+      DesicDehum(DesicDehumNum)%CompNum)
+      RegenCoilActual = RegenCoilLoad
+      ! simulate the regenerator hot water heating coil
+      CALL SimulateWaterCoilComponents(DesicDehum(DesicDehumNum)%RegenCoilName,FirstHVACIteration, &
+      DesicDehum(DesicDehumNum)%RegenCoilIndex, RegenCoilActual)
 
-          IF ( RegenCoilActual > (RegenCoilLoad + SmallLoad) ) THEN
-              ! control water flow to obtain output matching RegenCoilLoad
-              SolFlag = 0
-              MinWaterFlow = 0.0d0
-              Par(1) = REAL(DesicDehumNum,r64)
-              IF (FirstHVACIteration) THEN
-                Par(2) = 1.
-              ELSE
-                Par(2) = 0.
-              END IF
-              Par(3) = RegenCoilLoad
-              CALL SolveRegulaFalsi(ErrTolerance, 50, SolFlag, HotWaterMdot, HotWaterCoilResidual, &
-                                    MinWaterFlow, MaxHotWaterFlow, Par)
-              IF (SolFlag == -1) THEN
-               IF (DesicDehum(DesicDehumNum)%HotWaterCoilMaxIterIndex == 0) THEN
-                 CALL ShowWarningMessage('Hot water coil control failed in Desiccant Dehumidifier '// &
-                                         TRIM(DesicDehum(DesicDehumNum)%Name))
-                 CALL ShowContinueError('  Iteration limit exceeded in calculating hot water mass flow rate')
-               ENDIF
-              CALL ShowRecurringWarningErrorAtEnd('Hot water coil control failed (iteration limit) in Desiccant Dehumidifier ' &
-                                    //TRIM(DesicDehum(DesicDehumNum)%Name),DesicDehum(DesicDehumNum)%HotWaterCoilMaxIterIndex)
-              ELSE IF (SolFlag == -2) THEN
-               IF (DesicDehum(DesicDehumNum)%HotWaterCoilMaxIterIndex2 == 0) THEN
-                 CALL ShowWarningMessage('Hot water coil control failed in Furnace '//TRIM(DesicDehum(DesicDehumNum)%Name))
-                 CALL ShowContinueError('  Bad hot water maximum flow rate limits')
-               ENDIF
-               CALL ShowRecurringWarningErrorAtEnd('Hot water coil control failed (flow limits) in Desiccant Dehumidifier '// &
-                    TRIM(DesicDehum(DesicDehumNum)%Name),DesicDehum(DesicDehumNum)%HotWaterCoilMaxIterIndex2)
-              END IF
-
-              RegenCoilActual = RegenCoilLoad
-              ! simulate the regenerator hot water heating coil
-              CALL SimulateWaterCoilComponents(DesicDehum(DesicDehumNum)%RegenCoilName,FirstHVACIteration, &
-                                               DesicDehum(DesicDehumNum)%RegenCoilIndex, RegenCoilActual)
+      IF ( RegenCoilActual > (RegenCoilLoad + SmallLoad) ) THEN
+        ! control water flow to obtain output matching RegenCoilLoad
+        SolFlag = 0
+        MinWaterFlow = 0.0d0
+        Par(1) = REAL(DesicDehumNum,r64)
+        IF (FirstHVACIteration) THEN
+          Par(2) = 1.
+        ELSE
+          Par(2) = 0.
+        END IF
+        Par(3) = RegenCoilLoad
+        CALL SolveRegulaFalsi(ErrTolerance, 50, SolFlag, HotWaterMdot, HotWaterCoilResidual, &
+        MinWaterFlow, MaxHotWaterFlow, Par)
+        IF (SolFlag == -1) THEN
+          IF (DesicDehum(DesicDehumNum)%HotWaterCoilMaxIterIndex == 0) THEN
+            CALL ShowWarningMessage('Hot water coil control failed in Desiccant Dehumidifier '// &
+            TRIM(DesicDehum(DesicDehumNum)%Name))
+            CALL ShowContinueError('  Iteration limit exceeded in calculating hot water mass flow rate')
           ENDIF
-        Case (Coil_HeatingSteam)
-          mdot = DesicDehum(DesicDehumNum)%MaxCoilFluidFlow
-          Call SetComponentFlowRate(mdot, &
-                                    DesicDehum(DesicDehumNum)%CoilControlNode, &
-                                    DesicDehum(DesicDehumNum)%CoilOutletNode, &
-                                    DesicDehum(DesicDehumNum)%LoopNum, &
-                                    DesicDehum(DesicDehumNum)%LoopSide, &
-                                    DesicDehum(DesicDehumNum)%BranchNum, &
-                                    DesicDehum(DesicDehumNum)%CompNum)
-          ! simulate the regenerator steam heating coil
-          CALL SimulateSteamCoilComponents(DesicDehum(DesicDehumNum)%RegenCoilName, FirstHVACIteration, &
-                                           RegenCoilLoad, DesicDehum(DesicDehumNum)%RegenCoilIndex, &
-                                           RegenCoilActual)
-     END Select
+          CALL ShowRecurringWarningErrorAtEnd('Hot water coil control failed (iteration limit) in Desiccant Dehumidifier ' &
+          //TRIM(DesicDehum(DesicDehumNum)%Name),DesicDehum(DesicDehumNum)%HotWaterCoilMaxIterIndex)
+        ELSE IF (SolFlag == -2) THEN
+          IF (DesicDehum(DesicDehumNum)%HotWaterCoilMaxIterIndex2 == 0) THEN
+            CALL ShowWarningMessage('Hot water coil control failed in Furnace '//TRIM(DesicDehum(DesicDehumNum)%Name))
+            CALL ShowContinueError('  Bad hot water maximum flow rate limits')
+          ENDIF
+          CALL ShowRecurringWarningErrorAtEnd('Hot water coil control failed (flow limits) in Desiccant Dehumidifier '// &
+          TRIM(DesicDehum(DesicDehumNum)%Name),DesicDehum(DesicDehumNum)%HotWaterCoilMaxIterIndex2)
+        END IF
+
+        RegenCoilActual = RegenCoilLoad
+        ! simulate the regenerator hot water heating coil
+        CALL SimulateWaterCoilComponents(DesicDehum(DesicDehumNum)%RegenCoilName,FirstHVACIteration, &
+        DesicDehum(DesicDehumNum)%RegenCoilIndex, RegenCoilActual)
+      ENDIF
+    Case (Coil_HeatingSteam)
+      mdot = DesicDehum(DesicDehumNum)%MaxCoilFluidFlow
+      Call SetComponentFlowRate(mdot, &
+      DesicDehum(DesicDehumNum)%CoilControlNode, &
+      DesicDehum(DesicDehumNum)%CoilOutletNode, &
+      DesicDehum(DesicDehumNum)%LoopNum, &
+      DesicDehum(DesicDehumNum)%LoopSide, &
+      DesicDehum(DesicDehumNum)%BranchNum, &
+      DesicDehum(DesicDehumNum)%CompNum)
+      ! simulate the regenerator steam heating coil
+      CALL SimulateSteamCoilComponents(DesicDehum(DesicDehumNum)%RegenCoilName, FirstHVACIteration, &
+      RegenCoilLoad, DesicDehum(DesicDehumNum)%RegenCoilIndex, &
+      RegenCoilActual)
+    END Select
   ELSE
-     Select Case (DesicDehum(DesicDehumNum)%RegenCoilType_Num)
-        Case (Coil_HeatingGas, Coil_HeatingElectric)
-          CALL SimulateHeatingCoilComponents(DesicDehum(DesicDehumNum)%RegenCoilName,FirstHVACIteration, &
-                                             RegenCoilLoad, DesicDehum(DesicDehumNum)%RegenCoilIndex, &
-                                             RegenCoilActual)
-        Case (Coil_HeatingWater)
-          mdot = 0.0d0
-          Call SetComponentFlowRate(mdot, &
-                                    DesicDehum(DesicDehumNum)%CoilControlNode, &
-                                    DesicDehum(DesicDehumNum)%CoilOutletNode, &
-                                    DesicDehum(DesicDehumNum)%LoopNum, &
-                                    DesicDehum(DesicDehumNum)%LoopSide, &
-                                    DesicDehum(DesicDehumNum)%BranchNum, &
-                                    DesicDehum(DesicDehumNum)%CompNum)
-          RegenCoilActual = RegenCoilLoad
-          ! simulate the regenerator hot water heating coil
-          CALL SimulateWaterCoilComponents(DesicDehum(DesicDehumNum)%RegenCoilName,FirstHVACIteration, &
-                                           DesicDehum(DesicDehumNum)%RegenCoilIndex, RegenCoilActual)
-        Case (Coil_HeatingSteam)
-          mdot = 0.0d0
-          Call SetComponentFlowRate(mdot, &
-                                    DesicDehum(DesicDehumNum)%CoilControlNode, &
-                                    DesicDehum(DesicDehumNum)%CoilOutletNode, &
-                                    DesicDehum(DesicDehumNum)%LoopNum, &
-                                    DesicDehum(DesicDehumNum)%LoopSide, &
-                                    DesicDehum(DesicDehumNum)%BranchNum, &
-                                    DesicDehum(DesicDehumNum)%CompNum)
-          ! simulate the regenerator steam heating coil
-          CALL SimulateSteamCoilComponents(DesicDehum(DesicDehumNum)%RegenCoilName, FirstHVACIteration, &
-                                           RegenCoilLoad, DesicDehum(DesicDehumNum)%RegenCoilIndex, &
-                                           RegenCoilActual)
-     END Select
+    Select Case (DesicDehum(DesicDehumNum)%RegenCoilType_Num)
+    Case (Coil_HeatingGas, Coil_HeatingElectric)
+      CALL SimulateHeatingCoilComponents(DesicDehum(DesicDehumNum)%RegenCoilName,FirstHVACIteration, &
+      RegenCoilLoad, DesicDehum(DesicDehumNum)%RegenCoilIndex, &
+      RegenCoilActual)
+    Case (Coil_HeatingWater)
+      mdot = 0.0d0
+      Call SetComponentFlowRate(mdot, &
+      DesicDehum(DesicDehumNum)%CoilControlNode, &
+      DesicDehum(DesicDehumNum)%CoilOutletNode, &
+      DesicDehum(DesicDehumNum)%LoopNum, &
+      DesicDehum(DesicDehumNum)%LoopSide, &
+      DesicDehum(DesicDehumNum)%BranchNum, &
+      DesicDehum(DesicDehumNum)%CompNum)
+      RegenCoilActual = RegenCoilLoad
+      ! simulate the regenerator hot water heating coil
+      CALL SimulateWaterCoilComponents(DesicDehum(DesicDehumNum)%RegenCoilName,FirstHVACIteration, &
+      DesicDehum(DesicDehumNum)%RegenCoilIndex, RegenCoilActual)
+    Case (Coil_HeatingSteam)
+      mdot = 0.0d0
+      Call SetComponentFlowRate(mdot, &
+      DesicDehum(DesicDehumNum)%CoilControlNode, &
+      DesicDehum(DesicDehumNum)%CoilOutletNode, &
+      DesicDehum(DesicDehumNum)%LoopNum, &
+      DesicDehum(DesicDehumNum)%LoopSide, &
+      DesicDehum(DesicDehumNum)%BranchNum, &
+      DesicDehum(DesicDehumNum)%CompNum)
+      ! simulate the regenerator steam heating coil
+      CALL SimulateSteamCoilComponents(DesicDehum(DesicDehumNum)%RegenCoilName, FirstHVACIteration, &
+      RegenCoilLoad, DesicDehum(DesicDehumNum)%RegenCoilIndex, &
+      RegenCoilActual)
+    END Select
   ENDIF
   IF (PRESENT(RegenCoilLoadmet)) RegenCoilLoadmet = RegenCoilActual
- RETURN
+  RETURN
 
 END SUBROUTINE CalcNonDXHeatingCoils
 
 FUNCTION HotWaterCoilResidual(HWFlow, Par) RESULT (Residuum)
 
-          ! FUNCTION INFORMATION:
-          !       AUTHOR         Bereket Nigusse, FSEC/UCF
-          !       DATE WRITTEN   January 2012
-          !       MODIFIED
-          !       RE-ENGINEERED
+  ! FUNCTION INFORMATION:
+  !       AUTHOR         Bereket Nigusse, FSEC/UCF
+  !       DATE WRITTEN   January 2012
+  !       MODIFIED
+  !       RE-ENGINEERED
 
-          ! PURPOSE OF THIS FUNCTION:
-          ! Calculates residual function (RegenCoilActual - RegenCoilHeatLoad) / RegenCoilHeatLoad
-          ! coil actual output depends on the hot water flow rate which is varied to minimize the residual
-          !
+  ! PURPOSE OF THIS FUNCTION:
+  ! Calculates residual function (RegenCoilActual - RegenCoilHeatLoad) / RegenCoilHeatLoad
+  ! coil actual output depends on the hot water flow rate which is varied to minimize the residual
+  !
 
-          ! METHODOLOGY EMPLOYED:
-          ! Calls HotWaterCoilResidual, and calculates the residual as defined above.
-          !
+  ! METHODOLOGY EMPLOYED:
+  ! Calls HotWaterCoilResidual, and calculates the residual as defined above.
+  !
 
-          ! REFERENCES:
+  ! REFERENCES:
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE WaterCoils,     ONLY: SimulateWaterCoilComponents
   USE PlantUtilities, ONLY: SetComponentFlowRate
 
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   REAL(r64), INTENT(IN)                         :: HWFlow   ! hot water flow rate in kg/s
   REAL(r64), INTENT(IN), DIMENSION(:), OPTIONAL :: Par      ! Par(5) is the requested coil load
   REAL(r64)                                     :: Residuum ! residual to be minimized to zero
 
-          ! FUNCTION PARAMETER DEFINITIONS:
-          ! na
+  ! FUNCTION PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! FUNCTION LOCAL VARIABLE DECLARATIONS:
+  ! FUNCTION LOCAL VARIABLE DECLARATIONS:
   INTEGER               :: DesicDehumNum
   LOGICAL               :: FirstHVACSoln
   REAL(r64)             :: RegenCoilActual             ! delivered coild load, W
@@ -3224,16 +3224,16 @@ FUNCTION HotWaterCoilResidual(HWFlow, Par) RESULT (Residuum)
   RegenCoilActual = RegenCoilHeatLoad
   mdot = HWFlow
   Call SetComponentFlowRate(mdot, &
-                            DesicDehum(DesicDehumNum)%CoilControlNode, &
-                            DesicDehum(DesicDehumNum)%CoilOutletNode, &
-                            DesicDehum(DesicDehumNum)%LoopNum, &
-                            DesicDehum(DesicDehumNum)%LoopSide, &
-                            DesicDehum(DesicDehumNum)%BranchNum, &
-                            DesicDehum(DesicDehumNum)%CompNum)
+  DesicDehum(DesicDehumNum)%CoilControlNode, &
+  DesicDehum(DesicDehumNum)%CoilOutletNode, &
+  DesicDehum(DesicDehumNum)%LoopNum, &
+  DesicDehum(DesicDehumNum)%LoopSide, &
+  DesicDehum(DesicDehumNum)%BranchNum, &
+  DesicDehum(DesicDehumNum)%CompNum)
 
-    ! simulate the hot water regenerator heating coil
+  ! simulate the hot water regenerator heating coil
   CALL SimulateWaterCoilComponents(DesicDehum(DesicDehumNum)%RegenCoilName,FirstHVACSoln, &
-                                   DesicDehum(DesicDehumNum)%RegenCoilIndex, RegenCoilActual)
+  DesicDehum(DesicDehumNum)%RegenCoilIndex, RegenCoilActual)
   IF (RegenCoilHeatLoad /= 0.0d0) THEN
     Residuum = (RegenCoilActual - RegenCoilHeatLoad)/ RegenCoilHeatLoad
   ENDIF
@@ -3247,7 +3247,7 @@ END FUNCTION HotWaterCoilResidual
 
 !                                 COPYRIGHT NOTICE
 !
-!     Portions Copyright © Gas Research Institute 2001.  All rights reserved.
+!     Portions Copyright ï¿½ Gas Research Institute 2001.  All rights reserved.
 !
 !     GRI LEGAL NOTICE
 !     Neither GRI, members of GRI nor any person or organization acting on behalf
@@ -3267,7 +3267,7 @@ END FUNCTION HotWaterCoilResidual
 !
 !     NOTICE
 !
-!     Copyright © 1996-2012 The Board of Trustees of the University of Illinois
+!     Copyright ï¿½ 1996-2012 The Board of Trustees of the University of Illinois
 !     and The Regents of the University of California through Ernest Orlando Lawrence
 !     Berkeley National Laboratory.  All rights reserved.
 !
@@ -3291,4 +3291,3 @@ END FUNCTION HotWaterCoilResidual
 
 
 END MODULE DesiccantDehumidifiers
-

@@ -1,5 +1,5 @@
- MODULE ZoneAirLoopEquipmentManager
-   ! Module containing the routines dealing with the ZoneAirLoopEquipmentManager
+MODULE ZoneAirLoopEquipmentManager
+  ! Module containing the routines dealing with the ZoneAirLoopEquipmentManager
 
   ! MODULE INFORMATION:
   !       AUTHOR         Russ Taylor
@@ -18,20 +18,20 @@
 
   ! USE STATEMENTS:
   ! Use statements for data only modules
-    USE DataPrecisionGlobals
-    USE DataGlobals_HPSimIntegrated, ONLY: NumOfZones, BeginEnvrnFlag, BeginDayFlag, &
-                           BeginHourFlag, BeginTimeStepFlag, MaxNameLength !, &
-                           !ShowFatalError, ShowSevereError, ShowContinueError
-    USE DataInterfaces, ONLY: SetupOutputVariable
+  USE DataPrecisionGlobals
+  USE DataGlobals_HPSimIntegrated, ONLY: NumOfZones, BeginEnvrnFlag, BeginDayFlag, &
+  BeginHourFlag, BeginTimeStepFlag, MaxNameLength !, &
+  !ShowFatalError, ShowSevereError, ShowContinueError
+  USE DataInterfaces, ONLY: SetupOutputVariable
 
-    USE DataHVACGlobals, ONLY: FirstTimeStepSysFlag
-    USE DataDefineEquip
+  USE DataHVACGlobals, ONLY: FirstTimeStepSysFlag
+  USE DataDefineEquip
 
   ! Use statements for access to subroutines in other modules
 
-IMPLICIT NONE         ! Enforce explicit typing of all variables
+  IMPLICIT NONE         ! Enforce explicit typing of all variables
 
-PRIVATE ! Everything private unless explicitly made public
+  PRIVATE ! Everything private unless explicitly made public
 
   ! MODULE PARAMETER DEFINITIONS:
   ! na
@@ -43,166 +43,166 @@ PRIVATE ! Everything private unless explicitly made public
   ! na
 
   ! SUBROUTINE SPECIFICATIONS FOR MODULE ZoneAirLoopEquipmentManager
-PUBLIC ManageZoneAirLoopEquipment
+  PUBLIC ManageZoneAirLoopEquipment
 
 CONTAINS
 
 
-SUBROUTINE ManageZoneAirLoopEquipment(ZoneAirLoopEquipName, FirstHVACIteration, &
-                                      SysOutputProvided, NonAirSysOutput, LatOutputProvided, ActualZoneNum, &
-                                      ControlledZoneNum, CompIndex)
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Russ Taylor
-          !       DATE WRITTEN   May 1997
-          !       MODIFIED       Don Shirey, Aug 2009 (LatOutputProvided)
-          !       RE-ENGINEERED  na
+  SUBROUTINE ManageZoneAirLoopEquipment(ZoneAirLoopEquipName, FirstHVACIteration, &
+    SysOutputProvided, NonAirSysOutput, LatOutputProvided, ActualZoneNum, &
+    ControlledZoneNum, CompIndex)
+    ! SUBROUTINE INFORMATION:
+    !       AUTHOR         Russ Taylor
+    !       DATE WRITTEN   May 1997
+    !       MODIFIED       Don Shirey, Aug 2009 (LatOutputProvided)
+    !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Calls the zone thermal control simulations and the interfaces
-          ! (water-air, refrigerant-air, steam-air, electric-electric,
-          ! water-water, etc)
+    ! PURPOSE OF THIS SUBROUTINE:
+    ! Calls the zone thermal control simulations and the interfaces
+    ! (water-air, refrigerant-air, steam-air, electric-electric,
+    ! water-water, etc)
 
-          ! METHODOLOGY EMPLOYED:
-          ! Needs description, as appropriate.
+    ! METHODOLOGY EMPLOYED:
+    ! Needs description, as appropriate.
 
-          ! REFERENCES:
-          ! na
+    ! REFERENCES:
+    ! na
 
-          ! USE STATEMENTS:
-  USE DataGlobals_HPSimIntegrated, ONLY:  MaxNameLength
-  USE General, ONLY: TrimSigDigits
-  USE InputProcessor, ONLY: FindItemInList
+    ! USE STATEMENTS:
+    USE DataGlobals_HPSimIntegrated, ONLY:  MaxNameLength
+    USE General, ONLY: TrimSigDigits
+    USE InputProcessor, ONLY: FindItemInList
 
-  IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
+    IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-  CHARACTER(len=*), INTENT(IN) :: ZoneAirLoopEquipName
-  LOGICAL, INTENT(IN) :: FirstHVACIteration
-  REAL(r64)           :: SysOutputProvided
-  REAL(r64), INTENT(OUT) :: LatOutputProvided   ! Latent add/removal supplied by window AC (kg/s), dehumid = negative
-  REAL(r64)           :: NonAirSysOutput
-  INTEGER, INTENT(IN) :: ActualZoneNum
-  INTEGER             :: ControlledZoneNum
-  INTEGER             :: CompIndex
+    ! SUBROUTINE ARGUMENT DEFINITIONS:
+    CHARACTER(len=*), INTENT(IN) :: ZoneAirLoopEquipName
+    LOGICAL, INTENT(IN) :: FirstHVACIteration
+    REAL(r64)           :: SysOutputProvided
+    REAL(r64), INTENT(OUT) :: LatOutputProvided   ! Latent add/removal supplied by window AC (kg/s), dehumid = negative
+    REAL(r64)           :: NonAirSysOutput
+    INTEGER, INTENT(IN) :: ActualZoneNum
+    INTEGER             :: ControlledZoneNum
+    INTEGER             :: CompIndex
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+    ! SUBROUTINE PARAMETER DEFINITIONS:
+    ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+    ! INTERFACE BLOCK SPECIFICATIONS
+    ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+    ! DERIVED TYPE DEFINITIONS
+    ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-  LOGICAL             :: SimZone
-  LOGICAL,SAVE :: GetInputFlag = .True.  ! Flag set to make sure you get input once
-  INTEGER :: AirDistUnitNum
+    ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+    LOGICAL             :: SimZone
+    LOGICAL,SAVE :: GetInputFlag = .True.  ! Flag set to make sure you get input once
+    INTEGER :: AirDistUnitNum
 
-  ! Beginning of Code
+    ! Beginning of Code
 
-  IF (GetInputFlag) THEN
-    CALL GetZoneAirLoopEquipment
-    GetInputFlag = .FALSE.
-  END IF
+    IF (GetInputFlag) THEN
+      CALL GetZoneAirLoopEquipment
+      GetInputFlag = .FALSE.
+    END IF
 
-  ! Find the correct Zone Air Distribution Unit Equipment
-  IF (CompIndex == 0) THEN
-    AirDistUnitNum = FindItemInList(ZoneAirLoopEquipName, AirDistUnit%Name, NumAirDistUnits)
-    IF (AirDistUnitNum == 0) THEN
-      CALL ShowFatalError('ManageZoneAirLoopEquipment: Unit not found='//TRIM(ZoneAirLoopEquipName))
+    ! Find the correct Zone Air Distribution Unit Equipment
+    IF (CompIndex == 0) THEN
+      AirDistUnitNum = FindItemInList(ZoneAirLoopEquipName, AirDistUnit%Name, NumAirDistUnits)
+      IF (AirDistUnitNum == 0) THEN
+        CALL ShowFatalError('ManageZoneAirLoopEquipment: Unit not found='//TRIM(ZoneAirLoopEquipName))
+      ENDIF
+      CompIndex=AirDistUnitNum
+    ELSE
+      AirDistUnitNum=CompIndex
+      IF (AirDistUnitNum > NumAirDistUnits .or. AirDistUnitNum < 1) THEN
+        CALL ShowFatalError('ManageZoneAirLoopEquipment:  Invalid CompIndex passed='//  &
+        TRIM(TrimSigDigits(AirDistUnitNum))// &
+        ', Number of Units='//TRIM(TrimSigDigits(NumAirDistUnits))//  &
+        ', Entered Unit name='//TRIM(ZoneAirLoopEquipName))
+      ENDIF
+      IF (ZoneAirLoopEquipName /= AirDistUnit(AirDistUnitNum)%Name) THEN
+        CALL ShowFatalError('ManageZoneAirLoopEquipment: Invalid CompIndex passed='//  &
+        TRIM(TrimSigDigits(AirDistUnitNum))// &
+        ', Unit name='//TRIM(ZoneAirLoopEquipName)//', stored Unit Name for that index='//  &
+        TRIM(AirDistUnit(AirDistUnitNum)%Name))
+      ENDIF
     ENDIF
-    CompIndex=AirDistUnitNum
-  ELSE
-    AirDistUnitNum=CompIndex
-    IF (AirDistUnitNum > NumAirDistUnits .or. AirDistUnitNum < 1) THEN
-      CALL ShowFatalError('ManageZoneAirLoopEquipment:  Invalid CompIndex passed='//  &
-                          TRIM(TrimSigDigits(AirDistUnitNum))// &
-                          ', Number of Units='//TRIM(TrimSigDigits(NumAirDistUnits))//  &
-                          ', Entered Unit name='//TRIM(ZoneAirLoopEquipName))
-    ENDIF
-    IF (ZoneAirLoopEquipName /= AirDistUnit(AirDistUnitNum)%Name) THEN
-      CALL ShowFatalError('ManageZoneAirLoopEquipment: Invalid CompIndex passed='//  &
-                          TRIM(TrimSigDigits(AirDistUnitNum))// &
-                          ', Unit name='//TRIM(ZoneAirLoopEquipName)//', stored Unit Name for that index='//  &
-                          TRIM(AirDistUnit(AirDistUnitNum)%Name))
-    ENDIF
-  ENDIF
 
-  CALL InitZoneAirLoopEquipment(FirstHVACIteration,AirDistUnitNum)
+    CALL InitZoneAirLoopEquipment(FirstHVACIteration,AirDistUnitNum)
 
-  CALL SimZoneAirLoopEquipment(AirDistUnitNum, SysOutputProvided, NonAirSysOutput, LatOutputProvided, &
-                                   FirstHVACIteration, ControlledZoneNum, ActualZoneNum)
+    CALL SimZoneAirLoopEquipment(AirDistUnitNum, SysOutputProvided, NonAirSysOutput, LatOutputProvided, &
+    FirstHVACIteration, ControlledZoneNum, ActualZoneNum)
 
     !  CALL RecordZoneAirLoopEquipment
 
     !  CALL ReportZoneAirLoopEquipment
 
-  SimZone = .False.
+    SimZone = .False.
 
-  RETURN
+    RETURN
 
-END SUBROUTINE ManageZoneAirLoopEquipment
+  END SUBROUTINE ManageZoneAirLoopEquipment
 
-SUBROUTINE GetZoneAirLoopEquipment
+  SUBROUTINE GetZoneAirLoopEquipment
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Russ Taylor
-          !       DATE WRITTEN   June 1997
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+    ! SUBROUTINE INFORMATION:
+    !       AUTHOR         Russ Taylor
+    !       DATE WRITTEN   June 1997
+    !       MODIFIED       na
+    !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Get all the system related equipment which may be attached to
-          ! a zone
+    ! PURPOSE OF THIS SUBROUTINE:
+    ! Get all the system related equipment which may be attached to
+    ! a zone
 
-          ! METHODOLOGY EMPLOYED:
-          ! Needs description, as appropriate.
+    ! METHODOLOGY EMPLOYED:
+    ! Needs description, as appropriate.
 
-          ! REFERENCES:
-          ! na
+    ! REFERENCES:
+    ! na
 
-          ! USE STATEMENTS:
-  USE InputProcessor,        ONLY: GetNumObjectsFound, GetObjectItem, GetObjectItemNum, VerifyName, SameString
-  USE NodeInputManager,      ONLY: GetOnlySingleNode
-  USE DataLoopNode
-  USE BranchNodeConnections, ONLY: SetUpCompSets
-  USE DataZoneEquipment,     ONLY: ZoneEquipConfig,ZoneEquipList
-  USE DualDuct ,             ONLY: GetDualDuctOutdoorAirRecircUse
+    ! USE STATEMENTS:
+    USE InputProcessor,        ONLY: GetNumObjectsFound, GetObjectItem, GetObjectItemNum, VerifyName, SameString
+    USE NodeInputManager,      ONLY: GetOnlySingleNode
+    USE DataLoopNode
+    USE BranchNodeConnections, ONLY: SetUpCompSets
+    USE DataZoneEquipment,     ONLY: ZoneEquipConfig,ZoneEquipList
+    USE DualDuct ,             ONLY: GetDualDuctOutdoorAirRecircUse
 
-  IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
+    IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-          ! na
+    ! SUBROUTINE ARGUMENT DEFINITIONS:
+    ! na
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-CHARACTER(len=*), PARAMETER :: RoutineName='GetZoneAirLoopEquipment: ' ! include trailing blank space
+    ! SUBROUTINE PARAMETER DEFINITIONS:
+    CHARACTER(len=*), PARAMETER :: RoutineName='GetZoneAirLoopEquipment: ' ! include trailing blank space
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+    ! INTERFACE BLOCK SPECIFICATIONS
+    ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+    ! DERIVED TYPE DEFINITIONS
+    ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-  INTEGER :: AirDistUnitNum
-  INTEGER :: AirDistCompUnitNum
-  INTEGER :: ZoneEqNum           ! zone equip config index
-  INTEGER :: InletNum            ! zone equip config inlet node index
-  INTEGER :: NumAlphas
-  INTEGER :: NumNums
-  INTEGER :: IOSTAT
-  CHARACTER(len=MaxNameLength), DIMENSION(4) :: AlphArray
-  REAL(r64), DIMENSION(2) :: NumArray
-  LOGICAL :: ErrorsFound = .false.   ! If errors detected in input
-  LOGICAL       :: IsNotOK               ! Flag to verify name
-  LOGICAL       :: IsBlank               ! Flag for blank name
-  CHARACTER(len=MaxNameLength) :: CurrentModuleObject   ! Object type for getting and error messages
-  CHARACTER(len=MaxNameLength), DIMENSION(4) :: cAlphaFields   ! Alpha field names
-  CHARACTER(len=MaxNameLength), DIMENSION(2) :: cNumericFields ! Numeric field names
-  LOGICAL, DIMENSION(4) :: lAlphaBlanks     ! Logical array, alpha field input BLANK = .true.
-  LOGICAL, DIMENSION(2) :: lNumericBlanks   ! Logical array, numeric field input BLANK = .true.
-  LOGICAL       :: DualDuctRecircIsUsed   !local temporary for deciding if recirc side used by dual duct terminal
+    ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+    INTEGER :: AirDistUnitNum
+    INTEGER :: AirDistCompUnitNum
+    INTEGER :: ZoneEqNum           ! zone equip config index
+    INTEGER :: InletNum            ! zone equip config inlet node index
+    INTEGER :: NumAlphas
+    INTEGER :: NumNums
+    INTEGER :: IOSTAT
+    CHARACTER(len=MaxNameLength), DIMENSION(4) :: AlphArray
+    REAL(r64), DIMENSION(2) :: NumArray
+    LOGICAL :: ErrorsFound = .false.   ! If errors detected in input
+    LOGICAL       :: IsNotOK               ! Flag to verify name
+    LOGICAL       :: IsBlank               ! Flag for blank name
+    CHARACTER(len=MaxNameLength) :: CurrentModuleObject   ! Object type for getting and error messages
+    CHARACTER(len=MaxNameLength), DIMENSION(4) :: cAlphaFields   ! Alpha field names
+    CHARACTER(len=MaxNameLength), DIMENSION(2) :: cNumericFields ! Numeric field names
+    LOGICAL, DIMENSION(4) :: lAlphaBlanks     ! Logical array, alpha field input BLANK = .true.
+    LOGICAL, DIMENSION(2) :: lNumericBlanks   ! Logical array, numeric field input BLANK = .true.
+    LOGICAL       :: DualDuctRecircIsUsed   !local temporary for deciding if recirc side used by dual duct terminal
 
     CurrentModuleObject = 'ZoneHVAC:AirDistributionUnit'
 
@@ -214,8 +214,8 @@ CHARACTER(len=*), PARAMETER :: RoutineName='GetZoneAirLoopEquipment: ' ! include
 
       DO AirDistUnitNum = 1,  NumAirDistUnits
         CALL GetObjectItem(TRIM(CurrentModuleObject),AirDistUnitNum,AlphArray,NumAlphas, &
-                           NumArray,NumNums,IOSTAT,NumBlank=lNumericBlanks,AlphaBlank=lAlphaBlanks, &
-                           AlphaFieldNames=cAlphaFields,NumericFieldNames=cNumericFields) !  data for one zone
+        NumArray,NumNums,IOSTAT,NumBlank=lNumericBlanks,AlphaBlank=lAlphaBlanks, &
+        AlphaFieldNames=cAlphaFields,NumericFieldNames=cNumericFields) !  data for one zone
 
         IsNotOK=.false.
         IsBlank=.false.
@@ -227,8 +227,8 @@ CHARACTER(len=*), PARAMETER :: RoutineName='GetZoneAirLoopEquipment: ' ! include
         AirDistUnit(AirDistUnitNum)%Name = AlphArray(1)
         !Input Outlet Node Num
         AirDistUnit(AirDistUnitNum)%OutletNodeNum    = &
-             GetOnlySingleNode(AlphArray(2),ErrorsFound,TRIM(CurrentModuleObject),AlphArray(1), &
-                               NodeType_Air,NodeConnectionType_Outlet,1,ObjectIsParent)
+        GetOnlySingleNode(AlphArray(2),ErrorsFound,TRIM(CurrentModuleObject),AlphArray(1), &
+        NodeType_Air,NodeConnectionType_Outlet,1,ObjectIsParent)
         AirDistUnit(AirDistUnitNum)%InletNodeNum = 0
         AirDistUnit(AirDistUnitNum)%NumComponents = 1
         AirDistCompUnitNum=1
@@ -245,7 +245,7 @@ CHARACTER(len=*), PARAMETER :: RoutineName='GetZoneAirLoopEquipment: ' ! include
         IF (AirDistUnit(AirDistUnitNum)%DownStreamLeakFrac <= 0.0d0) THEN
           AirDistUnit(AirDistUnitNum)%LeakLoadMult = 1.0d0
         ELSE IF (AirDistUnit(AirDistUnitNum)%DownStreamLeakFrac < 1.0d0 .AND. &
-                 AirDistUnit(AirDistUnitNum)%DownStreamLeakFrac > 0.0d0) THEN
+          AirDistUnit(AirDistUnitNum)%DownStreamLeakFrac > 0.0d0) THEN
           AirDistUnit(AirDistUnitNum)%LeakLoadMult = 1.0d0/(1.0d0-AirDistUnit(AirDistUnitNum)%DownStreamLeakFrac)
         ELSE
           CALL ShowSevereError('Error found in '//TRIM(CurrentModuleObject)//' = '//TRIM(AirDistUnit(AirDistUnitNum)%Name))
@@ -269,7 +269,7 @@ CHARACTER(len=*), PARAMETER :: RoutineName='GetZoneAirLoopEquipment: ' ! include
           IF (AirDistUnit(AirDistUnitNum)%UpStreamLeak .or. AirDistUnit(AirDistUnitNum)%DownStreamLeak) THEN
             CALL ShowSevereError('Error found in '//TRIM(CurrentModuleObject)//' = '//TRIM(AirDistUnit(AirDistUnitNum)%Name))
             CALL ShowContinueError('Simple duct leakage model not available for '//TRIM(cAlphaFields(3))//' = '//  &
-                                    TRIM(AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum)))
+            TRIM(AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum)))
             ErrorsFound=.true.
           END IF
         ELSEIF (SameString(AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum),'AirTerminal:DualDuct:VAV')) THEN
@@ -277,7 +277,7 @@ CHARACTER(len=*), PARAMETER :: RoutineName='GetZoneAirLoopEquipment: ' ! include
           IF (AirDistUnit(AirDistUnitNum)%UpStreamLeak .or. AirDistUnit(AirDistUnitNum)%DownStreamLeak) THEN
             CALL ShowSevereError('Error found in '//TRIM(CurrentModuleObject)//' = '//TRIM(AirDistUnit(AirDistUnitNum)%Name))
             CALL ShowContinueError('Simple duct leakage model not available for '//TRIM(cAlphaFields(3))//' = '//  &
-                                    TRIM(AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum)))
+            TRIM(AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum)))
             ErrorsFound=.true.
           END IF
         ELSEIF (SameString(AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum),'AirTerminal:DualDuct:VAV:OutdoorAir')) THEN
@@ -285,65 +285,65 @@ CHARACTER(len=*), PARAMETER :: RoutineName='GetZoneAirLoopEquipment: ' ! include
           IF (AirDistUnit(AirDistUnitNum)%UpStreamLeak .or. AirDistUnit(AirDistUnitNum)%DownStreamLeak) THEN
             CALL ShowSevereError('Error found in '//TRIM(CurrentModuleObject)//' = '//TRIM(AirDistUnit(AirDistUnitNum)%Name))
             CALL ShowContinueError('Simple duct leakage model not available for '//TRIM(cAlphaFields(3))//' = '//  &
-                                    TRIM(AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum)))
+            TRIM(AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum)))
             ErrorsFound=.true.
           END IF
         ELSEIF (SameString(AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum),  &
-                          'AirTerminal:SingleDuct:ConstantVolume:Reheat')) THEN
+          'AirTerminal:SingleDuct:ConstantVolume:Reheat')) THEN
           AirDistUnit(AirDistUnitNum)%EquipType_Num(AirDistCompUnitNum)=SingleDuctConstVolReheat
         ELSEIF (SameString(AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum),'AirTerminal:SingleDuct:VAV:Reheat')) THEN
           AirDistUnit(AirDistUnitNum)%EquipType_Num(AirDistCompUnitNum)=SingleDuctVAVReheat
         ELSEIF (SameString(AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum),'AirTerminal:SingleDuct:VAV:NoReheat')) THEN
           AirDistUnit(AirDistUnitNum)%EquipType_Num(AirDistCompUnitNum)=SingleDuctVAVNoReheat
         ELSEIF (SameString(AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum),  &
-                           'AirTerminal:SingleDuct:VAV:HeatAndCool:Reheat')) THEN
+          'AirTerminal:SingleDuct:VAV:HeatAndCool:Reheat')) THEN
           AirDistUnit(AirDistUnitNum)%EquipType_Num(AirDistCompUnitNum)=SingleDuctCBVAVReheat
         ELSEIF (SameString(AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum),  &
-                          'AirTerminal:SingleDuct:VAV:HeatAndCool:NoReheat')) THEN
+          'AirTerminal:SingleDuct:VAV:HeatAndCool:NoReheat')) THEN
           AirDistUnit(AirDistUnitNum)%EquipType_Num(AirDistCompUnitNum)=SingleDuctCBVAVNoReheat
         ELSEIF (SameString(AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum),  &
-                           'AirTerminal:SingleDuct:SeriesPIU:Reheat')) THEN
+          'AirTerminal:SingleDuct:SeriesPIU:Reheat')) THEN
           AirDistUnit(AirDistUnitNum)%EquipType_Num(AirDistCompUnitNum)=SingleDuct_SeriesPIU_Reheat
           IF (AirDistUnit(AirDistUnitNum)%UpStreamLeak .or. AirDistUnit(AirDistUnitNum)%DownStreamLeak) THEN
             CALL ShowSevereError('Error found in '//TRIM(CurrentModuleObject)//' = '//TRIM(AirDistUnit(AirDistUnitNum)%Name))
             CALL ShowContinueError('Simple duct leakage model not available for '//TRIM(cAlphaFields(3))//' = '//  &
-                                    TRIM(AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum)))
+            TRIM(AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum)))
             ErrorsFound=.true.
           END IF
         ELSEIF (SameString(AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum),  &
-                           'AirTerminal:SingleDuct:ParallelPIU:Reheat')) THEN
+          'AirTerminal:SingleDuct:ParallelPIU:Reheat')) THEN
           AirDistUnit(AirDistUnitNum)%EquipType_Num(AirDistCompUnitNum)=SingleDuct_ParallelPIU_Reheat
           IF (AirDistUnit(AirDistUnitNum)%UpStreamLeak .or. AirDistUnit(AirDistUnitNum)%DownStreamLeak) THEN
             CALL ShowSevereError('Error found in '//TRIM(CurrentModuleObject)//' = '//TRIM(AirDistUnit(AirDistUnitNum)%Name))
             CALL ShowContinueError('Simple duct leakage model not available for '//TRIM(cAlphaFields(3))//' = '//  &
-                                TRIM(AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum)))
+            TRIM(AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum)))
             ErrorsFound=.true.
           END IF
         ELSEIF (SameString(AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum),  &
-                           'AirTerminal:SingleDuct:ConstantVolume:FourPipeInduction')) THEN
+          'AirTerminal:SingleDuct:ConstantVolume:FourPipeInduction')) THEN
           AirDistUnit(AirDistUnitNum)%EquipType_Num(AirDistCompUnitNum)=SingleDuct_ConstVol_4PipeInduc
           IF (AirDistUnit(AirDistUnitNum)%UpStreamLeak .or. AirDistUnit(AirDistUnitNum)%DownStreamLeak) THEN
             CALL ShowSevereError('Error found in '//TRIM(CurrentModuleObject)//' = '//TRIM(AirDistUnit(AirDistUnitNum)%Name))
             CALL ShowContinueError('Simple duct leakage model not available for '//TRIM(cAlphaFields(3))//' = '//  &
-                                TRIM(AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum)))
+            TRIM(AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum)))
             ErrorsFound=.true.
           END IF
         ELSEIF (SameString(AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum),  &
-                           'AirTerminal:SingleDuct:VAV:Reheat:VariableSpeedFan')) THEN
+          'AirTerminal:SingleDuct:VAV:Reheat:VariableSpeedFan')) THEN
           AirDistUnit(AirDistUnitNum)%EquipType_Num(AirDistCompUnitNum)=SingleDuctVAVReheatVSFan
           IF (AirDistUnit(AirDistUnitNum)%UpStreamLeak .or. AirDistUnit(AirDistUnitNum)%DownStreamLeak) THEN
             CALL ShowSevereError('Error found in '//TRIM(CurrentModuleObject)//' = '//TRIM(AirDistUnit(AirDistUnitNum)%Name))
             CALL ShowContinueError('Simple duct leakage model not available for '//TRIM(cAlphaFields(3))//' = '//  &
-                                TRIM(AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum)))
+            TRIM(AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum)))
             ErrorsFound=.true.
           END IF
-          ELSEIF (SameString(AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum),  &
-                           'AirTerminal:SingleDuct:ConstantVolume:CooledBeam')) THEN
+        ELSEIF (SameString(AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum),  &
+          'AirTerminal:SingleDuct:ConstantVolume:CooledBeam')) THEN
           AirDistUnit(AirDistUnitNum)%EquipType_Num(AirDistCompUnitNum)=SingleDuctConstVolCooledBeam
           IF (AirDistUnit(AirDistUnitNum)%UpStreamLeak .or. AirDistUnit(AirDistUnitNum)%DownStreamLeak) THEN
             CALL ShowSevereError('Error found in '//TRIM(CurrentModuleObject)//' = '//TRIM(AirDistUnit(AirDistUnitNum)%Name))
             CALL ShowContinueError('Simple duct leakage model not available for '//TRIM(cAlphaFields(3))//' = '//  &
-                                TRIM(AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum)))
+            TRIM(AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum)))
             ErrorsFound=.true.
           END IF
         ELSEIF (SameString(AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum),'AirTerminal:SingleDuct:UserDefined')) THEN
@@ -351,65 +351,65 @@ CHARACTER(len=*), PARAMETER :: RoutineName='GetZoneAirLoopEquipment: ' ! include
         ELSE
           CALL ShowSevereError('Error found in '//TRIM(CurrentModuleObject)//' = '//TRIM(AirDistUnit(AirDistUnitNum)%Name))
           CALL ShowContinueError('Invalid '//TRIM(cAlphaFields(3))//' = '//  &
-                                TRIM(AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum)))
+          TRIM(AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum)))
           ErrorsFound=.true.
         ENDIF
 
         ! Set up component set for air terminal unit
         IF ((AirDistUnit(AirDistUnitNum)%EquipType_Num(AirDistCompUnitNum) == DualDuctConstVolume) .OR. &
-            (AirDistUnit(AirDistUnitNum)%EquipType_Num(AirDistCompUnitNum) == DualDuctVAV)) THEN
+        (AirDistUnit(AirDistUnitNum)%EquipType_Num(AirDistCompUnitNum) == DualDuctVAV)) THEN
         !  For dual duct units, set up two component sets, one for heat and one for cool
-          CALL SetUpCompSets(TRIM(CurrentModuleObject), AirDistUnit(AirDistUnitNum)%Name, &
-                             TRIM(AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum))//':HEAT', &
-                             AirDistUnit(AirDistUnitNum)%EquipName(AirDistCompUnitNum), &
-                             'UNDEFINED',AlphArray(2))
-          CALL SetUpCompSets(TRIM(CurrentModuleObject), AirDistUnit(AirDistUnitNum)%Name, &
-                             TRIM(AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum))//':COOL', &
-                             AirDistUnit(AirDistUnitNum)%EquipName(AirDistCompUnitNum), &
-                             'UNDEFINED',AlphArray(2))
-        !  For dual duct units with decoupled OA and RA, set up two component sets, one for OA (Outdoor Air) 
+        CALL SetUpCompSets(TRIM(CurrentModuleObject), AirDistUnit(AirDistUnitNum)%Name, &
+        TRIM(AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum))//':HEAT', &
+        AirDistUnit(AirDistUnitNum)%EquipName(AirDistCompUnitNum), &
+        'UNDEFINED',AlphArray(2))
+        CALL SetUpCompSets(TRIM(CurrentModuleObject), AirDistUnit(AirDistUnitNum)%Name, &
+        TRIM(AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum))//':COOL', &
+        AirDistUnit(AirDistUnitNum)%EquipName(AirDistCompUnitNum), &
+        'UNDEFINED',AlphArray(2))
+        !  For dual duct units with decoupled OA and RA, set up two component sets, one for OA (Outdoor Air)
         !  and one for RA (Recirculated Air)
-        ELSEIF ((AirDistUnit(AirDistUnitNum)%EquipType_Num(AirDistCompUnitNum) == DualDuctVAVOutdoorAir)) THEN
+      ELSEIF ((AirDistUnit(AirDistUnitNum)%EquipType_Num(AirDistCompUnitNum) == DualDuctVAVOutdoorAir)) THEN
+        CALL SetUpCompSets(TRIM(CurrentModuleObject), AirDistUnit(AirDistUnitNum)%Name, &
+        TRIM(AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum))//':OutdoorAir', &
+        AirDistUnit(AirDistUnitNum)%EquipName(AirDistCompUnitNum), &
+        'UNDEFINED',AlphArray(2))
+        CALL GetDualDuctOutdoorAirRecircUse( AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum) , &
+        AirDistUnit(AirDistUnitNum)%EquipName(AirDistCompUnitNum) , &
+        DualDuctRecircIsUsed )
+        IF ( DualDuctRecircIsUsed ) THEN
           CALL SetUpCompSets(TRIM(CurrentModuleObject), AirDistUnit(AirDistUnitNum)%Name, &
-                             TRIM(AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum))//':OutdoorAir', &
-                             AirDistUnit(AirDistUnitNum)%EquipName(AirDistCompUnitNum), &
-                             'UNDEFINED',AlphArray(2))
-          CALL GetDualDuctOutdoorAirRecircUse( AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum) , &
-                                               AirDistUnit(AirDistUnitNum)%EquipName(AirDistCompUnitNum) , &
-                                               DualDuctRecircIsUsed )
-          IF ( DualDuctRecircIsUsed ) THEN 
-            CALL SetUpCompSets(TRIM(CurrentModuleObject), AirDistUnit(AirDistUnitNum)%Name, &
-                             TRIM(AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum))//':RecirculatedAir', &
-                             AirDistUnit(AirDistUnitNum)%EquipName(AirDistCompUnitNum), &
-                             'UNDEFINED',AlphArray(2))
-          ENDIF
-        ELSE
-          CALL SetUpCompSets(TRIM(CurrentModuleObject), AirDistUnit(AirDistUnitNum)%Name, &
-                             AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum), &
-                             AirDistUnit(AirDistUnitNum)%EquipName(AirDistCompUnitNum), &
-                             'UNDEFINED',AlphArray(2))
+          TRIM(AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum))//':RecirculatedAir', &
+          AirDistUnit(AirDistUnitNum)%EquipName(AirDistCompUnitNum), &
+          'UNDEFINED',AlphArray(2))
         ENDIF
+      ELSE
+        CALL SetUpCompSets(TRIM(CurrentModuleObject), AirDistUnit(AirDistUnitNum)%Name, &
+        AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompUnitNum), &
+        AirDistUnit(AirDistUnitNum)%EquipName(AirDistCompUnitNum), &
+        'UNDEFINED',AlphArray(2))
+      ENDIF
 
-        ! find and save corresponding zone equip config
-        DO ZoneEqNum=1,NumOfZones
-          IF (.not. ZoneEquipConfig(ZoneEqNum)%IsControlled) CYCLE
-          DO InletNum=1,ZoneEquipConfig(ZoneEqNum)%NumInletNodes
-            IF (ZoneEquipConfig(ZoneEqNum)%InletNode(InletNum) == AirDistUnit(AirDistUnitNum)%OutletNodeNum) THEN
-              AirDistUnit(AirDistUnitNum)%ZoneEqNum = ZoneEqNum
-            END IF
-          END DO
+      ! find and save corresponding zone equip config
+      DO ZoneEqNum=1,NumOfZones
+        IF (.not. ZoneEquipConfig(ZoneEqNum)%IsControlled) CYCLE
+        DO InletNum=1,ZoneEquipConfig(ZoneEqNum)%NumInletNodes
+          IF (ZoneEquipConfig(ZoneEqNum)%InletNode(InletNum) == AirDistUnit(AirDistUnitNum)%OutletNodeNum) THEN
+            AirDistUnit(AirDistUnitNum)%ZoneEqNum = ZoneEqNum
+          END IF
         END DO
+      END DO
 
-        IF ( AirDistUnit(AirDistUnitNum)%UpStreamLeak .or. AirDistUnit(AirDistUnitNum)%DownStreamLeak ) THEN
-          ZoneEquipConfig(AirDistUnit(AirDistUnitNum)%ZoneEqNum)%SupLeakToRetPlen = .TRUE.
-        END IF
+      IF ( AirDistUnit(AirDistUnitNum)%UpStreamLeak .or. AirDistUnit(AirDistUnitNum)%DownStreamLeak ) THEN
+        ZoneEquipConfig(AirDistUnit(AirDistUnitNum)%ZoneEqNum)%SupLeakToRetPlen = .TRUE.
+      END IF
 
-      END DO !End of Air Dist Do Loop
+    END DO !End of Air Dist Do Loop
 
-    END IF
-    IF (ErrorsFound) THEN
-      CALL ShowFatalError(RoutineName//'Errors found in getting '//TRIM(CurrentModuleObject)//' Input')
-    ENDIF
+  END IF
+  IF (ErrorsFound) THEN
+    CALL ShowFatalError(RoutineName//'Errors found in getting '//TRIM(CurrentModuleObject)//' Input')
+  ENDIF
 
   RETURN
 
@@ -417,41 +417,41 @@ END SUBROUTINE GetZoneAirLoopEquipment
 
 
 SUBROUTINE InitZoneAirLoopEquipment(FirstHVACIteration, AirDistUnitNum)
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Russ Taylor
-          !       DATE WRITTEN   Nov 1997
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Russ Taylor
+  !       DATE WRITTEN   Nov 1997
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine is left for Module format consistency -- not needed in this module.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine is left for Module format consistency -- not needed in this module.
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   LOGICAL, INTENT(IN) :: FirstHVACIteration !unused1208
   INTEGER, INTENT(IN) :: AirDistUnitNum
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-          ! na
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! na
 
   ! every time step
   AirDistUnit(AirDistUnitNum)%MassFlowRateDnStrLk = 0.0
@@ -464,24 +464,24 @@ SUBROUTINE InitZoneAirLoopEquipment(FirstHVACIteration, AirDistUnitNum)
 END SUBROUTINE InitZoneAirLoopEquipment
 
 SUBROUTINE SimZoneAirLoopEquipment(AirDistUnitNum, SysOutputProvided, NonAirSysOutput, LatOutputProvided, &
-                                   FirstHVACIteration, ControlledZoneNum, ActualZoneNum)
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Russ Taylor
-          !       DATE WRITTEN   May 1997
-          !       MODIFIED       Don Shirey, Aug 2009 (LatOutputProvided)
-          !       RE-ENGINEERED  na
+  FirstHVACIteration, ControlledZoneNum, ActualZoneNum)
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Russ Taylor
+  !       DATE WRITTEN   May 1997
+  !       MODIFIED       Don Shirey, Aug 2009 (LatOutputProvided)
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Simulates primary system air supplied to a zone and calculates
-          ! airflow requirements
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! Simulates primary system air supplied to a zone and calculates
+  ! airflow requirements
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataZoneEquipment, ONLY: ZoneEquipConfig, ZoneEquipList
   USE DataLoopNode, ONLY: Node
   USE DataAirLoop, ONLY: AirLoopFlow
@@ -495,7 +495,7 @@ SUBROUTINE SimZoneAirLoopEquipment(AirDistUnitNum, SysOutputProvided, NonAirSysO
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   INTEGER, INTENT(IN) :: AirDistUnitNum
   REAL(r64), INTENT(INOUT) :: SysOutputProvided
   REAL(r64), INTENT(OUT)   :: NonAirSysOutput
@@ -504,15 +504,15 @@ SUBROUTINE SimZoneAirLoopEquipment(AirDistUnitNum, SysOutputProvided, NonAirSysO
   INTEGER :: ControlledZoneNum
   INTEGER, INTENT(IN) :: ActualZoneNum
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! SUBROUTINE PARAMETER DEFINITIONS:
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER :: AirDistCompNum
   INTEGER :: InNodeNum  ! air distribution unit inlet node
   INTEGER :: OutNodeNum ! air distribution unit outlet node
@@ -526,240 +526,240 @@ SUBROUTINE SimZoneAirLoopEquipment(AirDistUnitNum, SysOutputProvided, NonAirSysO
   REAL(r64) :: SpecHumOut=0.0              ! Specific humidity ratio of outlet air (kg moisture / kg moist air)
   REAL(r64) :: SpecHumIn=0.0               ! Specific humidity ratio of inlet air (kg moisture / kg moist air)
 
-      DO AirDistCompNum = 1, AirDistUnit(AirDistUnitNum)%NumComponents
-         NonAirSysOutput = 0.0
-         InNodeNum = AirDistUnit(AirDistUnitNum)%InletNodeNum
-         OutNodeNum = AirDistUnit(AirDistUnitNum)%OutletNodeNum
-         MassFlowRateMaxAvail = 0.0
-         MassFlowRateMinAvail = 0.0
-         ! check for no plenum
-         ! set the max and min avail flow rates taking into acount the upstream leak
-         IF (InNodeNum > 0) THEN
-           IF (AirDistUnit(AirDistUnitNum)%UpStreamLeak) THEN
-             MassFlowRateMaxAvail = Node(InNodeNum)%MassFlowRateMaxAvail
-             MassFlowRateMinAvail = Node(InNodeNum)%MassFlowRateMinAvail
-             AirLoopNum = ZoneEquipConfig(ControlledZoneNum)%AirLoopNum
-             IF (AirLoopNum > 0) THEN
-               DesFlowRatio = AirLoopFlow(AirLoopNum)%SysToZoneDesFlowRatio
-             ELSE
-               DesFlowRatio = 1.0d0
-             END IF
-             MassFlowRateUpStreamLeakMax = AirDistUnit(AirDistUnitNum)%UpStreamLeakFrac*Node(InNodeNum)%MassFlowRateMax*DesFlowRatio
-             IF (MassFlowRateMaxAvail > MassFlowRateUpStreamLeakMax) THEN
-               AirDistUnit(AirDistUnitNum)%MassFlowRateUpStrLk = MassFlowRateUpStreamLeakMax
-               Node(InNodeNum)%MassFlowRateMaxAvail = MassFlowRateMaxAvail - MassFlowRateUpStreamLeakMax
-             ELSE
-               AirDistUnit(AirDistUnitNum)%MassFlowRateUpStrLk = MassFlowRateMaxAvail
-               Node(InNodeNum)%MassFlowRateMaxAvail = 0.0
-             END IF
-             Node(InNodeNum)%MassFlowRateMinAvail = MAX(0.0d0, MassFlowRateMinAvail &
-                                                             -AirDistUnit(AirDistUnitNum)%MassFlowRateUpStrLk)
-           END IF
-         END IF
+  DO AirDistCompNum = 1, AirDistUnit(AirDistUnitNum)%NumComponents
+    NonAirSysOutput = 0.0
+    InNodeNum = AirDistUnit(AirDistUnitNum)%InletNodeNum
+    OutNodeNum = AirDistUnit(AirDistUnitNum)%OutletNodeNum
+    MassFlowRateMaxAvail = 0.0
+    MassFlowRateMinAvail = 0.0
+    ! check for no plenum
+    ! set the max and min avail flow rates taking into acount the upstream leak
+    IF (InNodeNum > 0) THEN
+      IF (AirDistUnit(AirDistUnitNum)%UpStreamLeak) THEN
+        MassFlowRateMaxAvail = Node(InNodeNum)%MassFlowRateMaxAvail
+        MassFlowRateMinAvail = Node(InNodeNum)%MassFlowRateMinAvail
+        AirLoopNum = ZoneEquipConfig(ControlledZoneNum)%AirLoopNum
+        IF (AirLoopNum > 0) THEN
+          DesFlowRatio = AirLoopFlow(AirLoopNum)%SysToZoneDesFlowRatio
+        ELSE
+          DesFlowRatio = 1.0d0
+        END IF
+        MassFlowRateUpStreamLeakMax = AirDistUnit(AirDistUnitNum)%UpStreamLeakFrac*Node(InNodeNum)%MassFlowRateMax*DesFlowRatio
+        IF (MassFlowRateMaxAvail > MassFlowRateUpStreamLeakMax) THEN
+          AirDistUnit(AirDistUnitNum)%MassFlowRateUpStrLk = MassFlowRateUpStreamLeakMax
+          Node(InNodeNum)%MassFlowRateMaxAvail = MassFlowRateMaxAvail - MassFlowRateUpStreamLeakMax
+        ELSE
+          AirDistUnit(AirDistUnitNum)%MassFlowRateUpStrLk = MassFlowRateMaxAvail
+          Node(InNodeNum)%MassFlowRateMaxAvail = 0.0
+        END IF
+        Node(InNodeNum)%MassFlowRateMinAvail = MAX(0.0d0, MassFlowRateMinAvail &
+        -AirDistUnit(AirDistUnitNum)%MassFlowRateUpStrLk)
+      END IF
+    END IF
 
-         SELECT CASE (AirDistUnit(AirDistUnitNum)%EquipType_Num(AirDistCompNum))
+    SELECT CASE (AirDistUnit(AirDistUnitNum)%EquipType_Num(AirDistCompNum))
 
-          CASE (DualDuctConstVolume)
-            CALL SimulateDualDuct(AirDistUnit(AirDistUnitNum)%EquipName(AirDistCompNum),FirstHVACIteration, &
-                                           ActualZoneNum, ZoneEquipConfig(ControlledZoneNum)%ZoneNode,      &
-                                           AirDistUnit(AirDistUnitNum)%EquipIndex(AirDistCompNum))
+    CASE (DualDuctConstVolume)
+      CALL SimulateDualDuct(AirDistUnit(AirDistUnitNum)%EquipName(AirDistCompNum),FirstHVACIteration, &
+      ActualZoneNum, ZoneEquipConfig(ControlledZoneNum)%ZoneNode,      &
+      AirDistUnit(AirDistUnitNum)%EquipIndex(AirDistCompNum))
 
-          CASE (DualDuctVAV)
-            CALL SimulateDualDuct(AirDistUnit(AirDistUnitNum)%EquipName(AirDistCompNum),FirstHVACIteration, &
-                                           ActualZoneNum, ZoneEquipConfig(ControlledZoneNum)%ZoneNode,      &
-                                           AirDistUnit(AirDistUnitNum)%EquipIndex(AirDistCompNum))
-                                           
-          CASE (DualDuctVAVOutdoorAir)
-            CALL SimulateDualDuct(AirDistUnit(AirDistUnitNum)%EquipName(AirDistCompNum),FirstHVACIteration, &
-                                           ActualZoneNum, ZoneEquipConfig(ControlledZoneNum)%ZoneNode,      &
-                                           AirDistUnit(AirDistUnitNum)%EquipIndex(AirDistCompNum))
+    CASE (DualDuctVAV)
+      CALL SimulateDualDuct(AirDistUnit(AirDistUnitNum)%EquipName(AirDistCompNum),FirstHVACIteration, &
+      ActualZoneNum, ZoneEquipConfig(ControlledZoneNum)%ZoneNode,      &
+      AirDistUnit(AirDistUnitNum)%EquipIndex(AirDistCompNum))
 
-          CASE (SingleDuctVAVReheat)
-            CALL SimulateSingleDuct(AirDistUnit(AirDistUnitNum)%EquipName(AirDistCompNum),FirstHVACIteration, &
-                                    ActualZoneNum, ZoneEquipConfig(ControlledZoneNum)%ZoneNode,      &
-                                           AirDistUnit(AirDistUnitNum)%EquipIndex(AirDistCompNum))
+    CASE (DualDuctVAVOutdoorAir)
+      CALL SimulateDualDuct(AirDistUnit(AirDistUnitNum)%EquipName(AirDistCompNum),FirstHVACIteration, &
+      ActualZoneNum, ZoneEquipConfig(ControlledZoneNum)%ZoneNode,      &
+      AirDistUnit(AirDistUnitNum)%EquipIndex(AirDistCompNum))
 
-          CASE (SingleDuctCBVAVReheat)
-            CALL SimulateSingleDuct(AirDistUnit(AirDistUnitNum)%EquipName(AirDistCompNum),FirstHVACIteration, &
-                                    ActualZoneNum, ZoneEquipConfig(ControlledZoneNum)%ZoneNode,      &
-                                           AirDistUnit(AirDistUnitNum)%EquipIndex(AirDistCompNum))
+    CASE (SingleDuctVAVReheat)
+      CALL SimulateSingleDuct(AirDistUnit(AirDistUnitNum)%EquipName(AirDistCompNum),FirstHVACIteration, &
+      ActualZoneNum, ZoneEquipConfig(ControlledZoneNum)%ZoneNode,      &
+      AirDistUnit(AirDistUnitNum)%EquipIndex(AirDistCompNum))
 
-          CASE (SingleDuctVAVNoReheat)
-            CALL SimulateSingleDuct(AirDistUnit(AirDistUnitNum)%EquipName(AirDistCompNum),FirstHVACIteration, &
-                                    ActualZoneNum, ZoneEquipConfig(ControlledZoneNum)%ZoneNode,      &
-                                           AirDistUnit(AirDistUnitNum)%EquipIndex(AirDistCompNum))
+    CASE (SingleDuctCBVAVReheat)
+      CALL SimulateSingleDuct(AirDistUnit(AirDistUnitNum)%EquipName(AirDistCompNum),FirstHVACIteration, &
+      ActualZoneNum, ZoneEquipConfig(ControlledZoneNum)%ZoneNode,      &
+      AirDistUnit(AirDistUnitNum)%EquipIndex(AirDistCompNum))
 
-          CASE (SingleDuctCBVAVNoReheat)
-            CALL SimulateSingleDuct(AirDistUnit(AirDistUnitNum)%EquipName(AirDistCompNum),FirstHVACIteration, &
-                                    ActualZoneNum, ZoneEquipConfig(ControlledZoneNum)%ZoneNode,      &
-                                           AirDistUnit(AirDistUnitNum)%EquipIndex(AirDistCompNum))
+    CASE (SingleDuctVAVNoReheat)
+      CALL SimulateSingleDuct(AirDistUnit(AirDistUnitNum)%EquipName(AirDistCompNum),FirstHVACIteration, &
+      ActualZoneNum, ZoneEquipConfig(ControlledZoneNum)%ZoneNode,      &
+      AirDistUnit(AirDistUnitNum)%EquipIndex(AirDistCompNum))
 
-          CASE (SingleDuctConstVolReheat)
-            CALL SimulateSingleDuct(AirDistUnit(AirDistUnitNum)%EquipName(AirDistCompNum),FirstHVACIteration, &
-                                    ActualZoneNum, ZoneEquipConfig(ControlledZoneNum)%ZoneNode,      &
-                                           AirDistUnit(AirDistUnitNum)%EquipIndex(AirDistCompNum))
+    CASE (SingleDuctCBVAVNoReheat)
+      CALL SimulateSingleDuct(AirDistUnit(AirDistUnitNum)%EquipName(AirDistCompNum),FirstHVACIteration, &
+      ActualZoneNum, ZoneEquipConfig(ControlledZoneNum)%ZoneNode,      &
+      AirDistUnit(AirDistUnitNum)%EquipIndex(AirDistCompNum))
 
-          CASE (SingleDuct_SeriesPIU_Reheat)
-            CALL SimPIU(AirDistUnit(AirDistUnitNum)%EquipName(AirDistCompNum),FirstHVACIteration, &
-                                    ActualZoneNum, ZoneEquipConfig(ControlledZoneNum)%ZoneNode,      &
-                                           AirDistUnit(AirDistUnitNum)%EquipIndex(AirDistCompNum))
+    CASE (SingleDuctConstVolReheat)
+      CALL SimulateSingleDuct(AirDistUnit(AirDistUnitNum)%EquipName(AirDistCompNum),FirstHVACIteration, &
+      ActualZoneNum, ZoneEquipConfig(ControlledZoneNum)%ZoneNode,      &
+      AirDistUnit(AirDistUnitNum)%EquipIndex(AirDistCompNum))
 
-          CASE (SingleDuct_ParallelPIU_Reheat)
-            CALL SimPIU(AirDistUnit(AirDistUnitNum)%EquipName(AirDistCompNum),FirstHVACIteration, &
-                                    ActualZoneNum, ZoneEquipConfig(ControlledZoneNum)%ZoneNode,      &
-                                           AirDistUnit(AirDistUnitNum)%EquipIndex(AirDistCompNum))
+    CASE (SingleDuct_SeriesPIU_Reheat)
+      CALL SimPIU(AirDistUnit(AirDistUnitNum)%EquipName(AirDistCompNum),FirstHVACIteration, &
+      ActualZoneNum, ZoneEquipConfig(ControlledZoneNum)%ZoneNode,      &
+      AirDistUnit(AirDistUnitNum)%EquipIndex(AirDistCompNum))
 
-          CASE(SingleDuct_ConstVol_4PipeInduc)
-            CALL SimIndUnit(AirDistUnit(AirDistUnitNum)%EquipName(AirDistCompNum), FirstHVACIteration, &
-                            ActualZoneNum, ZoneEquipConfig(ControlledZoneNum)%ZoneNode,      &
-                                           AirDistUnit(AirDistUnitNum)%EquipIndex(AirDistCompNum))
+    CASE (SingleDuct_ParallelPIU_Reheat)
+      CALL SimPIU(AirDistUnit(AirDistUnitNum)%EquipName(AirDistCompNum),FirstHVACIteration, &
+      ActualZoneNum, ZoneEquipConfig(ControlledZoneNum)%ZoneNode,      &
+      AirDistUnit(AirDistUnitNum)%EquipIndex(AirDistCompNum))
 
-          CASE(SingleDuctVAVReheatVSFan)
-            CALL SimulateSingleDuct(AirDistUnit(AirDistUnitNum)%EquipName(AirDistCompNum),FirstHVACIteration, &
-                                    ActualZoneNum, ZoneEquipConfig(ControlledZoneNum)%ZoneNode,      &
-                                           AirDistUnit(AirDistUnitNum)%EquipIndex(AirDistCompNum))
+    CASE(SingleDuct_ConstVol_4PipeInduc)
+      CALL SimIndUnit(AirDistUnit(AirDistUnitNum)%EquipName(AirDistCompNum), FirstHVACIteration, &
+      ActualZoneNum, ZoneEquipConfig(ControlledZoneNum)%ZoneNode,      &
+      AirDistUnit(AirDistUnitNum)%EquipIndex(AirDistCompNum))
 
-         CASE(SingleDuctConstVolCooledBeam)
-            CALL SimCoolBeam(AirDistUnit(AirDistUnitNum)%EquipName(AirDistCompNum),FirstHVACIteration, &
-                             ActualZoneNum, ZoneEquipConfig(ControlledZoneNum)%ZoneNode,      &
-                             AirDistUnit(AirDistUnitNum)%EquipIndex(AirDistCompNum), NonAirSysOutput)
+    CASE(SingleDuctVAVReheatVSFan)
+      CALL SimulateSingleDuct(AirDistUnit(AirDistUnitNum)%EquipName(AirDistCompNum),FirstHVACIteration, &
+      ActualZoneNum, ZoneEquipConfig(ControlledZoneNum)%ZoneNode,      &
+      AirDistUnit(AirDistUnitNum)%EquipIndex(AirDistCompNum))
 
-          CASE (SingleDuctUserDefined)
-            CALL SimAirTerminalUserDefined(AirDistUnit(AirDistUnitNum)%EquipName(AirDistCompNum),FirstHVACIteration, &
-                                    ActualZoneNum, ZoneEquipConfig(ControlledZoneNum)%ZoneNode,      &
-                                           AirDistUnit(AirDistUnitNum)%EquipIndex(AirDistCompNum))
-            
-          CASE DEFAULT
-            CALL ShowSevereError('Error found in ZoneHVAC:AirDistributionUnit='//TRIM(AirDistUnit(AirDistUnitNum)%Name))
-            CALL ShowContinueError('Invalid Component='//TRIM(AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompNum)))
-            CALL ShowFatalError('Preceding condition causes termination.')
+    CASE(SingleDuctConstVolCooledBeam)
+      CALL SimCoolBeam(AirDistUnit(AirDistUnitNum)%EquipName(AirDistCompNum),FirstHVACIteration, &
+      ActualZoneNum, ZoneEquipConfig(ControlledZoneNum)%ZoneNode,      &
+      AirDistUnit(AirDistUnitNum)%EquipIndex(AirDistCompNum), NonAirSysOutput)
 
-        END SELECT
+    CASE (SingleDuctUserDefined)
+      CALL SimAirTerminalUserDefined(AirDistUnit(AirDistUnitNum)%EquipName(AirDistCompNum),FirstHVACIteration, &
+      ActualZoneNum, ZoneEquipConfig(ControlledZoneNum)%ZoneNode,      &
+      AirDistUnit(AirDistUnitNum)%EquipIndex(AirDistCompNum))
 
-        ! do leak mass flow calcs
-         IF (InNodeNum > 0) THEN
-           IF (AirDistUnit(AirDistUnitNum)%UpStreamLeak) THEN
-             Node(InNodeNum)%MassFlowRateMaxAvail = MassFlowRateMaxAvail
-             Node(InNodeNum)%MassFlowRateMinAvail = MassFlowRateMinAvail
-           END IF
-           IF ( (AirDistUnit(AirDistUnitNum)%UpStreamLeak .OR. AirDistUnit(AirDistUnitNum)%DownStreamLeak) .AND. &
-                MassFlowRateMaxAvail > 0.0 ) THEN
-             AirDistUnit(AirDistUnitNum)%MassFlowRateTU = Node(InNodeNum)%MassFlowRate
-             AirDistUnit(AirDistUnitNum)%MassFlowRateZSup = AirDistUnit(AirDistUnitNum)%MassFlowRateTU * &
-                                                            (1.-AirDistUnit(AirDistUnitNum)%DownStreamLeakFrac)
-             AirDistUnit(AirDistUnitNum)%MassFlowRateDnStrLk = AirDistUnit(AirDistUnitNum)%MassFlowRateTU * &
-                                                              AirDistUnit(AirDistUnitNum)%DownStreamLeakFrac
-             AirDistUnit(AirDistUnitNum)%MassFlowRateSup = AirDistUnit(AirDistUnitNum)%MassFlowRateTU &
-                                                           + AirDistUnit(AirDistUnitNum)%MassFlowRateUpStrLk
-             Node(InNodeNum)%MassFlowRate = AirDistUnit(AirDistUnitNum)%MassFlowRateSup
-             Node(OutNodeNum)%MassFlowRate = AirDistUnit(AirDistUnitNum)%MassFlowRateZSup
-             Node(OutNodeNum)%MassFlowRateMaxAvail = MAX(0.0d0, MassFlowRateMaxAvail &
-                                                     - AirDistUnit(AirDistUnitNum)%MassFlowRateDnStrLk &
-                                                     - AirDistUnit(AirDistUnitNum)%MassFlowRateUpStrLk)
-             Node(OutNodeNum)%MassFlowRateMinAvail = MAX(0.0d0, MassFlowRateMinAvail &
-                                                     - AirDistUnit(AirDistUnitNum)%MassFlowRateDnStrLk &
-                                                     - AirDistUnit(AirDistUnitNum)%MassFlowRateUpStrLk)
-             AirDistUnit(AirDistUnitNum)%MaxAvailDelta = MassFlowRateMaxAvail - Node(OutNodeNum)%MassFlowRateMaxAvail
-             AirDistUnit(AirDistUnitNum)%MinAvailDelta = MassFlowRateMinAvail - Node(OutNodeNum)%MassFlowRateMinAvail
-           END IF
-         END IF
+    CASE DEFAULT
+      CALL ShowSevereError('Error found in ZoneHVAC:AirDistributionUnit='//TRIM(AirDistUnit(AirDistUnitNum)%Name))
+      CALL ShowContinueError('Invalid Component='//TRIM(AirDistUnit(AirDistUnitNum)%EquipType(AirDistCompNum)))
+      CALL ShowFatalError('Preceding condition causes termination.')
 
-      END DO
-      ! Sign convention: SysOutputProvided <0 Zone is cooled
-      !                  SysOutputProvided >0 Zone is heated
-      CpAirZn = PsyCpAirFnWTdb(Node(ZoneEquipConfig(ControlledZoneNum)%ZoneNode)%HumRat, &
-                        Node(ZoneEquipConfig(ControlledZoneNum)%ZoneNode)%Temp)
-      CpAirSys = PsyCpAirFnWTdb(Node(AirDistUnit(AirDistUnitNum)%OutletNodeNum)%Humrat,  &
-                         Node(AirDistUnit(AirDistUnitNum)%OutletNodeNum)%Temp)
-      SysOutputProvided = Node(AirDistUnit(AirDistUnitNum)%OutletNodeNum)%MassFlowRate * &
-                (CpAirSys*Node(AirDistUnit(AirDistUnitNum)%OutletNodeNum)%Temp - &
-                CpAirZn*Node(ZoneEquipConfig(ControlledZoneNum)%ZoneNode)%Temp)
+    END SELECT
 
-      ! Sign convention: LatOutputProvided <0 Zone is dehumidified
-      !                  LatOutputProvided >0 Zone is humidified
-      SpecHumOut = Node(AirDistUnit(AirDistUnitNum)%OutletNodeNum)%HumRat / &
-                   (1.0d0 + Node(AirDistUnit(AirDistUnitNum)%OutletNodeNum)%HumRat)
-      SpecHumIn  = Node(ZoneEquipConfig(ControlledZoneNum)%ZoneNode)%HumRat / &
-                   (1.0d0 + Node(ZoneEquipConfig(ControlledZoneNum)%ZoneNode)%HumRat)
-      LatOutputProvided = Node(AirDistUnit(AirDistUnitNum)%OutletNodeNum)%MassFlowRate * &
-                          (SpecHumOut - SpecHumIn) ! Latent rate (kg/s), dehumid = negative
+    ! do leak mass flow calcs
+    IF (InNodeNum > 0) THEN
+      IF (AirDistUnit(AirDistUnitNum)%UpStreamLeak) THEN
+        Node(InNodeNum)%MassFlowRateMaxAvail = MassFlowRateMaxAvail
+        Node(InNodeNum)%MassFlowRateMinAvail = MassFlowRateMinAvail
+      END IF
+      IF ( (AirDistUnit(AirDistUnitNum)%UpStreamLeak .OR. AirDistUnit(AirDistUnitNum)%DownStreamLeak) .AND. &
+      MassFlowRateMaxAvail > 0.0 ) THEN
+      AirDistUnit(AirDistUnitNum)%MassFlowRateTU = Node(InNodeNum)%MassFlowRate
+      AirDistUnit(AirDistUnitNum)%MassFlowRateZSup = AirDistUnit(AirDistUnitNum)%MassFlowRateTU * &
+      (1.-AirDistUnit(AirDistUnitNum)%DownStreamLeakFrac)
+      AirDistUnit(AirDistUnitNum)%MassFlowRateDnStrLk = AirDistUnit(AirDistUnitNum)%MassFlowRateTU * &
+      AirDistUnit(AirDistUnitNum)%DownStreamLeakFrac
+      AirDistUnit(AirDistUnitNum)%MassFlowRateSup = AirDistUnit(AirDistUnitNum)%MassFlowRateTU &
+      + AirDistUnit(AirDistUnitNum)%MassFlowRateUpStrLk
+      Node(InNodeNum)%MassFlowRate = AirDistUnit(AirDistUnitNum)%MassFlowRateSup
+      Node(OutNodeNum)%MassFlowRate = AirDistUnit(AirDistUnitNum)%MassFlowRateZSup
+      Node(OutNodeNum)%MassFlowRateMaxAvail = MAX(0.0d0, MassFlowRateMaxAvail &
+      - AirDistUnit(AirDistUnitNum)%MassFlowRateDnStrLk &
+      - AirDistUnit(AirDistUnitNum)%MassFlowRateUpStrLk)
+      Node(OutNodeNum)%MassFlowRateMinAvail = MAX(0.0d0, MassFlowRateMinAvail &
+      - AirDistUnit(AirDistUnitNum)%MassFlowRateDnStrLk &
+      - AirDistUnit(AirDistUnitNum)%MassFlowRateUpStrLk)
+      AirDistUnit(AirDistUnitNum)%MaxAvailDelta = MassFlowRateMaxAvail - Node(OutNodeNum)%MassFlowRateMaxAvail
+      AirDistUnit(AirDistUnitNum)%MinAvailDelta = MassFlowRateMinAvail - Node(OutNodeNum)%MassFlowRateMinAvail
+    END IF
+  END IF
 
-  RETURN
+END DO
+! Sign convention: SysOutputProvided <0 Zone is cooled
+!                  SysOutputProvided >0 Zone is heated
+CpAirZn = PsyCpAirFnWTdb(Node(ZoneEquipConfig(ControlledZoneNum)%ZoneNode)%HumRat, &
+Node(ZoneEquipConfig(ControlledZoneNum)%ZoneNode)%Temp)
+CpAirSys = PsyCpAirFnWTdb(Node(AirDistUnit(AirDistUnitNum)%OutletNodeNum)%Humrat,  &
+Node(AirDistUnit(AirDistUnitNum)%OutletNodeNum)%Temp)
+SysOutputProvided = Node(AirDistUnit(AirDistUnitNum)%OutletNodeNum)%MassFlowRate * &
+(CpAirSys*Node(AirDistUnit(AirDistUnitNum)%OutletNodeNum)%Temp - &
+CpAirZn*Node(ZoneEquipConfig(ControlledZoneNum)%ZoneNode)%Temp)
+
+! Sign convention: LatOutputProvided <0 Zone is dehumidified
+!                  LatOutputProvided >0 Zone is humidified
+SpecHumOut = Node(AirDistUnit(AirDistUnitNum)%OutletNodeNum)%HumRat / &
+(1.0d0 + Node(AirDistUnit(AirDistUnitNum)%OutletNodeNum)%HumRat)
+SpecHumIn  = Node(ZoneEquipConfig(ControlledZoneNum)%ZoneNode)%HumRat / &
+(1.0d0 + Node(ZoneEquipConfig(ControlledZoneNum)%ZoneNode)%HumRat)
+LatOutputProvided = Node(AirDistUnit(AirDistUnitNum)%OutletNodeNum)%MassFlowRate * &
+(SpecHumOut - SpecHumIn) ! Latent rate (kg/s), dehumid = negative
+
+RETURN
 
 END SUBROUTINE SimZoneAirLoopEquipment
 
 SUBROUTINE UpdateZoneAirLoopEquipment
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Russ Taylor
-          !       DATE WRITTEN   Nov 1997
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Russ Taylor
+  !       DATE WRITTEN   Nov 1997
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine is left for Module format consistency -- not needed in this module.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine is left for Module format consistency -- not needed in this module.
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-          ! na
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! na
   RETURN
 
 END SUBROUTINE UpdateZoneAirLoopEquipment
 
 SUBROUTINE ReportZoneAirLoopEquipment
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Russ Taylor
-          !       DATE WRITTEN   Nov 1997
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Russ Taylor
+  !       DATE WRITTEN   Nov 1997
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine is left for Module format consistency -- not needed in this module.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine is left for Module format consistency -- not needed in this module.
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-          ! na
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! na
 
 
   RETURN
@@ -768,7 +768,7 @@ END SUBROUTINE ReportZoneAirLoopEquipment
 
 !     NOTICE
 !
-!     Copyright © 1996-2012 The Board of Trustees of the University of Illinois
+!     Copyright ï¿½ 1996-2012 The Board of Trustees of the University of Illinois
 !     and The Regents of the University of California through Ernest Orlando Lawrence
 !     Berkeley National Laboratory.  All rights reserved.
 !
@@ -791,4 +791,3 @@ END SUBROUTINE ReportZoneAirLoopEquipment
 !
 
 END MODULE ZoneAirLoopEquipmentManager
-

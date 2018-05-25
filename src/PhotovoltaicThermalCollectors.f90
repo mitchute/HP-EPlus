@@ -1,347 +1,347 @@
 MODULE PhotovoltaicThermalCollectors
 
-          ! Module containing the routines dealing with the photovoltaic thermal collectors
+  ! Module containing the routines dealing with the photovoltaic thermal collectors
 
-          ! MODULE INFORMATION:
-          !       AUTHOR         Brent. Griffith
-          !       DATE WRITTEN   June-August 2008
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! MODULE INFORMATION:
+  !       AUTHOR         Brent. Griffith
+  !       DATE WRITTEN   June-August 2008
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS MODULE:
-          ! collect models related to PVT or hybrid, photovoltaic - thermal solar collectors
+  ! PURPOSE OF THIS MODULE:
+  ! collect models related to PVT or hybrid, photovoltaic - thermal solar collectors
 
-          ! METHODOLOGY EMPLOYED:
-          ! The approach is to have one PVT structure that works with different models.
-          !  the PVT modle reuses photovoltaic modeling in Photovoltaics.f90 for electricity generation.
-          !  the electric load center and "generator" is all accessed thru PV objects and models.
-          !  this module is for the thermal portion of PVT.
-          !  the first model is a "simple" or "ideal" model useful for sizing, early design, or policy analyses
-          !  Simple PV/T model just converts incoming solar to electricity and temperature rise of a working fluid.
+  ! METHODOLOGY EMPLOYED:
+  ! The approach is to have one PVT structure that works with different models.
+  !  the PVT modle reuses photovoltaic modeling in Photovoltaics.f90 for electricity generation.
+  !  the electric load center and "generator" is all accessed thru PV objects and models.
+  !  this module is for the thermal portion of PVT.
+  !  the first model is a "simple" or "ideal" model useful for sizing, early design, or policy analyses
+  !  Simple PV/T model just converts incoming solar to electricity and temperature rise of a working fluid.
 
-          ! REFERENCES:
-
-
-          ! OTHER NOTES:
-          ! na
-
-          ! USE STATEMENTS:
-USE DataPrecisionGlobals
-USE DataGlobals_HPSimIntegrated
-USE DataSurfaces, ONLY: Surface, TotSurfaces, SurfSunlitArea, SurfSunlitFrac, SurfaceClass_Detached_F, SurfaceClass_Detached_B,  &
-                        SurfaceClass_Shading
-USE DataPhotovoltaics
-USE DataInterfaces
+  ! REFERENCES:
 
 
-IMPLICIT NONE ! Enforce explicit typing of all variables
+  ! OTHER NOTES:
+  ! na
 
-PRIVATE ! Everything private unless explicitly made public
-
-          ! MODULE PARAMETER DEFINITIONS:
-INTEGER, PARAMETER :: SimplePVTmodel       = 1001
-INTEGER, PARAMETER :: LayerByLayerPVTmodel = 1002
-
-INTEGER, PARAMETER :: ScheduledThermEffic = 15 ! mode for thermal efficiency is to use schedule
-INTEGER, PARAMETER :: FixedThermEffic     = 16 ! mode for thermal efficiency is to use fixed value
-
-INTEGER, PARAMETER :: LiquidWorkingFluid  = 1
-INTEGER, PARAMETER :: AirWorkingFluid     = 2
-
-INTEGER, PARAMETER , PUBLIC :: CalledFromPlantLoopEquipMgr  = 101
-INTEGER, PARAMETER , PUBLIC :: CalledFromOutsideAirSystem = 102
-
-REAL(r64), PARAMETER :: SimplePVTWaterSizeFactor = 1.905E-5  ! [ m3/s/m2 ] average of collectors in SolarCollectors.idf
+  ! USE STATEMENTS:
+  USE DataPrecisionGlobals
+  USE DataGlobals_HPSimIntegrated
+  USE DataSurfaces, ONLY: Surface, TotSurfaces, SurfSunlitArea, SurfSunlitFrac, SurfaceClass_Detached_F, SurfaceClass_Detached_B,  &
+  SurfaceClass_Shading
+  USE DataPhotovoltaics
+  USE DataInterfaces
 
 
-          ! DERIVED TYPE DEFINITIONS:
+  IMPLICIT NONE ! Enforce explicit typing of all variables
 
-TYPE SimplePVTModelStruct
-  CHARACTER(len=MaxNameLength) :: Name               = '' !
-  REAL(r64)                    :: ThermalActiveFract = 0.0D0 ! fraction of surface area with active thermal collection
-  INTEGER                      :: ThermEfficMode     = 0  ! setting for how therm effic is determined
-  REAL(r64)                    :: ThermEffic         = 0.0D0 ! fixed or current Therm efficiency
-  INTEGER                      :: ThermEffSchedNum   = 0 ! pointer to schedule for therm effic (if any)
-  REAL(r64)                    :: SurfEmissivity     = 0.0D0  ! surface emittance in long wave IR
-  REAL(r64)                    :: LastCollectorTemp  = 0.0D0  ! store previous temperature
-  REAL(r64)                    :: CollectorTemp      = 0.0D0  ! average solar collector temp.
-END TYPE SimplePVTModelStruct
+  PRIVATE ! Everything private unless explicitly made public
 
-TYPE PVTReportStruct
+  ! MODULE PARAMETER DEFINITIONS:
+  INTEGER, PARAMETER :: SimplePVTmodel       = 1001
+  INTEGER, PARAMETER :: LayerByLayerPVTmodel = 1002
 
-  REAL(r64) :: ThermEfficiency       = 0.0D0 ! Thermal efficiency of solar energy conversion
-  REAL(r64) :: ThermPower            = 0.0D0 ! Heat gain or loss to collector fluid (W)
-  REAL(r64) :: ThermHeatGain         = 0.0D0 ! Heat gain to collector fluid (W)
-  REAL(r64) :: ThermHeatLoss         = 0.0D0 ! Heat loss from collector fluid (W)
-  REAL(r64) :: ThermEnergy           = 0.0D0 ! Energy gained (or lost) to collector fluid (J)
-  REAL(r64) :: MdotWorkFluid         = 0.0D0 ! working fluid mass flow rate (kg/s)
-  REAL(r64) :: TinletWorkFluid       = 0.0D0 ! working fluid inlet temp (C)
-  REAL(r64) :: ToutletWorkFluid      = 0.0D0 ! working fluid outlet temp (C)
-  REAL(r64) :: BypassStatus          = 0.0D0  ! 0 = no bypass, 1=full bypass
-END TYPE PVTReportStruct
+  INTEGER, PARAMETER :: ScheduledThermEffic = 15 ! mode for thermal efficiency is to use schedule
+  INTEGER, PARAMETER :: FixedThermEffic     = 16 ! mode for thermal efficiency is to use fixed value
 
-TYPE PVTCollectorStruct
-  ! input
-  CHARACTER(len=MaxNameLength) :: Name               = '' ! Name of PVT collector
-  INTEGER                      :: TypeNum                  ! Plant Side Connection: 'TypeOf_Num' assigned in DataPlant  !DSU
-  INTEGER                      :: WLoopNum     = 0         ! Water plant loop index number                      !DSU
-  INTEGER                      :: WLoopSideNum = 0         ! Water plant loop side index                        !DSU
-  INTEGER                      :: WLoopBranchNum   = 0     ! Water plant loop branch index                      !DSU
-  INTEGER                      :: WLoopCompNum     = 0     ! Water plant loop component index                   !DSU
-  LOGICAL                      :: EnvrnInit          = .TRUE. ! manage begin environmen inits
-  LOGICAL                      :: SizingInit         = .TRUE. ! manage when sizing is complete
-  CHARACTER(len=MaxNameLength) :: PVTModelName       = '' ! Name of PVT performance object
-  INTEGER                      :: PVTModelType       = 0  ! model type indicator, only simple avail now
-  INTEGER                      :: SurfNum            = 0  ! surface index
-  CHARACTER(len=MaxNameLength) :: PVname             = '' ! named Generator:Photovoltaic object
-  INTEGER                      :: PVNum              = 0  ! PV index
-  LOGICAL                      :: PVfound            = .FALSE. ! init, need to delay get input until PV gotten
- ! INTEGER                      :: PlantLoopNum       = 0  ! needed for sizing and control
- ! INTEGER                      :: PlantLoopSide      = 0  ! needed for sizing, demand vs. supply sided
-  Type(SimplePVTModelStruct)   :: Simple                  ! performance data structure.
+  INTEGER, PARAMETER :: LiquidWorkingFluid  = 1
+  INTEGER, PARAMETER :: AirWorkingFluid     = 2
 
-  INTEGER                      :: WorkingFluidType   = 0  !
-  INTEGER                      :: PlantInletNodeNum  = 0  !
-  INTEGER                      :: PlantOutletNodeNum = 0
-  INTEGER                      :: HVACInletNodeNum   = 0
-  INTEGER                      :: HVACOutletNodeNum  = 0
-  REAL(r64)                    :: DesignVolFlowRate  = 0.0D0
-  REAL(r64)                    :: MaxMassFlowRate    = 0.0D0
-  REAL(r64)                    :: MassFlowRate       = 0.0D0  !DSU
-  REAL(r64)                    :: AreaCol            = 0.0D0
-  LOGICAL                      :: BypassDamperOff    = .TRUE.
-  LOGICAL                      :: CoolingUseful      = .FALSE.
-  LOGICAL                      :: HeatingUseful      = .FALSE.
-  TYPE(PVTReportStruct)        :: Report
-END TYPE PVTCollectorStruct
+  INTEGER, PARAMETER , PUBLIC :: CalledFromPlantLoopEquipMgr  = 101
+  INTEGER, PARAMETER , PUBLIC :: CalledFromOutsideAirSystem = 102
 
-          ! MODULE VARIABLE DECLARATIONS:
-TYPE (PVTCollectorStruct), ALLOCATABLE, DIMENSION(:) :: PVT
-LOGICAL, ALLOCATABLE, DIMENSION(:) :: CheckEquipName
-INTEGER  :: NumPVT =0              ! count of all types of PVT in input file
-INTEGER  :: NumSimplePVTPerform=0    ! count of simple PVT performance objects in input file
-
-          ! SUBROUTINE SPECIFICATIONS FOR MODULE:
-     ! Driver/Manager Routines
-PUBLIC  SimPVTcollectors       !main entry point, called from non-zone equipment manager
-PRIVATE GetPVTcollectorsInput  !
-PRIVATE InitPVTcollectors
-PRIVATE SizePVT
-PRIVATE ControlPVTcollector
-PRIVATE CalcPVTcollectors
-PRIVATE UpdatePVTcollectors
+  REAL(r64), PARAMETER :: SimplePVTWaterSizeFactor = 1.905E-5  ! [ m3/s/m2 ] average of collectors in SolarCollectors.idf
 
 
-     ! Utility routines for module
-! these would be public such as:
-PUBLIC  GetPVTThermalPowerProduction
-!PUBLIC  GetPVTIncidentSolarForInternalPVLayer
-!PUBLIC  GetPVTCellTemp
+  ! DERIVED TYPE DEFINITIONS:
+
+  TYPE SimplePVTModelStruct
+    CHARACTER(len=MaxNameLength) :: Name               = '' !
+    REAL(r64)                    :: ThermalActiveFract = 0.0D0 ! fraction of surface area with active thermal collection
+    INTEGER                      :: ThermEfficMode     = 0  ! setting for how therm effic is determined
+    REAL(r64)                    :: ThermEffic         = 0.0D0 ! fixed or current Therm efficiency
+    INTEGER                      :: ThermEffSchedNum   = 0 ! pointer to schedule for therm effic (if any)
+    REAL(r64)                    :: SurfEmissivity     = 0.0D0  ! surface emittance in long wave IR
+    REAL(r64)                    :: LastCollectorTemp  = 0.0D0  ! store previous temperature
+    REAL(r64)                    :: CollectorTemp      = 0.0D0  ! average solar collector temp.
+  END TYPE SimplePVTModelStruct
+
+  TYPE PVTReportStruct
+
+    REAL(r64) :: ThermEfficiency       = 0.0D0 ! Thermal efficiency of solar energy conversion
+    REAL(r64) :: ThermPower            = 0.0D0 ! Heat gain or loss to collector fluid (W)
+    REAL(r64) :: ThermHeatGain         = 0.0D0 ! Heat gain to collector fluid (W)
+    REAL(r64) :: ThermHeatLoss         = 0.0D0 ! Heat loss from collector fluid (W)
+    REAL(r64) :: ThermEnergy           = 0.0D0 ! Energy gained (or lost) to collector fluid (J)
+    REAL(r64) :: MdotWorkFluid         = 0.0D0 ! working fluid mass flow rate (kg/s)
+    REAL(r64) :: TinletWorkFluid       = 0.0D0 ! working fluid inlet temp (C)
+    REAL(r64) :: ToutletWorkFluid      = 0.0D0 ! working fluid outlet temp (C)
+    REAL(r64) :: BypassStatus          = 0.0D0  ! 0 = no bypass, 1=full bypass
+  END TYPE PVTReportStruct
+
+  TYPE PVTCollectorStruct
+    ! input
+    CHARACTER(len=MaxNameLength) :: Name               = '' ! Name of PVT collector
+    INTEGER                      :: TypeNum                  ! Plant Side Connection: 'TypeOf_Num' assigned in DataPlant  !DSU
+    INTEGER                      :: WLoopNum     = 0         ! Water plant loop index number                      !DSU
+    INTEGER                      :: WLoopSideNum = 0         ! Water plant loop side index                        !DSU
+    INTEGER                      :: WLoopBranchNum   = 0     ! Water plant loop branch index                      !DSU
+    INTEGER                      :: WLoopCompNum     = 0     ! Water plant loop component index                   !DSU
+    LOGICAL                      :: EnvrnInit          = .TRUE. ! manage begin environmen inits
+    LOGICAL                      :: SizingInit         = .TRUE. ! manage when sizing is complete
+    CHARACTER(len=MaxNameLength) :: PVTModelName       = '' ! Name of PVT performance object
+    INTEGER                      :: PVTModelType       = 0  ! model type indicator, only simple avail now
+    INTEGER                      :: SurfNum            = 0  ! surface index
+    CHARACTER(len=MaxNameLength) :: PVname             = '' ! named Generator:Photovoltaic object
+    INTEGER                      :: PVNum              = 0  ! PV index
+    LOGICAL                      :: PVfound            = .FALSE. ! init, need to delay get input until PV gotten
+    ! INTEGER                      :: PlantLoopNum       = 0  ! needed for sizing and control
+    ! INTEGER                      :: PlantLoopSide      = 0  ! needed for sizing, demand vs. supply sided
+    Type(SimplePVTModelStruct)   :: Simple                  ! performance data structure.
+
+    INTEGER                      :: WorkingFluidType   = 0  !
+    INTEGER                      :: PlantInletNodeNum  = 0  !
+    INTEGER                      :: PlantOutletNodeNum = 0
+    INTEGER                      :: HVACInletNodeNum   = 0
+    INTEGER                      :: HVACOutletNodeNum  = 0
+    REAL(r64)                    :: DesignVolFlowRate  = 0.0D0
+    REAL(r64)                    :: MaxMassFlowRate    = 0.0D0
+    REAL(r64)                    :: MassFlowRate       = 0.0D0  !DSU
+    REAL(r64)                    :: AreaCol            = 0.0D0
+    LOGICAL                      :: BypassDamperOff    = .TRUE.
+    LOGICAL                      :: CoolingUseful      = .FALSE.
+    LOGICAL                      :: HeatingUseful      = .FALSE.
+    TYPE(PVTReportStruct)        :: Report
+  END TYPE PVTCollectorStruct
+
+  ! MODULE VARIABLE DECLARATIONS:
+  TYPE (PVTCollectorStruct), ALLOCATABLE, DIMENSION(:) :: PVT
+  LOGICAL, ALLOCATABLE, DIMENSION(:) :: CheckEquipName
+  INTEGER  :: NumPVT =0              ! count of all types of PVT in input file
+  INTEGER  :: NumSimplePVTPerform=0    ! count of simple PVT performance objects in input file
+
+  ! SUBROUTINE SPECIFICATIONS FOR MODULE:
+  ! Driver/Manager Routines
+  PUBLIC  SimPVTcollectors       !main entry point, called from non-zone equipment manager
+  PRIVATE GetPVTcollectorsInput  !
+  PRIVATE InitPVTcollectors
+  PRIVATE SizePVT
+  PRIVATE ControlPVTcollector
+  PRIVATE CalcPVTcollectors
+  PRIVATE UpdatePVTcollectors
+
+
+  ! Utility routines for module
+  ! these would be public such as:
+  PUBLIC  GetPVTThermalPowerProduction
+  !PUBLIC  GetPVTIncidentSolarForInternalPVLayer
+  !PUBLIC  GetPVTCellTemp
 
 
 CONTAINS
 
-SUBROUTINE SimPVTcollectors(PVTNum, FirstHVACIteration, CalledFrom, PVTName, InitLoopEquip )
+  SUBROUTINE SimPVTcollectors(PVTNum, FirstHVACIteration, CalledFrom, PVTName, InitLoopEquip )
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         <author>
-          !       DATE WRITTEN   <date_written>
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+    ! SUBROUTINE INFORMATION:
+    !       AUTHOR         <author>
+    !       DATE WRITTEN   <date_written>
+    !       MODIFIED       na
+    !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! <description>
+    ! PURPOSE OF THIS SUBROUTINE:
+    ! <description>
 
-          ! METHODOLOGY EMPLOYED:
-          ! <description>
+    ! METHODOLOGY EMPLOYED:
+    ! <description>
 
-          ! REFERENCES:
-          ! na
+    ! REFERENCES:
+    ! na
 
-          ! USE STATEMENTS:
-  USE InputProcessor, ONLY:FindItemInList
-  USE General,        ONLY: TrimSigDigits
+    ! USE STATEMENTS:
+    USE InputProcessor, ONLY:FindItemInList
+    USE General,        ONLY: TrimSigDigits
 
-  IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
+    IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+    ! SUBROUTINE ARGUMENT DEFINITIONS:
 
-  INTEGER, INTENT(INOUT) :: PVTnum  ! index to PVT array.
-  LOGICAL, INTENT(IN) :: FirstHVACIteration
-  INTEGER, INTENT(IN) :: CalledFrom
-  CHARACTER(len=*), OPTIONAL, INTENT (IN)   :: PVTName
-  LOGICAL, OPTIONAL, INTENT(IN) :: InitLoopEquip
+    INTEGER, INTENT(INOUT) :: PVTnum  ! index to PVT array.
+    LOGICAL, INTENT(IN) :: FirstHVACIteration
+    INTEGER, INTENT(IN) :: CalledFrom
+    CHARACTER(len=*), OPTIONAL, INTENT (IN)   :: PVTName
+    LOGICAL, OPTIONAL, INTENT(IN) :: InitLoopEquip
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+    ! SUBROUTINE PARAMETER DEFINITIONS:
+    ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+    ! INTERFACE BLOCK SPECIFICATIONS:
+    ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+    ! DERIVED TYPE DEFINITIONS:
+    ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-  LOGICAL,SAVE      :: GetInputFlag = .true.  ! First time, input is "gotten"
+    ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+    LOGICAL,SAVE      :: GetInputFlag = .true.  ! First time, input is "gotten"
 
-  IF (GetInputFlag) THEN
-    CALL GetPVTcollectorsInput
-    GetInputFlag=.false.
-  ENDIF
+    IF (GetInputFlag) THEN
+      CALL GetPVTcollectorsInput
+      GetInputFlag=.false.
+    ENDIF
 
-  IF (PRESENT(PVTName)) THEN
-    IF ( PVTNum == 0) THEN
-      PVTnum =  FindItemInList(PVTName,PVT%Name,NumPVT)
-      IF (PVTnum == 0) THEN
-        CALL ShowFatalError('SimPVTcollectors: Unit not found='//TRIM(PVTName))
+    IF (PRESENT(PVTName)) THEN
+      IF ( PVTNum == 0) THEN
+        PVTnum =  FindItemInList(PVTName,PVT%Name,NumPVT)
+        IF (PVTnum == 0) THEN
+          CALL ShowFatalError('SimPVTcollectors: Unit not found='//TRIM(PVTName))
+        ENDIF
+      ELSE
+        IF (PVTnum > NumPVT .OR. PVTnum < 1 ) THEN
+          CALL ShowFatalError('SimPVTcollectors: Invalid PVT index passed = '// &
+          TRIM(TrimSigDigits(PVTnum))// &
+          ', Number of PVT units='//TRIM(TrimSigDigits(NumPVT))//  &
+          ', Entered Unit name='//TRIM(PVTName))
+        ENDIF
+        IF (CheckEquipName(PVTnum)) THEN
+          IF (PVTName /= PVT(PVTnum)%Name) THEN
+            CALL ShowFatalError('SimPVTcollectors: Invalid PVT index passed = '// &
+            TRIM(TrimSigDigits(PVTnum))// &
+            ', Unit name='//TRIM(PVTName)//  &
+            ', stored name for that index='//TRIM(PVT(PVTnum)%Name))
+          ENDIF
+          CheckEquipName(PVTnum)=.false.
+        ENDIF
       ENDIF
     ELSE
       IF (PVTnum > NumPVT .OR. PVTnum < 1 ) THEN
         CALL ShowFatalError('SimPVTcollectors: Invalid PVT index passed = '// &
-                              TRIM(TrimSigDigits(PVTnum))// &
-                              ', Number of PVT units='//TRIM(TrimSigDigits(NumPVT))//  &
-                              ', Entered Unit name='//TRIM(PVTName))
+        TRIM(TrimSigDigits(PVTnum))// &
+        ', Number of PVT units='//TRIM(TrimSigDigits(NumPVT))//  &
+        ', Entered Unit name='//TRIM(PVTName))
       ENDIF
-      IF (CheckEquipName(PVTnum)) THEN
-        IF (PVTName /= PVT(PVTnum)%Name) THEN
-          CALL ShowFatalError('SimPVTcollectors: Invalid PVT index passed = '// &
-                                TRIM(TrimSigDigits(PVTnum))// &
-                                ', Unit name='//TRIM(PVTName)//  &
-                                ', stored name for that index='//TRIM(PVT(PVTnum)%Name))
+    ENDIF ! compName present
+
+    IF (PRESENT(InitLoopEquip)) THEN
+      IF (InitLoopEquip) THEN
+        CALL InitPVTcollectors( PVTnum, FirstHVACIteration )
+        RETURN
+      ENDIF
+    ENDIF
+
+    !check where called from and what type of collector this is, return if not right for calling order for speed
+    IF ((PVT(PVTnum)%WorkingFluidType == AirWorkingFluid) .AND. (CalledFrom == CalledFromPlantLoopEquipMgr) ) RETURN
+    IF ((PVT(PVTnum)%WorkingFluidType == LiquidWorkingFluid) .AND. (CalledFrom == CalledFromOutsideAirSystem) ) RETURN
+
+    CALL InitPVTcollectors( PVTnum, FirstHVACIteration )
+
+    CALL ControlPVTcollector( PVTnum )
+
+    CALL CalcPVTcollectors( PVTnum )
+
+    CALL UpdatePVTcollectors( PVTnum )
+
+
+
+    RETURN
+
+  END SUBROUTINE SimPVTcollectors
+
+  SUBROUTINE GetPVTcollectorsInput
+
+    ! SUBROUTINE INFORMATION:
+    !       AUTHOR         B. Griffith
+    !       DATE WRITTEN   June 2008
+    !       MODIFIED       na
+    !       RE-ENGINEERED  na
+
+    ! PURPOSE OF THIS SUBROUTINE:
+    ! Get input for PVT objects
+
+    ! METHODOLOGY EMPLOYED:
+    ! usual E+ methods
+
+    ! REFERENCES:
+    ! na
+
+    ! USE STATEMENTS:
+    USE InputProcessor, ONLY: GetNumObjectsFound, GetObjectItem , FindItemInList, SameString, &
+    VerifyName
+    USE DataIPShortCuts
+    USE DataHeatBalance
+    USE DataLoopNode
+    USE DataEnvironment, ONLY: StdRhoAir
+    USE NodeInputManager, ONLY: GetOnlySingleNode
+    USE BranchNodeConnections, ONLY: TestCompSet
+    USE ScheduleManager, ONLY: GetScheduleIndex
+    USE DataInterfaces, ONLY: SetupOutputVariable
+    USE DataSizing ,    ONLY: Autosize
+    USE General,        ONLY: RoundSigDigits
+    USE PlantUtilities, ONLY: RegisterPlantCompDesignFlow
+    USE ReportSizingManager, ONLY: ReportSizingOutput
+    USE DataPlant      !DSU
+
+    IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
+
+    ! SUBROUTINE ARGUMENT DEFINITIONS:
+    ! na
+
+    ! SUBROUTINE PARAMETER DEFINITIONS:
+    CHARACTER(len=*), PARAMETER :: Blank = ' '
+
+    ! INTERFACE BLOCK SPECIFICATIONS:
+    ! na
+
+    ! DERIVED TYPE DEFINITIONS:
+    ! na
+
+    ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+    INTEGER                        :: Item    ! Item to be "gotten"
+    INTEGER                        :: NumAlphas  ! Number of Alphas for each GetObjectItem call
+    INTEGER                        :: NumNumbers ! Number of Numbers for each GetObjectItem call
+    INTEGER                        :: IOStatus   ! Used in GetObjectItem
+    LOGICAL                        :: ErrorsFound=.false.  ! Set to true if errors in input, fatal at end of routine
+    INTEGER    :: SurfNum ! local use only
+    TYPE (SimplePVTModelStruct), ALLOCATABLE, DIMENSION(:) :: tmpSimplePVTperf
+    INTEGER                        :: ThisParamObj !
+    LOGICAL :: IsNotOK               ! Flag to verify name
+    LOGICAL :: IsBlank               ! Flag for blank name
+
+
+    ! first load the performance object info into temporary structure
+    cCurrentModuleObject = 'SolarCollectorPerformance:PhotovoltaicThermal:Simple'
+    NumSimplePVTPerform = GetNumObjectsFound( TRIM(cCurrentModuleObject) )
+    IF (NumSimplePVTPerform > 0) Then
+      Allocate(tmpSimplePVTperf(NumSimplePVTPerform))
+      DO Item=1, NumSimplePVTPerform
+        CALL GetObjectItem(TRIM(cCurrentModuleObject),Item,cAlphaArgs,NumAlphas, &
+        rNumericArgs,NumNumbers,IOStatus, AlphaBlank=lAlphaFieldBlanks, &
+        AlphaFieldnames=cAlphaFieldNames,NumericFieldNames=cNumericFieldNames)
+        IsNotOK=.false.
+        IsBlank=.false.
+        CALL VerifyName(cAlphaArgs(1),tmpSimplePVTperf%Name,Item-1,IsNotOK,IsBlank,TRIM(cCurrentModuleObject)//' Names')
+        IF (IsNotOK) THEN
+          ErrorsFound=.true.
+          IF (IsBlank) THEN
+            CALL ShowSevereError('Invalid '//TRIM(cCurrentModuleObject)//', Name cannot be blank')
+          ENDIF
+          CYCLE
         ENDIF
-        CheckEquipName(PVTnum)=.false.
-      ENDIF
-    ENDIF
-  ELSE
-    IF (PVTnum > NumPVT .OR. PVTnum < 1 ) THEN
-      CALL ShowFatalError('SimPVTcollectors: Invalid PVT index passed = '// &
-                            TRIM(TrimSigDigits(PVTnum))// &
-                            ', Number of PVT units='//TRIM(TrimSigDigits(NumPVT))//  &
-                            ', Entered Unit name='//TRIM(PVTName))
-    ENDIF
-  ENDIF ! compName present
-
-  IF (PRESENT(InitLoopEquip)) THEN
-    IF (InitLoopEquip) THEN
-      CALL InitPVTcollectors( PVTnum, FirstHVACIteration )
-      RETURN
-    ENDIF
-  ENDIF
-
-  !check where called from and what type of collector this is, return if not right for calling order for speed
-  IF ((PVT(PVTnum)%WorkingFluidType == AirWorkingFluid) .AND. (CalledFrom == CalledFromPlantLoopEquipMgr) ) RETURN
-  IF ((PVT(PVTnum)%WorkingFluidType == LiquidWorkingFluid) .AND. (CalledFrom == CalledFromOutsideAirSystem) ) RETURN
-
-  CALL InitPVTcollectors( PVTnum, FirstHVACIteration )
-
-  CALL ControlPVTcollector( PVTnum )
-
-  CALL CalcPVTcollectors( PVTnum )
-
-  CALL UpdatePVTcollectors( PVTnum )
-
-
-
-  RETURN
-
-END SUBROUTINE SimPVTcollectors
-
-SUBROUTINE GetPVTcollectorsInput
-
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         B. Griffith
-          !       DATE WRITTEN   June 2008
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
-
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Get input for PVT objects
-
-          ! METHODOLOGY EMPLOYED:
-          ! usual E+ methods
-
-          ! REFERENCES:
-          ! na
-
-          ! USE STATEMENTS:
-  USE InputProcessor, ONLY: GetNumObjectsFound, GetObjectItem , FindItemInList, SameString, &
-                            VerifyName
-  USE DataIPShortCuts
-  USE DataHeatBalance
-  USE DataLoopNode
-  USE DataEnvironment, ONLY: StdRhoAir
-  USE NodeInputManager, ONLY: GetOnlySingleNode
-  USE BranchNodeConnections, ONLY: TestCompSet
-  USE ScheduleManager, ONLY: GetScheduleIndex
-  USE DataInterfaces, ONLY: SetupOutputVariable
-  USE DataSizing ,    ONLY: Autosize
-  USE General,        ONLY: RoundSigDigits
-  USE PlantUtilities, ONLY: RegisterPlantCompDesignFlow
-  USE ReportSizingManager, ONLY: ReportSizingOutput
-  USE DataPlant      !DSU
-
-  IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
-
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-          ! na
-
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-  CHARACTER(len=*), PARAMETER :: Blank = ' '
-
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
-
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
-
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-  INTEGER                        :: Item    ! Item to be "gotten"
-  INTEGER                        :: NumAlphas  ! Number of Alphas for each GetObjectItem call
-  INTEGER                        :: NumNumbers ! Number of Numbers for each GetObjectItem call
-  INTEGER                        :: IOStatus   ! Used in GetObjectItem
-  LOGICAL                        :: ErrorsFound=.false.  ! Set to true if errors in input, fatal at end of routine
-  INTEGER    :: SurfNum ! local use only
-  TYPE (SimplePVTModelStruct), ALLOCATABLE, DIMENSION(:) :: tmpSimplePVTperf
-  INTEGER                        :: ThisParamObj !
-  LOGICAL :: IsNotOK               ! Flag to verify name
-  LOGICAL :: IsBlank               ! Flag for blank name
-
-
-  ! first load the performance object info into temporary structure
-  cCurrentModuleObject = 'SolarCollectorPerformance:PhotovoltaicThermal:Simple'
-  NumSimplePVTPerform = GetNumObjectsFound( TRIM(cCurrentModuleObject) )
-  IF (NumSimplePVTPerform > 0) Then
-    Allocate(tmpSimplePVTperf(NumSimplePVTPerform))
-    DO Item=1, NumSimplePVTPerform
-      CALL GetObjectItem(TRIM(cCurrentModuleObject),Item,cAlphaArgs,NumAlphas, &
-                           rNumericArgs,NumNumbers,IOStatus, AlphaBlank=lAlphaFieldBlanks, &
-                           AlphaFieldnames=cAlphaFieldNames,NumericFieldNames=cNumericFieldNames)
-      IsNotOK=.false.
-      IsBlank=.false.
-      CALL VerifyName(cAlphaArgs(1),tmpSimplePVTperf%Name,Item-1,IsNotOK,IsBlank,TRIM(cCurrentModuleObject)//' Names')
-      IF (IsNotOK) THEN
-        ErrorsFound=.true.
-        IF (IsBlank) THEN
-          CALL ShowSevereError('Invalid '//TRIM(cCurrentModuleObject)//', Name cannot be blank')
+        tmpSimplePVTperf(Item)%Name = TRIM(cAlphaArgs(1))
+        If (SameString(cAlphaArgs(2), 'Fixed')) Then
+          tmpSimplePVTperf(Item)%ThermEfficMode = FixedThermEffic
+        ELSEIF (SameString(cAlphaArgs(2), 'Scheduled')) Then
+          tmpSimplePVTperf(Item)%ThermEfficMode = ScheduledThermEffic
+        ELSE
+          CALL ShowSevereError('Invalid '//TRIM(cAlphaFieldNames(2))//' = '//TRIM(cAlphaArgs(2)) )
+          CALL ShowContinueError('Entered in '//TRIM(cCurrentModuleObject)//' = '//TRIM(cAlphaArgs(1)) )
+          ErrorsFound=.true.
         ENDIF
-        CYCLE
-      ENDIF
-      tmpSimplePVTperf(Item)%Name = TRIM(cAlphaArgs(1))
-      If (SameString(cAlphaArgs(2), 'Fixed')) Then
-        tmpSimplePVTperf(Item)%ThermEfficMode = FixedThermEffic
-      ELSEIF (SameString(cAlphaArgs(2), 'Scheduled')) Then
-        tmpSimplePVTperf(Item)%ThermEfficMode = ScheduledThermEffic
-      ELSE
-        CALL ShowSevereError('Invalid '//TRIM(cAlphaFieldNames(2))//' = '//TRIM(cAlphaArgs(2)) )
-        CALL ShowContinueError('Entered in '//TRIM(cCurrentModuleObject)//' = '//TRIM(cAlphaArgs(1)) )
-        ErrorsFound=.true.
-      ENDIF
-      tmpSimplePVTperf(Item)%ThermalActiveFract = rNumericArgs(1)
-      tmpSimplePVTperf(Item)%ThermEffic         = rNumericArgs(2)
+        tmpSimplePVTperf(Item)%ThermalActiveFract = rNumericArgs(1)
+        tmpSimplePVTperf(Item)%ThermEffic         = rNumericArgs(2)
 
-      tmpSimplePVTperf(Item)%ThermEffSchedNum = GetScheduleIndex(cAlphaArgs(3))
-      IF ( (tmpSimplePVTperf(Item)%ThermEffSchedNum == 0) &
-           .AND. (tmpSimplePVTperf(Item)%ThermEfficMode == ScheduledThermEffic) ) THEN
+        tmpSimplePVTperf(Item)%ThermEffSchedNum = GetScheduleIndex(cAlphaArgs(3))
+        IF ( (tmpSimplePVTperf(Item)%ThermEffSchedNum == 0) &
+        .AND. (tmpSimplePVTperf(Item)%ThermEfficMode == ScheduledThermEffic) ) THEN
         CALL ShowSevereError('Invalid '//TRIM(cAlphaFieldNames(3))//' = '//TRIM(cAlphaArgs(3)) )
         CALL ShowContinueError('Entered in '//TRIM(cCurrentModuleObject)//' = '//TRIM(cAlphaArgs(1)) )
         ErrorsFound=.true.
@@ -360,17 +360,17 @@ SUBROUTINE GetPVTcollectorsInput
 
   DO Item=1, NumPVT
     CALL GetObjectItem(TRIM(cCurrentModuleObject),Item,cAlphaArgs,NumAlphas, &
-                           rNumericArgs,NumNumbers,IOStatus, AlphaBlank=lAlphaFieldBlanks, &
-                           AlphaFieldnames=cAlphaFieldNames,NumericFieldNames=cNumericFieldNames)
+    rNumericArgs,NumNumbers,IOStatus, AlphaBlank=lAlphaFieldBlanks, &
+    AlphaFieldnames=cAlphaFieldNames,NumericFieldNames=cNumericFieldNames)
     !check name
     IsNotOK = .FALSE.
     IsBlank = .FALSE.
     CALL VerifyName(cAlphaArgs(1), PVT%Name, Item -1, IsNotOK, IsBlank, &
-                     TRIM(cCurrentModuleObject) )
+    TRIM(cCurrentModuleObject) )
     If (IsNotOK) Then
       ErrorsFound = .true.
       IF (IsBlank) THEN
-          CALL ShowSevereError('Invalid '//TRIM(cCurrentModuleObject)//', Name cannot be blank')
+        CALL ShowSevereError('Invalid '//TRIM(cCurrentModuleObject)//', Name cannot be blank')
       ENDIF
       CYCLE
     ENDIF
@@ -391,37 +391,37 @@ SUBROUTINE GetPVTcollectorsInput
       ENDIF
       ErrorsFound=.true.
     ELSE
-!     ! Found one -- make sure has right parameters for PVT
+      !     ! Found one -- make sure has right parameters for PVT
       SurfNum = PVT(Item)%SurfNum
 
       IF (.NOT. Surface(PVT(Item)%SurfNum)%ExtSolar) THEN
-         CALL ShowSevereError('Invalid '//TRIM(cAlphaFieldNames(2))//' = '//TRIM(cAlphaArgs(2)) )
-         CALL ShowContinueError('Entered in '//TRIM(cCurrentModuleObject)//' = '//TRIM(cAlphaArgs(1)) )
-         CALL ShowContinueError('Surface must be exposed to solar.' )
-         ErrorsFound=.true.
+        CALL ShowSevereError('Invalid '//TRIM(cAlphaFieldNames(2))//' = '//TRIM(cAlphaArgs(2)) )
+        CALL ShowContinueError('Entered in '//TRIM(cCurrentModuleObject)//' = '//TRIM(cAlphaArgs(1)) )
+        CALL ShowContinueError('Surface must be exposed to solar.' )
+        ErrorsFound=.true.
       END IF
-! check surface orientation, warn if upside down
+      ! check surface orientation, warn if upside down
       IF (( Surface(SurfNum)%Tilt < -95.0D0 ) .OR. (Surface(SurfNum)%Tilt > 95.0D0)) THEN
         CALL ShowWarningError('Suspected input problem with '//TRIM(cAlphaFieldNames(2))//' = '//TRIM(cAlphaArgs(2)) )
         CALL ShowContinueError('Entered in '//TRIM(cCurrentModuleObject)//' = '//TRIM(cAlphaArgs(1)) )
         CALL ShowContinueError( 'Surface used for solar collector faces down')
         CALL ShowContinueError('Surface tilt angle (degrees from ground outward normal) = ' &
-                                   //TRIM(RoundSigDigits(Surface(SurfNum)%Tilt,2) ) )
+        //TRIM(RoundSigDigits(Surface(SurfNum)%Tilt,2) ) )
       ENDIF
 
     ENDIF ! check surface
 
     If (lAlphaFieldBlanks(3)) Then
-        CALL ShowSevereError('Invalid '//TRIM(cAlphaFieldNames(3))//' = '//TRIM(cAlphaArgs(3)) )
-        CALL ShowContinueError('Entered in '//TRIM(cCurrentModuleObject)//' = '//TRIM(cAlphaArgs(1)) )
-        CALL ShowContinueError(TRIM(cAlphaFieldNames(3))//', name cannot be blank.')
-        ErrorsFound=.true.
+      CALL ShowSevereError('Invalid '//TRIM(cAlphaFieldNames(3))//' = '//TRIM(cAlphaArgs(3)) )
+      CALL ShowContinueError('Entered in '//TRIM(cCurrentModuleObject)//' = '//TRIM(cAlphaArgs(1)) )
+      CALL ShowContinueError(TRIM(cAlphaFieldNames(3))//', name cannot be blank.')
+      ErrorsFound=.true.
     ELSE
       PVT(Item)%PVTModelName = cAlphaArgs(3)
       ThisParamObj = FindItemInList( PVT(Item)%PVTModelName, tmpSimplePVTperf%Name, NumSimplePVTPerform)
       IF (ThisParamObj > 0) THEN
         PVT(Item)%Simple = tmpSimplePVTperf(ThisParamObj) ! entire structure assigned
-         ! do one-time setups on input data
+        ! do one-time setups on input data
         PVT(Item)%AreaCol = Surface(PVT(Item)%SurfNum)%Area * PVT(Item)%Simple%ThermalActiveFract
         PVT(Item)%PVTModelType = SimplePVTmodel
       ELSE
@@ -435,7 +435,7 @@ SUBROUTINE GetPVTcollectorsInput
     !
     IF (ALLOCATED(PVarray)) THEN ! then PV input gotten... but don't expect this to be true.
       PVT(Item)%PVnum = FindItemInList( cAlphaArgs(4) ,PVarray%name, NumPVs)
-    ! check PV
+      ! check PV
       IF (PVT(Item)%PVnum == 0) THEN
         CALL ShowSevereError('Invalid '//TRIM(cAlphaFieldNames(4))//' = '//TRIM(cAlphaArgs(4)) )
         CALL ShowContinueError('Entered in '//TRIM(cCurrentModuleObject)//' = '//TRIM(cAlphaArgs(1)) )
@@ -467,11 +467,11 @@ SUBROUTINE GetPVTcollectorsInput
 
     IF (PVT(Item)%WorkingFluidType == LiquidWorkingFluid) THEN
       PVT(Item)%PlantInletNodeNum = &
-               GetOnlySingleNode(cAlphaArgs(6),ErrorsFound,TRIM(cCurrentModuleObject),cAlphaArgs(1), &
-                 NodeType_Water,NodeConnectionType_Inlet,1,ObjectIsNotParent )
+      GetOnlySingleNode(cAlphaArgs(6),ErrorsFound,TRIM(cCurrentModuleObject),cAlphaArgs(1), &
+      NodeType_Water,NodeConnectionType_Inlet,1,ObjectIsNotParent )
       PVT(Item)%PlantOutletNodeNum = &
-               GetOnlySingleNode(cAlphaArgs(7),ErrorsFound,TRIM(cCurrentModuleObject),cAlphaArgs(1), &
-                 NodeType_Water,NodeConnectionType_Outlet,1,ObjectIsNotParent )
+      GetOnlySingleNode(cAlphaArgs(7),ErrorsFound,TRIM(cCurrentModuleObject),cAlphaArgs(1), &
+      NodeType_Water,NodeConnectionType_Outlet,1,ObjectIsNotParent )
 
       CALL TestCompSet(TRIM(cCurrentModuleObject), cAlphaArgs(1), cAlphaArgs(6), cAlphaArgs(7), 'Water Nodes')
 
@@ -481,11 +481,11 @@ SUBROUTINE GetPVTcollectorsInput
 
     IF (PVT(Item)%WorkingFluidType == AirWorkingFluid) THEN
       PVT(Item)%HVACInletNodeNum = &
-          GetOnlySingleNode(cAlphaArgs(8), ErrorsFound, TRIM(cCurrentModuleObject), cAlphaArgs(1), &
-          NodeType_Air,NodeConnectionType_Inlet,1,ObjectIsNotParent)
+      GetOnlySingleNode(cAlphaArgs(8), ErrorsFound, TRIM(cCurrentModuleObject), cAlphaArgs(1), &
+      NodeType_Air,NodeConnectionType_Inlet,1,ObjectIsNotParent)
       PVT(Item)%HVACOutletNodeNum = &
-          GetOnlySingleNode(cAlphaArgs(9), ErrorsFound, TRIM(cCurrentModuleObject), cAlphaArgs(1), &
-          NodeType_Air,NodeConnectionType_Outlet,1,ObjectIsNotParent)
+      GetOnlySingleNode(cAlphaArgs(9), ErrorsFound, TRIM(cCurrentModuleObject), cAlphaArgs(1), &
+      NodeType_Air,NodeConnectionType_Outlet,1,ObjectIsNotParent)
 
       CALL TestCompSet( TRIM(cCurrentModuleObject), cAlphaArgs(1), cAlphaArgs(8), cAlphaArgs(9), 'Air Nodes' )
 
@@ -506,29 +506,29 @@ SUBROUTINE GetPVTcollectorsInput
   ENDDO
 
   DO Item=1, NumPVT
-   ! electrical production reporting under generator:photovoltaic....
-   !    only thermal side reported here,
+    ! electrical production reporting under generator:photovoltaic....
+    !    only thermal side reported here,
 
     CALL SetupOutputVariable('Generator Thermal Power Produced [W]', &
-         PVT(Item)%Report%ThermPower, 'System', 'Average', PVT(Item)%name )
+    PVT(Item)%Report%ThermPower, 'System', 'Average', PVT(Item)%name )
     IF (PVT(Item)%WorkingFluidType == LiquidWorkingFluid) THEN
       CALL SetupOutputVariable('Generator Thermal Energy Produced [J]', &
-           PVT(Item)%Report%ThermEnergy, 'System', 'Sum', PVT(Item)%name , &
-           ResourceTypeKey='SolarWater', EndUseKey='HeatProduced', GroupKey='Plant')
+      PVT(Item)%Report%ThermEnergy, 'System', 'Sum', PVT(Item)%name , &
+      ResourceTypeKey='SolarWater', EndUseKey='HeatProduced', GroupKey='Plant')
     ELSEIF (PVT(Item)%WorkingFluidType == AirWorkingFluid) THEN
       CALL SetupOutputVariable('Generator Thermal Energy Produced [J]', &
-           PVT(Item)%Report%ThermEnergy, 'System', 'Sum', PVT(Item)%name , &
-           ResourceTypeKey='SolarAir', EndUseKey='HeatProduced', GroupKey='System')
+      PVT(Item)%Report%ThermEnergy, 'System', 'Sum', PVT(Item)%name , &
+      ResourceTypeKey='SolarAir', EndUseKey='HeatProduced', GroupKey='System')
       CALL SetupOutputVariable('PVT Bypass Status []', &
-           PVT(Item)%Report%BypassStatus, 'System', 'Average', PVT(Item)%name )
+      PVT(Item)%Report%BypassStatus, 'System', 'Average', PVT(Item)%name )
     ENDIF
 
     CALL SetupOutputVariable('PVT Working Fluid Inlet Temperature [C]', &
-           PVT(Item)%Report%TinletWorkFluid, 'System', 'Average', PVT(Item)%name )
+    PVT(Item)%Report%TinletWorkFluid, 'System', 'Average', PVT(Item)%name )
     CALL SetupOutputVariable('PVT Working Fluid Outlet Temperature [C]', &
-           PVT(Item)%Report%ToutletWorkFluid, 'System', 'Average', PVT(Item)%name )
+    PVT(Item)%Report%ToutletWorkFluid, 'System', 'Average', PVT(Item)%name )
     CALL SetupOutputVariable('PVT Working Fluid Mass Flow Rate [kg/s]', &
-           PVT(Item)%Report%MdotWorkFluid, 'System', 'Average', PVT(Item)%name )
+    PVT(Item)%Report%MdotWorkFluid, 'System', 'Average', PVT(Item)%name )
   ENDDO
 
   IF (ErrorsFound) THEN
@@ -543,22 +543,22 @@ END SUBROUTINE GetPVTcollectorsInput
 
 SUBROUTINE InitPVTcollectors(PVTnum, FirstHVACIteration)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         B. Griffith
-          !       DATE WRITTEN   June 2008
-          !       MODIFIED       B. Griffith, May 2009, EMS setpoint check
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         B. Griffith
+  !       DATE WRITTEN   June 2008
+  !       MODIFIED       B. Griffith, May 2009, EMS setpoint check
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! init for PVT
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! init for PVT
 
-          ! METHODOLOGY EMPLOYED:
-          ! <description>
+  ! METHODOLOGY EMPLOYED:
+  ! <description>
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataGlobals_HPSimIntegrated,     ONLY: SysSizingCalc, InitConvTemp, AnyEnergyManagementSystemInModel
   USE PlantUtilities,  ONLY: RegisterPlantCompDesignFlow
   USE DataLoopNode,    ONLY: Node, SensedNodeFlagValue
@@ -573,20 +573,20 @@ SUBROUTINE InitPVTcollectors(PVTnum, FirstHVACIteration)
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   INTEGER, INTENT(IN) :: PVTnum
   LOGICAL, INTENT(IN) :: FirstHVACIteration
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER :: InletNode
   INTEGER :: OutletNode
   INTEGER :: PVTindex
@@ -597,7 +597,7 @@ SUBROUTINE InitPVTcollectors(PVTnum, FirstHVACIteration)
   LOGICAL, ALLOCATABLE, SAVE, DIMENSION(:) :: SetLoopIndexFlag       ! get loop number flag
   LOGICAL :: errFlag
   REAL(r64) :: rho ! local fluid density kg/s
-          ! FLOW:
+  ! FLOW:
 
   ! Do the one time initializations
   IF (MyOneTimeFlag) THEN
@@ -610,12 +610,12 @@ SUBROUTINE InitPVTcollectors(PVTnum, FirstHVACIteration)
     IF(ALLOCATED(PlantLoop) .AND. (PVT(PVTnum)%PlantInletNodeNum >0 ) )THEN
       errFlag=.false.
       CALL ScanPlantLoopsForObject(PVT(PVTnum)%Name, &
-                                   PVT(PVTnum)%TypeNum, &
-                                   PVT(PVTnum)%WLoopNum, &
-                                   PVT(PVTnum)%WLoopSideNum, &
-                                   PVT(PVTnum)%WLoopBranchNum, &
-                                   PVT(PVTnum)%WLoopCompNum,   &
-                                   errFlag=errFlag)
+      PVT(PVTnum)%TypeNum, &
+      PVT(PVTnum)%WLoopNum, &
+      PVT(PVTnum)%WLoopSideNum, &
+      PVT(PVTnum)%WLoopBranchNum, &
+      PVT(PVTnum)%WLoopCompNum,   &
+      errFlag=errFlag)
       IF (errFlag) THEN
         CALL ShowFatalError('InitPVTcollectors: Program terminated for previous conditions.')
       ENDIF
@@ -651,15 +651,15 @@ SUBROUTINE InitPVTcollectors(PVTnum, FirstHVACIteration)
           IF (.NOT. AnyEnergyManagementSystemInModel) THEN
             CALL ShowSevereError( 'Missing temperature setpoint for PVT outlet node  ')
             CALL ShowContinueError('Add a setpoint manager to outlet node of PVT named ' &
-                                    //Trim(PVT(PVTindex)%Name) )
+            //Trim(PVT(PVTindex)%Name) )
             SetPointErrorFlag = .TRUE.
           ELSE
-           ! need call to EMS to check node
+            ! need call to EMS to check node
             CALL CheckIfNodeSetpointManagedByEMS(PVT(PVTindex)%HVACOutletNodeNum,iTemperatureSetpoint, SetPointErrorFlag)
             IF (SetPointErrorFlag) THEN
               CALL ShowSevereError( 'Missing temperature setpoint for PVT outlet node  ')
               CALL ShowContinueError('Add a setpoint manager to outlet node of PVT named ' &
-                                    //Trim(PVT(PVTindex)%Name) )
+              //Trim(PVT(PVTindex)%Name) )
               CALL ShowContinueError('  or use an EMS actuator to establish a setpoint at the outlet node of PVT')
             ENDIF
           ENDIF
@@ -690,18 +690,18 @@ SUBROUTINE InitPVTcollectors(PVTnum, FirstHVACIteration)
     CASE (LiquidWorkingFluid)
 
       rho = GetDensityGlycol(PlantLoop(PVT(PVTnum)%WLoopNum)%FluidName, &
-                               60.d0, &
-                               PlantLoop(PVT(PVTnum)%WLoopNum)%FluidIndex, &
-                               'InitPVTcollectors')
+      60.d0, &
+      PlantLoop(PVT(PVTnum)%WLoopNum)%FluidIndex, &
+      'InitPVTcollectors')
 
       PVT(PVTnum)%MaxMassFlowRate = PVT(PVTnum)%DesignVolFlowRate * rho
 
       CALL InitComponentNodes(0.d0, PVT(PVTnum)%MaxMassFlowRate, &
-                                   InletNode, OutletNode,        &
-                                   PVT(PVTnum)%WLoopNum,         &
-                                   PVT(PVTnum)%WLoopSideNum,     &
-                                   PVT(PVTnum)%WLoopBranchNum,   &
-                                   PVT(PVTnum)%WLoopCompNum )
+      InletNode, OutletNode,        &
+      PVT(PVTnum)%WLoopNum,         &
+      PVT(PVTnum)%WLoopSideNum,     &
+      PVT(PVTnum)%WLoopBranchNum,   &
+      PVT(PVTnum)%WLoopCompNum )
 
       PVT(PVTnum)%Simple%LastCollectorTemp  = 23.0D0
 
@@ -730,8 +730,8 @@ SUBROUTINE InitPVTcollectors(PVTnum, FirstHVACIteration)
     ENDIF
     ! Should we declare a mass flow rate variable in the data structure instead of using node(outlet)%massflowrate ?  DSU
     CALL SetComponentFlowRate( PVT(PVTnum)%MassFlowRate,InletNode,OutletNode, &     !DSU
-                               PVT(PVTnum)%WLoopNum,PVT(PVTnum)%WLoopSideNum , &
-                               PVT(PVTnum)%WLoopBranchNum , PVT(PVTnum)%WLoopCompNum)      !DSU
+    PVT(PVTnum)%WLoopNum,PVT(PVTnum)%WLoopSideNum , &
+    PVT(PVTnum)%WLoopBranchNum , PVT(PVTnum)%WLoopCompNum)      !DSU
   CASE (AirWorkingFluid)
     ! nothing to be done
 
@@ -743,26 +743,26 @@ END SUBROUTINE InitPVTcollectors
 
 SUBROUTINE SizePVT(PVTnum)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Brent Griffith
-          !       DATE WRITTEN   August 2008
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Brent Griffith
+  !       DATE WRITTEN   August 2008
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine is for sizing PVT flow rates that
-          ! have not been specified in the input.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine is for sizing PVT flow rates that
+  ! have not been specified in the input.
 
-          ! METHODOLOGY EMPLOYED:
-          ! Obtains hot water flow rate from the plant sizing array.
+  ! METHODOLOGY EMPLOYED:
+  ! Obtains hot water flow rate from the plant sizing array.
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataSizing
   USE DataPlant,        ONLY: PlantLoop, SupplySide, DemandSide
-!  USE DataGlobals_HPSimIntegrated,      ONLY: ShowFatalError, ShowSevereError, ShowContinueError
+  !  USE DataGlobals_HPSimIntegrated,      ONLY: ShowFatalError, ShowSevereError, ShowContinueError
   USE DataInterfaces,   ONLY: SetupOutputVariable
   USE DataHVACGlobals,  ONLY: SmallWaterVolFlow, SmallAirVolFlow, Main, Cooling, Heating, Other
   USE PlantUtilities,   ONLY: RegisterPlantCompDesignFlow
@@ -775,22 +775,22 @@ SUBROUTINE SizePVT(PVTnum)
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   INTEGER, INTENT(IN) :: PVTnum
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER                      :: PltSizNum     ! Plant Sizing index corresponding to CurLoopNum
   LOGICAL                      :: ErrorsFound   ! If errors detected in input
-!unused1208  CHARACTER(len=MaxNameLength) :: equipName     ! Name of boiler object
+  !unused1208  CHARACTER(len=MaxNameLength) :: equipName     ! Name of boiler object
   REAL(r64)                    :: DesVolFlow
   REAL(r64)                    :: DesMassFlow
 
@@ -827,8 +827,8 @@ SUBROUTINE SizePVT(PVTnum)
 
       ENDIF
       CALL ReportSizingOutput('SolarCollector:FlatPlate:PhotovoltaicThermal', PVT(PVTnum)%Name, &
-                              'Design Flow Rate [m3/s]', &
-                              PVT(PVTnum)%DesignVolFlowRate)
+      'Design Flow Rate [m3/s]', &
+      PVT(PVTnum)%DesignVolFlowRate)
       CALL RegisterPlantCompDesignFlow( PVT(PVTnum)%PlantInletNodeNum, PVT(PVTnum)%DesignVolFlowRate )
       PVT(PVTnum)%SizingInit = .FALSE.
     END IF
@@ -863,11 +863,11 @@ SUBROUTINE SizePVT(PVTnum)
         PVT(PVTnum)%MaxMassFlowRate   = DesMassFlow
 
         CALL ReportSizingOutput('SolarCollector:FlatPlate:PhotovoltaicThermal', PVT(PVTnum)%Name, &
-                                'Design Flow Rate [m3/s]', &
-                                PVT(PVTnum)%DesignVolFlowRate)
+        'Design Flow Rate [m3/s]', &
+        PVT(PVTnum)%DesignVolFlowRate)
         PVT(PVTnum)%SizingInit = .FALSE.
       ELSE IF (CurZoneEqNum > 0) THEN
-       ! PVT is not currently for zone equipment, should not come here.
+        ! PVT is not currently for zone equipment, should not come here.
 
       ENDIF
 
@@ -884,43 +884,43 @@ END SUBROUTINE SizePVT
 
 SUBROUTINE ControlPVTcollector(PVTnum)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Brent Griffith
-          !       DATE WRITTEN   August 2008
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Brent Griffith
+  !       DATE WRITTEN   August 2008
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! make control decisions for PVT collector
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! make control decisions for PVT collector
 
-          ! METHODOLOGY EMPLOYED:
-          ! decide if PVT should be in cooling or heat mode and if it should be bypassed or not
+  ! METHODOLOGY EMPLOYED:
+  ! decide if PVT should be in cooling or heat mode and if it should be bypassed or not
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataLoopNode   , ONLY: Node
   USE DataHeatBalance, ONLY: QRadSWOutIncident
   USE DataPlant ,      ONLY: PlantReport
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   INTEGER, INTENT(IN)  :: PVTnum !
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER   :: SurfNum      = 0
-!  INTEGER   :: PlantLoopNum = 0
-!  REAL(r64) :: mdot  = 0.0D0
+  !  INTEGER   :: PlantLoopNum = 0
+  !  REAL(r64) :: mdot  = 0.0D0
 
   SurfNum     = PVT(PVTnum)%SurfNum
 
@@ -928,91 +928,91 @@ SUBROUTINE ControlPVTcollector(PVTnum)
 
     IF (PVT(PVTnum)%PVTModelType ==  SimplePVTmodel) THEN
       IF (QRadSWOutIncident(SurfNum) > MinIrradiance) then
-         ! is heating wanted?
-         !  Outlet node is required to have a setpoint.
-        IF ( Node(PVT(PVTnum)%HVACOutletNodeNum)%TempSetPoint &
-              >  Node(PVT(PVTnum)%HVACInletNodeNum)%Temp )   THEN
-          PVT(PVTnum)%HeatingUseful   = .TRUE.
-          PVT(PVTnum)%CoolingUseful   = .FALSE.
-          PVT(PVTnum)%BypassDamperOff = .TRUE.
-        ELSE
-          PVT(PVTnum)%HeatingUseful   = .FALSE.
-          PVT(PVTnum)%CoolingUseful   = .TRUE.
-          PVT(PVTnum)%BypassDamperOff = .FALSE.
-        ENDIF
-      ELSE
-        ! is cooling wanted?
-        IF (Node(PVT(PVTnum)%HVACOutletNodeNum)%TempSetPoint &
-              < Node(PVT(PVTnum)%HVACInletNodeNum)%Temp ) THEN
-          PVT(PVTnum)%CoolingUseful   = .TRUE.
-          PVT(PVTnum)%HeatingUseful   = .FALSE.
-          PVT(PVTnum)%BypassDamperOff = .TRUE.
-        ELSE
-          PVT(PVTnum)%CoolingUseful   = .FALSE.
-          PVT(PVTnum)%HeatingUseful   = .TRUE.
-          PVT(PVTnum)%BypassDamperOff = .FALSE.
-        ENDIF
-      ENDIF
-    ENDIF
-
-  ELSEIF ( PVT(PVTnum)%WorkingFluidType == LiquidWorkingFluid ) THEN
-    !PlantLoopNum = PVT(PVTNum)%PlantLoopNum
-!    mdot   = Node(PVT(PVTNum)%PlantInletNodeNum)%MassFlowRate
-    !If (.NOT. Allocated(PlantReport)) RETURN ! this can happen early before plant is setup
-    IF (PVT(PVTnum)%PVTModelType ==  SimplePVTmodel) THEN
-      IF (QRadSWOutIncident(SurfNum) > MinIrradiance) THEN
         ! is heating wanted?
+        !  Outlet node is required to have a setpoint.
+        IF ( Node(PVT(PVTnum)%HVACOutletNodeNum)%TempSetPoint &
+        >  Node(PVT(PVTnum)%HVACInletNodeNum)%Temp )   THEN
+        PVT(PVTnum)%HeatingUseful   = .TRUE.
+        PVT(PVTnum)%CoolingUseful   = .FALSE.
+        PVT(PVTnum)%BypassDamperOff = .TRUE.
+      ELSE
+        PVT(PVTnum)%HeatingUseful   = .FALSE.
+        PVT(PVTnum)%CoolingUseful   = .TRUE.
+        PVT(PVTnum)%BypassDamperOff = .FALSE.
+      ENDIF
+    ELSE
+      ! is cooling wanted?
+      IF (Node(PVT(PVTnum)%HVACOutletNodeNum)%TempSetPoint &
+      < Node(PVT(PVTnum)%HVACInletNodeNum)%Temp ) THEN
+      PVT(PVTnum)%CoolingUseful   = .TRUE.
+      PVT(PVTnum)%HeatingUseful   = .FALSE.
+      PVT(PVTnum)%BypassDamperOff = .TRUE.
+    ELSE
+      PVT(PVTnum)%CoolingUseful   = .FALSE.
+      PVT(PVTnum)%HeatingUseful   = .TRUE.
+      PVT(PVTnum)%BypassDamperOff = .FALSE.
+    ENDIF
+  ENDIF
+ENDIF
+
+ELSEIF ( PVT(PVTnum)%WorkingFluidType == LiquidWorkingFluid ) THEN
+  !PlantLoopNum = PVT(PVTNum)%PlantLoopNum
+  !    mdot   = Node(PVT(PVTNum)%PlantInletNodeNum)%MassFlowRate
+  !If (.NOT. Allocated(PlantReport)) RETURN ! this can happen early before plant is setup
+  IF (PVT(PVTnum)%PVTModelType ==  SimplePVTmodel) THEN
+    IF (QRadSWOutIncident(SurfNum) > MinIrradiance) THEN
+      ! is heating wanted?
 
       !  IF (mdot > 0.0D0) THEN
       !  If (PlantReport(PlantLoopNum)%HeatingDemand > 0.0) THEN
-          PVT(PVTnum)%HeatingUseful   = .TRUE.
-!          PVT(PVTnum)%CoolingUseful   = .FALSE.
-          PVT(PVTnum)%BypassDamperOff = .TRUE.
-!        ELSE
-!          PVT(PVTnum)%HeatingUseful   = .FALSE.
-!          PVT(PVTnum)%CoolingUseful   = .TRUE.
-!          PVT(PVTnum)%BypassDamperOff = .FALSE.
-!        ENDIF
+      PVT(PVTnum)%HeatingUseful   = .TRUE.
+      !          PVT(PVTnum)%CoolingUseful   = .FALSE.
+      PVT(PVTnum)%BypassDamperOff = .TRUE.
+      !        ELSE
+      !          PVT(PVTnum)%HeatingUseful   = .FALSE.
+      !          PVT(PVTnum)%CoolingUseful   = .TRUE.
+      !          PVT(PVTnum)%BypassDamperOff = .FALSE.
+      !        ENDIF
 
-      ELSE
-        ! is cooling wanted?
-!        IF (mdot > 0.0D0) THEN
+    ELSE
+      ! is cooling wanted?
+      !        IF (mdot > 0.0D0) THEN
       !  If (PlantReport(PlantLoopNum)%CoolingDemand > 0.0) THEN
-!          PVT(PVTnum)%CoolingUseful   = .TRUE.
-!          PVT(PVTnum)%HeatingUseful   = .FALSE.
-!          PVT(PVTnum)%BypassDamperOff = .TRUE.
-!        ELSE
-          PVT(PVTnum)%CoolingUseful   = .FALSE.
-!          PVT(PVTnum)%HeatingUseful   = .TRUE.
-          PVT(PVTnum)%BypassDamperOff = .FALSE.
-!        ENDIF
+      !          PVT(PVTnum)%CoolingUseful   = .TRUE.
+      !          PVT(PVTnum)%HeatingUseful   = .FALSE.
+      !          PVT(PVTnum)%BypassDamperOff = .TRUE.
+      !        ELSE
+      PVT(PVTnum)%CoolingUseful   = .FALSE.
+      !          PVT(PVTnum)%HeatingUseful   = .TRUE.
+      PVT(PVTnum)%BypassDamperOff = .FALSE.
+      !        ENDIF
 
-      ENDIF
     ENDIF
   ENDIF
+ENDIF
 
-  RETURN
+RETURN
 
 END SUBROUTINE ControlPVTcollector
 
 SUBROUTINE CalcPVTcollectors(PVTnum)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Brent Griffith
-          !       DATE WRITTEN   August 2008
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Brent Griffith
+  !       DATE WRITTEN   August 2008
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Calculate PVT collector thermal
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! Calculate PVT collector thermal
 
-          ! METHODOLOGY EMPLOYED:
-          ! Current model is "simple" fixed efficiency and simple night sky balance for cooling
+  ! METHODOLOGY EMPLOYED:
+  ! Current model is "simple" fixed efficiency and simple night sky balance for cooling
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataHeatBalance, ONLY: VerySmooth, QRadSWOutIncident
   USE Psychrometrics , ONLY: CPHW, PsyCpAirFnWTdb, PsyTwbFnTdbWPb, PsyTdpFnTdbTwbPb
   USE DataGlobals_HPSimIntegrated,     ONLY: SecInHour
@@ -1024,19 +1024,19 @@ SUBROUTINE CalcPVTcollectors(PVTnum)
 
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   INTEGER, INTENT(IN)  :: PVTnum
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
 
   INTEGER   :: InletNode    = 0
   INTEGER   :: OutletNode   = 0
@@ -1102,14 +1102,14 @@ SUBROUTINE CalcPVTcollectors(PVTnum)
         If (PotentialOutletTemp > Node(PVT(PVTnum)%HVACOutletNodeNum)%TempSetPoint) Then ! need to modulate
           If (Tinlet /= PotentialOutletTemp) Then
             BypassFraction = (Node(PVT(PVTnum)%HVACOutletNodeNum)%TempSetPoint - PotentialOutletTemp)  &
-                             /(Tinlet - PotentialOutletTemp)
+            /(Tinlet - PotentialOutletTemp)
           ELSE
             BypassFraction = 0.0D0
           ENDIF
           BypassFraction = MAX(0.0D0, BypassFraction)
           PotentialOutletTemp = Node(PVT(PVTnum)%HVACOutletNodeNum)%TempSetPoint
           PotentialHeatGain  = mdot * PsyCpAirFnWTdb(Winlet,Tinlet, 'CalcPVTcollectors') &
-                              *(PotentialOutletTemp - Tinlet)
+          *(PotentialOutletTemp - Tinlet)
 
         ELSE
           BypassFraction = 0.0D0
@@ -1136,11 +1136,11 @@ SUBROUTINE CalcPVTcollectors(PVTnum)
       PVT(PVTnum)%Report%BypassStatus     = BypassFraction
 
     ELSEIF (PVT(PVTnum)%CoolingUseful .AND. PVT(PVTnum)%BypassDamperOff .AND. (mdot > 0.0D0 ) ) THEN
-         !calculate cooling using energy balance
+      !calculate cooling using energy balance
 
       CALL InitExteriorConvectionCoeff(SurfNum,0.0D0,RoughSurf,PVT(PVTnum)%Simple%SurfEmissivity, &
-            PVT(PVTnum)%Simple%LastCollectorTemp, &
-            HcExt,HrSky,HrGround,HrAir)
+      PVT(PVTnum)%Simple%LastCollectorTemp, &
+      HcExt,HrSky,HrGround,HrAir)
 
       IF ( PVT(PVTnum)%WorkingFluidType == AirWorkingFluid ) THEN
         Winlet = Node(InletNode)%HumRat
@@ -1152,22 +1152,22 @@ SUBROUTINE CalcPVTcollectors(PVTnum)
       ENDIF
 
       Tcollector = ( 2.0D0 * mdot * CpInlet * Tinlet                &
-                 + PVT(PVTnum)%AreaCol *(                           &
-                      HrGround * OutDryBulbTemp                     &
-                      + HrSky * SkyTemp                             &
-                      + HrAir * Surface(SurfNum)%OutDryBulbTemp     &
-                      + HcExt * Surface(SurfNum)%OutDryBulbTemp) )  &
-                 / (2.0D0 * mdot * CpInlet + PVT(PVTnum)%AreaCol *(HrGround + HrSky + HrAir + HcExt) )
+      + PVT(PVTnum)%AreaCol *(                           &
+      HrGround * OutDryBulbTemp                     &
+      + HrSky * SkyTemp                             &
+      + HrAir * Surface(SurfNum)%OutDryBulbTemp     &
+      + HcExt * Surface(SurfNum)%OutDryBulbTemp) )  &
+      / (2.0D0 * mdot * CpInlet + PVT(PVTnum)%AreaCol *(HrGround + HrSky + HrAir + HcExt) )
 
       PotentialOutletTemp = 2.0D0 * Tcollector - Tinlet
       PVT(PVTnum)%Report%ToutletWorkFluid  =PotentialOutletTemp
       ! trap for air not being cooled below its wetbulb.
       IF ( PVT(PVTnum)%WorkingFluidType == AirWorkingFluid ) THEN
         IF (PotentialOutletTemp < DewPointInlet) THEN
-        !  water removal would be needed.. not going to allow that for now.  limit cooling to dew point and model bypass
+          !  water removal would be needed.. not going to allow that for now.  limit cooling to dew point and model bypass
           IF (Tinlet /= PotentialOutletTemp) THEN
             BypassFraction = (DewPointInlet - PotentialOutletTemp)  &
-                             /(Tinlet - PotentialOutletTemp)
+            /(Tinlet - PotentialOutletTemp)
           ELSE
             BypassFraction = 0.0D0
           ENDIF
@@ -1208,40 +1208,40 @@ END SUBROUTINE CalcPVTcollectors
 
 SUBROUTINE UpdatePVTcollectors(PVTnum)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Brent Griffith
-          !       DATE WRITTEN   August 2008
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Brent Griffith
+  !       DATE WRITTEN   August 2008
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! <description>
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! <description>
 
-          ! METHODOLOGY EMPLOYED:
-          ! <description>
+  ! METHODOLOGY EMPLOYED:
+  ! <description>
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataLoopNode, ONLY: Node
   USE Psychrometrics, ONLY: PsyHFnTdbW
 
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   INTEGER, INTENT(IN)  :: PVTNum
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER :: InletNode
   INTEGER :: OutletNode
 
@@ -1253,8 +1253,8 @@ SUBROUTINE UpdatePVTcollectors(PVTnum)
     ! Pass all variables from inlet to outlet node
     !Node(OutletNode) = Node(InletNode) !DSU Don't do this...flow rates have already been updated properly
 
-     ! Set outlet node variables that are possibly changed
-     ! DSU, Shirey, 2/26/2010... shouldn't other outlet node properties be set? (not mass flow stuff, but others?)
+    ! Set outlet node variables that are possibly changed
+    ! DSU, Shirey, 2/26/2010... shouldn't other outlet node properties be set? (not mass flow stuff, but others?)
     Node(OutletNode)%Temp = PVT(PVTnum)%Report%ToutletWorkFluid
 
   CASE (AirWorkingFluid)
@@ -1273,7 +1273,7 @@ SUBROUTINE UpdatePVTcollectors(PVTnum)
     Node(OutletNode)%Temp = PVT(PVTnum)%Report%ToutletWorkFluid
     Node(OutletNode)%HumRat = Node(InletNode)%HumRat ! assumes dewpoint bound on cooling ....
     Node(OutletNode)%Enthalpy = PsyHFnTdbW( PVT(PVTnum)%Report%ToutletWorkFluid  , &
-                                            Node(OutletNode)%HumRat )
+    Node(OutletNode)%HumRat )
   END SELECT
 
   RETURN
@@ -1282,40 +1282,40 @@ END SUBROUTINE UpdatePVTcollectors
 
 SUBROUTINE GetPVTThermalPowerProduction(PVindex, ThermalPower, ThermalEnergy)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         <author>
-          !       DATE WRITTEN   <date_written>
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         <author>
+  !       DATE WRITTEN   <date_written>
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! <description>
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! <description>
 
-          ! METHODOLOGY EMPLOYED:
-          ! <description>
+  ! METHODOLOGY EMPLOYED:
+  ! <description>
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
-          ! na
+  ! USE STATEMENTS:
+  ! na
 
   IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   INTEGER, INTENT(IN)  :: PVindex ! index of PV generator (not PVT collector)
   REAL(r64),  INTENT(OUT) :: ThermalPower
   REAL(r64),  INTENT(OUT) :: ThermalEnergy
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS:
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+  ! DERIVED TYPE DEFINITIONS:
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   INTEGER :: PVTnum = 0
   INTEGER :: Loop = 0
 
@@ -1344,7 +1344,7 @@ END SUBROUTINE GetPVTThermalPowerProduction
 
 !     NOTICE
 !
-!     Copyright © 1996-2012 The Board of Trustees of the University of Illinois
+!     Copyright ï¿½ 1996-2012 The Board of Trustees of the University of Illinois
 !     and The Regents of the University of California through Ernest Orlando Lawrence
 !     Berkeley National Laboratory.  All rights reserved.
 !

@@ -6,39 +6,39 @@
 
 MODULE DataTimings      ! EnergyPlus Data-Only Module
 
-          ! MODULE INFORMATION:
-          !       AUTHOR         Linda K. Lawrie
-          !       DATE WRITTEN   January 2012
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! MODULE INFORMATION:
+  !       AUTHOR         Linda K. Lawrie
+  !       DATE WRITTEN   January 2012
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS MODULE:
-          ! This data-only module is a repository for data and routines for timing within EnergyPlus.
+  ! PURPOSE OF THIS MODULE:
+  ! This data-only module is a repository for data and routines for timing within EnergyPlus.
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+  ! METHODOLOGY EMPLOYED:
+  ! na
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! OTHER NOTES:
-          ! na
+  ! OTHER NOTES:
+  ! na
 
-          ! USE STATEMENTS:
-USE DataPrecisionGlobals
-USE DataSystemVariables, ONLY: tabchar, DeveloperFlag
+  ! USE STATEMENTS:
+  USE DataPrecisionGlobals
+  USE DataSystemVariables, ONLY: tabchar, DeveloperFlag
 
-IMPLICIT NONE   ! Enforce explicit typing of all variables
+  IMPLICIT NONE   ! Enforce explicit typing of all variables
 
-PUBLIC          ! By definition, all variables which are placed in this data
-                ! -only module should be available to other modules and routines.
-                ! Thus, all variables in this module must be PUBLIC.
+  PUBLIC          ! By definition, all variables which are placed in this data
+  ! -only module should be available to other modules and routines.
+  ! Thus, all variables in this module must be PUBLIC.
 
 
-          ! MODULE PARAMETER DEFINITIONS:
+  ! MODULE PARAMETER DEFINITIONS:
   INTEGER, PARAMETER :: MaxTimingStringLength=250 ! string length for timing string array
 
-          ! DERIVED TYPE DEFINITIONS
+  ! DERIVED TYPE DEFINITIONS
   TYPE timings
     CHARACTER(len=MaxTimingStringLength) :: Element=' '
     REAL(r64)                            :: rstartTime=0.0d0
@@ -46,10 +46,10 @@ PUBLIC          ! By definition, all variables which are placed in this data
     INTEGER                              :: calls=0
   END TYPE
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! MODULE VARIABLE DECLARATIONS:
+  ! MODULE VARIABLE DECLARATIONS:
   TYPE(timings), ALLOCATABLE, DIMENSION(:) :: Timing
   INTEGER :: NumTimingElements=0
   INTEGER :: MaxTimingElements=0
@@ -63,151 +63,151 @@ PUBLIC          ! By definition, all variables which are placed in this data
 
 CONTAINS
 
-SUBROUTINE epStartTime(ctimingElementstring)
+  SUBROUTINE epStartTime(ctimingElementstring)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Linda Lawrie
-          !       DATE WRITTEN   January 2012
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+    ! SUBROUTINE INFORMATION:
+    !       AUTHOR         Linda Lawrie
+    !       DATE WRITTEN   January 2012
+    !       MODIFIED       na
+    !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Implement a timing scheme using start-stop (ref: epStopTime) that will help
-          ! developers pinpoint problems.
+    ! PURPOSE OF THIS SUBROUTINE:
+    ! Implement a timing scheme using start-stop (ref: epStopTime) that will help
+    ! developers pinpoint problems.
 
-          ! METHODOLOGY EMPLOYED:
-          ! structure similar to recurring error structure.
+    ! METHODOLOGY EMPLOYED:
+    ! structure similar to recurring error structure.
 
-          ! REFERENCES:
-          ! na
+    ! REFERENCES:
+    ! na
 
-          ! USE STATEMENTS:
-#if defined (_OPENMP) && defined(TIMER_OMP_GET_WTIME)
-  use omp_lib ! only here for OMP timer
-#endif
+    ! USE STATEMENTS:
+    #if defined (_OPENMP) && defined(TIMER_OMP_GET_WTIME)
+    use omp_lib ! only here for OMP timer
+    #endif
 
-  IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
+    IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-  CHARACTER(len=*), INTENT(IN) :: ctimingElementstring
+    ! SUBROUTINE ARGUMENT DEFINITIONS:
+    CHARACTER(len=*), INTENT(IN) :: ctimingElementstring
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+    ! SUBROUTINE PARAMETER DEFINITIONS:
+    ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+    ! INTERFACE BLOCK SPECIFICATIONS:
+    ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+    ! DERIVED TYPE DEFINITIONS:
+    ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-  TYPE(timings), ALLOCATABLE, DIMENSION(:) :: tempTiming  ! used for reallocate.
-  !INTEGER :: loop  ! testing if already in structure   !RS: Debugging: Extraneous
-  !INTEGER :: found ! indicator for element !RS: Debugging: Extraneous
+    ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+    TYPE(timings), ALLOCATABLE, DIMENSION(:) :: tempTiming  ! used for reallocate.
+    !INTEGER :: loop  ! testing if already in structure   !RS: Debugging: Extraneous
+    !INTEGER :: found ! indicator for element !RS: Debugging: Extraneous
 
-#ifdef EP_NO_Timings
-  RETURN
-#endif
-#ifdef EP_Timings
-  IF (NumTimingElements == 0) THEN
-    MaxTimingElements=250
-    ALLOCATE(Timing(MaxTimingElements))
-  ELSEIF (NumTimingElements == MaxTimingElements) THEN
-    ALLOCATE(tempTiming(MaxTimingElements+250))
-    tempTiming(1:MaxTimingElements)=Timing(1:MaxTimingElements)
-    DEALLOCATE(Timing)
-    MaxTimingElements=MaxTimingElements+250
-    ALLOCATE(Timing(MaxTimingElements))
-    Timing(1:MaxTimingElements)=tempTiming(1:MaxTimingElements)
-    DEALLOCATE(tempTiming)
-  ENDIF
+    #ifdef EP_NO_Timings
+    RETURN
+    #endif
+    #ifdef EP_Timings
+    IF (NumTimingElements == 0) THEN
+      MaxTimingElements=250
+      ALLOCATE(Timing(MaxTimingElements))
+    ELSEIF (NumTimingElements == MaxTimingElements) THEN
+      ALLOCATE(tempTiming(MaxTimingElements+250))
+      tempTiming(1:MaxTimingElements)=Timing(1:MaxTimingElements)
+      DEALLOCATE(Timing)
+      MaxTimingElements=MaxTimingElements+250
+      ALLOCATE(Timing(MaxTimingElements))
+      Timing(1:MaxTimingElements)=tempTiming(1:MaxTimingElements)
+      DEALLOCATE(tempTiming)
+    ENDIF
 
-  found=0
-  DO loop=1,NumTimingElements
-    IF (Timing(loop)%Element /= ctimingElementstring) cycle
-    found=loop
-  ENDDO
+    found=0
+    DO loop=1,NumTimingElements
+      IF (Timing(loop)%Element /= ctimingElementstring) cycle
+      found=loop
+    ENDDO
 
-  IF (found == 0) THEN
-    NumTimingElements=NumTimingElements+1
-    Timing(NumTimingElements)%Element = ctimingElementstring
-    found=NumTimingElements
-  ENDIF
+    IF (found == 0) THEN
+      NumTimingElements=NumTimingElements+1
+      Timing(NumTimingElements)%Element = ctimingElementstring
+      found=NumTimingElements
+    ENDIF
 
-  TSTART(Timing(found)%rstartTime)
-  Timing(found)%calls=Timing(found)%calls+1
+    TSTART(Timing(found)%rstartTime)
+    Timing(found)%calls=Timing(found)%calls+1
 
-  RETURN
-#endif
+    RETURN
+    #endif
 
-END SUBROUTINE epStartTime
+  END SUBROUTINE epStartTime
 
-SUBROUTINE epStopTime(ctimingElementstring,printit,wprint)
+  SUBROUTINE epStopTime(ctimingElementstring,printit,wprint)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Linda Lawrie
-          !       DATE WRITTEN   January 2012
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+    ! SUBROUTINE INFORMATION:
+    !       AUTHOR         Linda Lawrie
+    !       DATE WRITTEN   January 2012
+    !       MODIFIED       na
+    !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Implement a timing scheme using start-stop (ref: epStartTime) that will help
-          ! developers pinpoint problems.
+    ! PURPOSE OF THIS SUBROUTINE:
+    ! Implement a timing scheme using start-stop (ref: epStartTime) that will help
+    ! developers pinpoint problems.
 
-          ! METHODOLOGY EMPLOYED:
-          ! structure similar to recurring error structure.
+    ! METHODOLOGY EMPLOYED:
+    ! structure similar to recurring error structure.
 
-          ! REFERENCES:
-          ! na
+    ! REFERENCES:
+    ! na
 
-          ! USE STATEMENTS:
+    ! USE STATEMENTS:
 
-#if defined (_OPENMP) && defined(TIMER_OMP_GET_WTIME)
-  use omp_lib ! only here for OMP timer
-#endif
-  !USE UtilityRoutines, ONLY: ShowFatalError !RS Comment: DataInterfaces was originally used, but ShowFatalError had been removed from it in this version. (7/23/12)
+    #if defined (_OPENMP) && defined(TIMER_OMP_GET_WTIME)
+    use omp_lib ! only here for OMP timer
+    #endif
+    !USE UtilityRoutines, ONLY: ShowFatalError !RS Comment: DataInterfaces was originally used, but ShowFatalError had been removed from it in this version. (7/23/12)
 
-  IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
+    IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-  CHARACTER(len=*), INTENT(IN) :: ctimingElementstring
-  LOGICAL, INTENT(IN), OPTIONAL :: printit   ! true if it should be printed here.
-  CHARACTER(len=*), INTENT(IN), OPTIONAL :: wprint  ! only needed (and assumed, if printit is true)
+    ! SUBROUTINE ARGUMENT DEFINITIONS:
+    CHARACTER(len=*), INTENT(IN) :: ctimingElementstring
+    LOGICAL, INTENT(IN), OPTIONAL :: printit   ! true if it should be printed here.
+    CHARACTER(len=*), INTENT(IN), OPTIONAL :: wprint  ! only needed (and assumed, if printit is true)
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+    ! SUBROUTINE PARAMETER DEFINITIONS:
+    ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+    ! INTERFACE BLOCK SPECIFICATIONS:
+    ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+    ! DERIVED TYPE DEFINITIONS:
+    ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-  !INTEGER :: loop  ! testing if already in structure   !RS: Debugging: Extraneous
-  !INTEGER :: found ! indicator for element !RS: Debugging: Extraneous
-  !REAL(r64) :: stoptime    !RS: Debugging: Extraneous
+    ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+    !INTEGER :: loop  ! testing if already in structure   !RS: Debugging: Extraneous
+    !INTEGER :: found ! indicator for element !RS: Debugging: Extraneous
+    !REAL(r64) :: stoptime    !RS: Debugging: Extraneous
 
-#ifdef EP_NO_Timings
-  RETURN
-#endif
-#ifdef EP_Timings
-  found=0
-  DO loop=1,NumTimingElements
-    IF (Timing(loop)%Element /= ctimingElementstring) cycle
-    found=loop
-  ENDDO
+    #ifdef EP_NO_Timings
+    RETURN
+    #endif
+    #ifdef EP_Timings
+    found=0
+    DO loop=1,NumTimingElements
+      IF (Timing(loop)%Element /= ctimingElementstring) cycle
+      found=loop
+    ENDDO
 
-  IF (found == 0) THEN
-    CALL ShowFatalError('epStopTime: No element='//trim(ctimingElementstring))
-  ENDIF
+    IF (found == 0) THEN
+      CALL ShowFatalError('epStopTime: No element='//trim(ctimingElementstring))
+    ENDIF
 
-  TSTOP(stoptime)
-  Timing(found)%currentTimeSum=Timing(found)%currentTimeSum+(stoptime-Timing(found)%rstartTime)
+    TSTOP(stoptime)
+    Timing(found)%currentTimeSum=Timing(found)%currentTimeSum+(stoptime-Timing(found)%rstartTime)
 
-  IF (PRESENT(printit)) THEN
-    IF (printit) THEN
-      SELECT CASE(wprint)
+    IF (PRESENT(printit)) THEN
+      IF (printit) THEN
+        SELECT CASE(wprint)
         CASE('PRINT_TIME0')
           write(*,'(a80,f16.4)') ctimingElementstring, stoptime-Timing(found)%rstartTime
         CASE('PRINT_TIME1')
@@ -232,328 +232,328 @@ SUBROUTINE epStopTime(ctimingElementstring,printit,wprint)
           write(*,'(a55,i10,f16.4)') ctimingElementstring,Timing(found)%calls,Timing(found)%currentTimeSum
         CASE DEFAULT
           write(*,*) trim(ctimingElementstring),Timing(found)%currentTimeSum
-      END SELECT
+        END SELECT
+      ENDIF
+      !could not cover:
+      !#define PRINT_TIME_AIIF(a, i1, i2, t) write(*,'(a55,i10,i10,f16.4)') a, i1, i2, t
+      !#define PRINT_TIME_AIIIF(a, i1, i2, i3, t) write(*,'(a55,i10,i10,i10,f16.55)') a, i1, i2, i3, t
     ENDIF
-!could not cover:
-!#define PRINT_TIME_AIIF(a, i1, i2, t) write(*,'(a55,i10,i10,f16.4)') a, i1, i2, t
-!#define PRINT_TIME_AIIIF(a, i1, i2, i3, t) write(*,'(a55,i10,i10,i10,f16.55)') a, i1, i2, i3, t
-  ENDIF
 
-  RETURN
-#endif
+    RETURN
+    #endif
 
-END SUBROUTINE epStopTime
+  END SUBROUTINE epStopTime
 
-SUBROUTINE epSummaryTimes(TimeUsed_CPUTime)
+  SUBROUTINE epSummaryTimes(TimeUsed_CPUTime)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Linda Lawrie
-          !       DATE WRITTEN   January 2012
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+    ! SUBROUTINE INFORMATION:
+    !       AUTHOR         Linda Lawrie
+    !       DATE WRITTEN   January 2012
+    !       MODIFIED       na
+    !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! Print summary of timings from timing scheme using start-stop (ref: epStartTime, epStopTime) that will help
-          ! developers pinpoint problems.
+    ! PURPOSE OF THIS SUBROUTINE:
+    ! Print summary of timings from timing scheme using start-stop (ref: epStartTime, epStopTime) that will help
+    ! developers pinpoint problems.
 
-          ! METHODOLOGY EMPLOYED:
-          ! structure similar to recurring error structure.
+    ! METHODOLOGY EMPLOYED:
+    ! structure similar to recurring error structure.
 
-          ! REFERENCES:
-          ! na
+    ! REFERENCES:
+    ! na
 
-          ! USE STATEMENTS:
-  USE General, ONLY: RoundSigDigits
+    ! USE STATEMENTS:
+    USE General, ONLY: RoundSigDigits
 
-  IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
+    IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
-  REAL(r64) :: TimeUsed_CPUTime
+    ! SUBROUTINE ARGUMENT DEFINITIONS:
+    REAL(r64) :: TimeUsed_CPUTime
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-  CHARACTER(len=*), PARAMETER :: fmta='(A)'
+    ! SUBROUTINE PARAMETER DEFINITIONS:
+    CHARACTER(len=*), PARAMETER :: fmta='(A)'
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+    ! INTERFACE BLOCK SPECIFICATIONS:
+    ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+    ! DERIVED TYPE DEFINITIONS:
+    ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-  !INTEGER loop !RS: Debugging: Extraneous
-  !INTEGER :: EchoInputFile !RS: Debugging: Extraneous
-  INTEGER, EXTERNAL :: FindUnitNumber
+    ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+    !INTEGER loop !RS: Debugging: Extraneous
+    !INTEGER :: EchoInputFile !RS: Debugging: Extraneous
+    INTEGER, EXTERNAL :: FindUnitNumber
 
-#ifdef EP_NO_Timings
-  RETURN
-#endif
-#ifdef EP_Timings
-  EchoInputFile=FindUnitNumber('eplusout.audit')
-  WRITE(EchoInputFile,fmta) 'Timing Element'//tabchar//'# calls'//tabchar//'Time {s}'//tabchar//'Time {s} (per call)'
+    #ifdef EP_NO_Timings
+    RETURN
+    #endif
+    #ifdef EP_Timings
+    EchoInputFile=FindUnitNumber('eplusout.audit')
+    WRITE(EchoInputFile,fmta) 'Timing Element'//tabchar//'# calls'//tabchar//'Time {s}'//tabchar//'Time {s} (per call)'
 
-  DO loop=1,NumTimingElements
-    IF (Timing(loop)%calls > 0) THEN
-      WRITE(EchoInputFile,fmta) trim(Timing(loop)%Element)//tabchar//trim(RoundSigDigits(Timing(loop)%calls))//  &
-         tabchar//trim(RoundSigDigits(Timing(loop)%currentTimeSum,3))//tabchar//  &
-         trim(RoundSigDigits(Timing(loop)%currentTimeSum/REAL(Timing(loop)%calls,r64),3))
+    DO loop=1,NumTimingElements
+      IF (Timing(loop)%calls > 0) THEN
+        WRITE(EchoInputFile,fmta) trim(Timing(loop)%Element)//tabchar//trim(RoundSigDigits(Timing(loop)%calls))//  &
+        tabchar//trim(RoundSigDigits(Timing(loop)%currentTimeSum,3))//tabchar//  &
+        trim(RoundSigDigits(Timing(loop)%currentTimeSum/REAL(Timing(loop)%calls,r64),3))
+      ELSE
+        WRITE(EchoInputFile,fmta) trim(Timing(loop)%Element)//tabchar//trim(RoundSigDigits(Timing(loop)%calls))//  &
+        tabchar//trim(RoundSigDigits(Timing(loop)%currentTimeSum,3))//tabchar//  &
+        trim(RoundSigDigits(-999.0d0,3))
+      ENDIF
+    ENDDO
+    WRITE(EchoInputFile,fmta) 'Time from CPU_Time'//tabchar//trim(RoundSigDigits(TimeUsed_CPUTime,3))
+
+    RETURN
+
+    #endif
+
+  END SUBROUTINE epSummaryTimes
+
+  FUNCTION epGetTimeUsed(ctimingElementstring) RESULT(totalTimeUsed)
+
+    ! FUNCTION INFORMATION:
+    !       AUTHOR         Linda Lawrie
+    !       DATE WRITTEN   January 2012
+    !       MODIFIED       na
+    !       RE-ENGINEERED  na
+
+    ! PURPOSE OF THIS FUNCTION:
+    ! Provides outside function to getting time used on a particular element
+
+    ! METHODOLOGY EMPLOYED:
+    ! na
+
+    ! REFERENCES:
+    ! na
+
+    ! USE STATEMENTS:
+    !USE UtilityRoutines, ONLY: ShowFatalError, ShowSevereError !RS Comment: DataInterfaces was originally used, but the subroutines had been removed from it in this version. (7/23/12)
+    USE DataErrorTracking, ONLY: AbortProcessing
+
+    IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
+
+    ! FUNCTION ARGUMENT DEFINITIONS:
+    CHARACTER(len=*), INTENT(IN) :: ctimingElementstring
+    REAL(r64) :: totalTimeUsed
+
+    ! FUNCTION PARAMETER DEFINITIONS:
+    ! na
+
+    ! INTERFACE BLOCK SPECIFICATIONS:
+    ! na
+
+    ! DERIVED TYPE DEFINITIONS:
+    ! na
+
+    ! FUNCTION LOCAL VARIABLE DECLARATIONS:
+    INTEGER :: loop  ! testing if already in structure
+    INTEGER :: found ! indicator for element
+
+    found=0
+    DO loop=1,NumTimingElements
+      IF (Timing(loop)%Element /= ctimingElementstring) cycle
+      found=loop
+    ENDDO
+
+    IF (found == 0 .and. .not. AbortProcessing) THEN
+      CALL ShowFatalError('epGetTimeUsed: No element='//trim(ctimingElementstring))
     ELSE
-      WRITE(EchoInputFile,fmta) trim(Timing(loop)%Element)//tabchar//trim(RoundSigDigits(Timing(loop)%calls))//  &
-         tabchar//trim(RoundSigDigits(Timing(loop)%currentTimeSum,3))//tabchar//  &
-         trim(RoundSigDigits(-999.0d0,3))
+      CALL ShowSevereError('epGetTimeUsed: No element='//trim(ctimingElementstring))
     ENDIF
-  ENDDO
-  WRITE(EchoInputFile,fmta) 'Time from CPU_Time'//tabchar//trim(RoundSigDigits(TimeUsed_CPUTime,3))
 
-  RETURN
+    totalTimeUsed = Timing(found)%currentTimeSum
 
-#endif
+    RETURN
 
-END SUBROUTINE epSummaryTimes
+  END FUNCTION epGetTimeUsed
 
-FUNCTION epGetTimeUsed(ctimingElementstring) RESULT(totalTimeUsed)
+  FUNCTION epGetTimeUsedperCall(ctimingElementstring) RESULT(averageTimeUsed)
 
-          ! FUNCTION INFORMATION:
-          !       AUTHOR         Linda Lawrie
-          !       DATE WRITTEN   January 2012
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+    ! FUNCTION INFORMATION:
+    !       AUTHOR         Linda Lawrie
+    !       DATE WRITTEN   January 2012
+    !       MODIFIED       na
+    !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS FUNCTION:
-          ! Provides outside function to getting time used on a particular element
+    ! PURPOSE OF THIS FUNCTION:
+    ! Provides outside function to getting time used on a particular element
+    ! per Call.
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+    ! METHODOLOGY EMPLOYED:
+    ! na
 
-          ! REFERENCES:
-          ! na
+    ! REFERENCES:
+    ! na
 
-          ! USE STATEMENTS:
-  !USE UtilityRoutines, ONLY: ShowFatalError, ShowSevereError !RS Comment: DataInterfaces was originally used, but the subroutines had been removed from it in this version. (7/23/12)
-  USE DataErrorTracking, ONLY: AbortProcessing
+    ! USE STATEMENTS:
+    !USE UtilityRoutines, ONLY: ShowFatalError, ShowSevereError !RS Comment: DataInterfaces was originally used, but the subs had been removed from it in this version. (7/23/12)
+    USE DataErrorTracking, ONLY: AbortProcessing
 
-  IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
+    IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! FUNCTION ARGUMENT DEFINITIONS:
-  CHARACTER(len=*), INTENT(IN) :: ctimingElementstring
-  REAL(r64) :: totalTimeUsed
+    ! FUNCTION ARGUMENT DEFINITIONS:
+    CHARACTER(len=*), INTENT(IN) :: ctimingElementstring
+    REAL(r64) :: averageTimeUsed
 
-          ! FUNCTION PARAMETER DEFINITIONS:
-          ! na
+    ! FUNCTION PARAMETER DEFINITIONS:
+    ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
+    ! INTERFACE BLOCK SPECIFICATIONS:
+    ! na
 
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
+    ! DERIVED TYPE DEFINITIONS:
+    ! na
 
-          ! FUNCTION LOCAL VARIABLE DECLARATIONS:
-  INTEGER :: loop  ! testing if already in structure
-  INTEGER :: found ! indicator for element
+    ! FUNCTION LOCAL VARIABLE DECLARATIONS:
+    INTEGER :: loop  ! testing if already in structure
+    INTEGER :: found ! indicator for element
 
-  found=0
-  DO loop=1,NumTimingElements
-    IF (Timing(loop)%Element /= ctimingElementstring) cycle
-    found=loop
-  ENDDO
+    found=0
+    DO loop=1,NumTimingElements
+      IF (Timing(loop)%Element /= ctimingElementstring) cycle
+      found=loop
+    ENDDO
 
-  IF (found == 0 .and. .not. AbortProcessing) THEN
-    CALL ShowFatalError('epGetTimeUsed: No element='//trim(ctimingElementstring))
-  ELSE
-    CALL ShowSevereError('epGetTimeUsed: No element='//trim(ctimingElementstring))
-  ENDIF
+    IF (found == 0) THEN
+      CALL ShowFatalError('epGetTimeUsedperCall: No element='//trim(ctimingElementstring))
+    ELSE
+      CALL ShowSevereError('epGetTimeUsedperCall: No element='//trim(ctimingElementstring))
+    ENDIF
 
-  totalTimeUsed = Timing(found)%currentTimeSum
+    IF (Timing(found)%calls > 0) THEN
+      averageTimeUsed = Timing(found)%currentTimeSum/REAL(Timing(found)%calls,r64)
+    ELSE
+      averageTimeUsed = -999.0d0
+    ENDIF
 
-  RETURN
+    RETURN
 
-END FUNCTION epGetTimeUsed
+  END FUNCTION epGetTimeUsedperCall
 
-FUNCTION epGetTimeUsedperCall(ctimingElementstring) RESULT(averageTimeUsed)
+  FUNCTION eptime() RESULT(calctime)
 
-          ! FUNCTION INFORMATION:
-          !       AUTHOR         Linda Lawrie
-          !       DATE WRITTEN   January 2012
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+    ! FUNCTION INFORMATION:
+    !       AUTHOR         Linda Lawrie
+    !       DATE WRITTEN   January 2012
+    !       MODIFIED       na
+    !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS FUNCTION:
-          ! Provides outside function to getting time used on a particular element
-          ! per Call.
+    ! PURPOSE OF THIS FUNCTION:
+    ! An alternative method for timing (to CPU_TIME) is to call the standard
+    ! System_Clock routine.  This is a standard alternative to CPU_TIME.
+    ! According to Intel documentation, the "count_rate" may differ depending on
+    ! the size of the integer to receive the output.
 
-          ! METHODOLOGY EMPLOYED:
-          ! na
+    ! METHODOLOGY EMPLOYED:
+    ! na
 
-          ! REFERENCES:
-          ! na
+    ! REFERENCES:
+    ! na
 
-          ! USE STATEMENTS:
-  !USE UtilityRoutines, ONLY: ShowFatalError, ShowSevereError !RS Comment: DataInterfaces was originally used, but the subs had been removed from it in this version. (7/23/12)
-  USE DataErrorTracking, ONLY: AbortProcessing
+    ! USE STATEMENTS:
+    ! na
 
-  IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
+    IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
-          ! FUNCTION ARGUMENT DEFINITIONS:
-  CHARACTER(len=*), INTENT(IN) :: ctimingElementstring
-  REAL(r64) :: averageTimeUsed
+    ! FUNCTION ARGUMENT DEFINITIONS:
+    REAL(r64) :: calctime  ! calculated time based on "count" and "count_rate"
 
-          ! FUNCTION PARAMETER DEFINITIONS:
-          ! na
+    ! FUNCTION PARAMETER DEFINITIONS:
+    ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
-
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
-
-          ! FUNCTION LOCAL VARIABLE DECLARATIONS:
-  INTEGER :: loop  ! testing if already in structure
-  INTEGER :: found ! indicator for element
-
-  found=0
-  DO loop=1,NumTimingElements
-    IF (Timing(loop)%Element /= ctimingElementstring) cycle
-    found=loop
-  ENDDO
-
-  IF (found == 0) THEN
-    CALL ShowFatalError('epGetTimeUsedperCall: No element='//trim(ctimingElementstring))
-  ELSE
-    CALL ShowSevereError('epGetTimeUsedperCall: No element='//trim(ctimingElementstring))
-  ENDIF
-
-  IF (Timing(found)%calls > 0) THEN
-    averageTimeUsed = Timing(found)%currentTimeSum/REAL(Timing(found)%calls,r64)
-  ELSE
-    averageTimeUsed = -999.0d0
-  ENDIF
-
-  RETURN
-
-END FUNCTION epGetTimeUsedperCall
-
-FUNCTION eptime() RESULT(calctime)
-
-          ! FUNCTION INFORMATION:
-          !       AUTHOR         Linda Lawrie
-          !       DATE WRITTEN   January 2012
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
-
-          ! PURPOSE OF THIS FUNCTION:
-          ! An alternative method for timing (to CPU_TIME) is to call the standard
-          ! System_Clock routine.  This is a standard alternative to CPU_TIME.
-          ! According to Intel documentation, the "count_rate" may differ depending on
-          ! the size of the integer to receive the output.
-
-          ! METHODOLOGY EMPLOYED:
-          ! na
-
-          ! REFERENCES:
-          ! na
-
-          ! USE STATEMENTS:
-          ! na
-
-  IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
-
-          ! FUNCTION ARGUMENT DEFINITIONS:
-  REAL(r64) :: calctime  ! calculated time based on "count" and "count_rate"
-
-          ! FUNCTION PARAMETER DEFINITIONS:
-          ! na
-
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
-
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
-
-          ! FUNCTION LOCAL VARIABLE DECLARATIONS:
-  INTEGER(i32) :: icount
-
-  CALL system_clock(count=icount)
-
-  calctime=real(icount,r64)/clockrate  ! clockrate is set by main program.
-
-  RETURN
-
-END FUNCTION eptime
-
-FUNCTION epElapsedTime() RESULT(calctime)
-
-          ! FUNCTION INFORMATION:
-          !       AUTHOR         Linda Lawrie
-          !       DATE WRITTEN   February 2012
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
-
-          ! PURPOSE OF THIS FUNCTION:
-          ! An alternative method for timing elapsed times is to call the standard
-          ! Date_And_Time routine and set the "time".
-
-          ! METHODOLOGY EMPLOYED:
-          ! na
-
-          ! REFERENCES:
-          ! na
-
-          ! USE STATEMENTS:
-          ! na
-
-  IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
-
-          ! FUNCTION ARGUMENT DEFINITIONS:
-  REAL(r64) :: calctime  ! calculated time based on hrs, minutes, seconds, milliseconds
-
-          ! FUNCTION PARAMETER DEFINITIONS:
-          ! na
-
-          ! INTERFACE BLOCK SPECIFICATIONS:
-          ! na
-
-          ! DERIVED TYPE DEFINITIONS:
-          ! na
-
-          ! FUNCTION LOCAL VARIABLE DECLARATIONS:
-  INTEGER(i32) :: clockvalues(8)
-               !value(1)   Current year
-               !value(2)   Current month
-               !value(3)   Current day
-               !value(4)   Time difference with respect to UTC in minutes (0-59)
-               !value(5)   Hour of the day (0-23)
-               !value(6)   Minutes (0-59)
-               !value(7)   Seconds (0-59)
-               !value(8)   Milliseconds (0-999)
-
-  CALL date_and_time(values=clockvalues)
-  calctime = clockvalues(5)*3600.d0+clockvalues(6)*60.d0+clockvalues(7)+clockvalues(8)/1000.d0
-
-  RETURN
-
-END FUNCTION epElapsedTime
-
-!     NOTICE
-!
-!     Copyright © 1996-2012 The Board of Trustees of the University of Illinois
-!     and The Regents of the University of California through Ernest Orlando Lawrence
-!     Berkeley National Laboratory.  All rights reserved.
-!
-!     Portions of the EnergyPlus software package have been developed and copyrighted
-!     by other individuals, companies and institutions.  These portions have been
-!     incorporated into the EnergyPlus software package under license.   For a complete
-!     list of contributors, see "Notice" located in EnergyPlus.f90.
-!
-!     NOTICE: The U.S. Government is granted for itself and others acting on its
-!     behalf a paid-up, nonexclusive, irrevocable, worldwide license in this data to
-!     reproduce, prepare derivative works, and perform publicly and display publicly.
-!     Beginning five (5) years after permission to assert copyright is granted,
-!     subject to two possible five year renewals, the U.S. Government is granted for
-!     itself and others acting on its behalf a paid-up, non-exclusive, irrevocable
-!     worldwide license in this data to reproduce, prepare derivative works,
-!     distribute copies to the public, perform publicly and display publicly, and to
-!     permit others to do so.
-!
-!     TRADEMARKS: EnergyPlus is a trademark of the US Department of Energy.
-!
+    ! INTERFACE BLOCK SPECIFICATIONS:
+    ! na
+
+    ! DERIVED TYPE DEFINITIONS:
+    ! na
+
+    ! FUNCTION LOCAL VARIABLE DECLARATIONS:
+    INTEGER(i32) :: icount
+
+    CALL system_clock(count=icount)
+
+    calctime=real(icount,r64)/clockrate  ! clockrate is set by main program.
+
+    RETURN
+
+  END FUNCTION eptime
+
+  FUNCTION epElapsedTime() RESULT(calctime)
+
+    ! FUNCTION INFORMATION:
+    !       AUTHOR         Linda Lawrie
+    !       DATE WRITTEN   February 2012
+    !       MODIFIED       na
+    !       RE-ENGINEERED  na
+
+    ! PURPOSE OF THIS FUNCTION:
+    ! An alternative method for timing elapsed times is to call the standard
+    ! Date_And_Time routine and set the "time".
+
+    ! METHODOLOGY EMPLOYED:
+    ! na
+
+    ! REFERENCES:
+    ! na
+
+    ! USE STATEMENTS:
+    ! na
+
+    IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
+
+    ! FUNCTION ARGUMENT DEFINITIONS:
+    REAL(r64) :: calctime  ! calculated time based on hrs, minutes, seconds, milliseconds
+
+    ! FUNCTION PARAMETER DEFINITIONS:
+    ! na
+
+    ! INTERFACE BLOCK SPECIFICATIONS:
+    ! na
+
+    ! DERIVED TYPE DEFINITIONS:
+    ! na
+
+    ! FUNCTION LOCAL VARIABLE DECLARATIONS:
+    INTEGER(i32) :: clockvalues(8)
+    !value(1)   Current year
+    !value(2)   Current month
+    !value(3)   Current day
+    !value(4)   Time difference with respect to UTC in minutes (0-59)
+    !value(5)   Hour of the day (0-23)
+    !value(6)   Minutes (0-59)
+    !value(7)   Seconds (0-59)
+    !value(8)   Milliseconds (0-999)
+
+    CALL date_and_time(values=clockvalues)
+    calctime = clockvalues(5)*3600.d0+clockvalues(6)*60.d0+clockvalues(7)+clockvalues(8)/1000.d0
+
+    RETURN
+
+  END FUNCTION epElapsedTime
+
+  !     NOTICE
+  !
+  !     Copyright ï¿½ 1996-2012 The Board of Trustees of the University of Illinois
+  !     and The Regents of the University of California through Ernest Orlando Lawrence
+  !     Berkeley National Laboratory.  All rights reserved.
+  !
+  !     Portions of the EnergyPlus software package have been developed and copyrighted
+  !     by other individuals, companies and institutions.  These portions have been
+  !     incorporated into the EnergyPlus software package under license.   For a complete
+  !     list of contributors, see "Notice" located in EnergyPlus.f90.
+  !
+  !     NOTICE: The U.S. Government is granted for itself and others acting on its
+  !     behalf a paid-up, nonexclusive, irrevocable, worldwide license in this data to
+  !     reproduce, prepare derivative works, and perform publicly and display publicly.
+  !     Beginning five (5) years after permission to assert copyright is granted,
+  !     subject to two possible five year renewals, the U.S. Government is granted for
+  !     itself and others acting on its behalf a paid-up, non-exclusive, irrevocable
+  !     worldwide license in this data to reproduce, prepare derivative works,
+  !     distribute copies to the public, perform publicly and display publicly, and to
+  !     permit others to do so.
+  !
+  !     TRADEMARKS: EnergyPlus is a trademark of the US Department of Energy.
+  !
 
 END MODULE DataTimings

@@ -1,135 +1,135 @@
-  subroutine DisplayString(String)
+subroutine DisplayString(String)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Linda Lawrie
-          !       DATE WRITTEN   Version 1.0
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Linda Lawrie
+  !       DATE WRITTEN   Version 1.0
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine provides a call to display strings during program execution.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine provides a call to display strings during program execution.
 
-          ! METHODOLOGY EMPLOYED:
-          ! usage:=  call DisplayString(string)
+  ! METHODOLOGY EMPLOYED:
+  ! usage:=  call DisplayString(string)
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataGlobals_HPSimIntegrated, ONLY: KickOffSimulation
   USE DataSystemVariables, ONLY: DeveloperFlag
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   character(len=*), intent(in) :: String  ! String to be displayed
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! SUBROUTINE PARAMETER DEFINITIONS:
   character(len=*), parameter :: FmtA="(1X,A)"
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-          ! na
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! na
 
   if (KickOffSimulation .and. .not. DeveloperFlag) return
   write(*,FmtA) trim(String)
 
   return
-  end subroutine DisplayString
+end subroutine DisplayString
 
-  subroutine DisplayNumberandString(Number,String)
+subroutine DisplayNumberandString(Number,String)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Linda Lawrie
-          !       DATE WRITTEN   Version 1.0
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Linda Lawrie
+  !       DATE WRITTEN   Version 1.0
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine provides a call to display (at set point on screen for screen positioning models) card images
-          ! during program parsing.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine provides a call to display (at set point on screen for screen positioning models) card images
+  ! during program parsing.
 
-          ! METHODOLOGY EMPLOYED:
-          ! usage:= call DisplayNumberandString(numbr,string)
+  ! METHODOLOGY EMPLOYED:
+  ! usage:= call DisplayNumberandString(numbr,string)
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataGlobals_HPSimIntegrated, ONLY: KickOffSimulation
   USE DataSystemVariables, ONLY: DeveloperFlag
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   integer, intent(in) :: Number  ! number to be displayed
   character(len=*), intent(in) :: String  ! String to be displayed
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! SUBROUTINE PARAMETER DEFINITIONS:
   character(len=*), parameter :: FmtA="(1X,A)"
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
-   character(len=25) :: NumString
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  character(len=25) :: NumString
 
-   if (KickOffSimulation .and. .not. DeveloperFlag) return
-   write(NumString,*) Number
-   NumString=ADJUSTL(NumString)
+  if (KickOffSimulation .and. .not. DeveloperFlag) return
+  write(NumString,*) Number
+  NumString=ADJUSTL(NumString)
 
-   write(*,FmtA) trim(String)//trim(NumString)
-!
+  write(*,FmtA) trim(String)//trim(NumString)
+  !
   return
-  end subroutine DisplayNumberandString
+end subroutine DisplayNumberandString
 
-  SUBROUTINE  DisplaySimDaysProgress(CurrentSimDay,TotalSimDays)
+SUBROUTINE  DisplaySimDaysProgress(CurrentSimDay,TotalSimDays)
 
-          ! SUBROUTINE INFORMATION:
-          !       AUTHOR         Linda Lawrie
-          !       DATE WRITTEN   Version 1.0
-          !       MODIFIED       na
-          !       RE-ENGINEERED  na
+  ! SUBROUTINE INFORMATION:
+  !       AUTHOR         Linda Lawrie
+  !       DATE WRITTEN   Version 1.0
+  !       MODIFIED       na
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS SUBROUTINE:
-          ! This subroutine provides a call for "progress" during simulation.
-          ! Progress is percent of current days vs total days.
+  ! PURPOSE OF THIS SUBROUTINE:
+  ! This subroutine provides a call for "progress" during simulation.
+  ! Progress is percent of current days vs total days.
 
-          ! METHODOLOGY EMPLOYED:
-          ! Needs description, as appropriate.
+  ! METHODOLOGY EMPLOYED:
+  ! Needs description, as appropriate.
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataGlobals_HPSimIntegrated, ONLY: KickOffSimulation
   USE DataSystemVariables, ONLY: DeveloperFlag
 
   IMPLICIT NONE    ! Enforce explicit typing of all variables in this routine
 
-          ! SUBROUTINE ARGUMENT DEFINITIONS:
+  ! SUBROUTINE ARGUMENT DEFINITIONS:
   integer, intent(in) :: CurrentSimDay  ! Current Simulation Day
   integer, intent(in) :: TotalSimdays   ! Total number of Simulation Days
 
-          ! SUBROUTINE PARAMETER DEFINITIONS:
-          ! na
+  ! SUBROUTINE PARAMETER DEFINITIONS:
+  ! na
 
-          ! INTERFACE BLOCK SPECIFICATIONS
-          ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-          ! DERIVED TYPE DEFINITIONS
-          ! na
+  ! DERIVED TYPE DEFINITIONS
+  ! na
 
-          ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  ! SUBROUTINE LOCAL VARIABLE DECLARATIONS:
   integer, save :: percent=0  ! Current percent progress
 
   if (KickOffSimulation .and. .not. DeveloperFlag) return
@@ -141,11 +141,11 @@
   endif
 
   return
-  end subroutine DisplaySimDaysProgress
+end subroutine DisplaySimDaysProgress
 
 !     NOTICE
 !
-!     Copyright © 1996-2012 The Board of Trustees of the University of Illinois
+!     Copyright ï¿½ 1996-2012 The Board of Trustees of the University of Illinois
 !     and The Regents of the University of California through Ernest Orlando Lawrence
 !     Berkeley National Laboratory.  All rights reserved.
 !
@@ -166,5 +166,3 @@
 !
 !     TRADEMARKS: EnergyPlus is a trademark of the US Department of Energy.
 !
-
-

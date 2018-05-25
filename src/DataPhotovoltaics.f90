@@ -1,35 +1,35 @@
 MODULE DataPhotovoltaics      ! Data-Only Module for native EnergyPlus Photovoltaics variables
 
-          ! MODULE INFORMATION:
-          !       AUTHOR         D. Bradley
-          !       DATE WRITTEN   May 2003
-          !       MODIFIED       B. Griffith, Dec. 2003, heavy changes, moved derived types here from Photovoltaics.f90
-          !                      B. Griffith, Feb 2008, added BIPV and inverter to one-diode model
-          !       RE-ENGINEERED  na
+  ! MODULE INFORMATION:
+  !       AUTHOR         D. Bradley
+  !       DATE WRITTEN   May 2003
+  !       MODIFIED       B. Griffith, Dec. 2003, heavy changes, moved derived types here from Photovoltaics.f90
+  !                      B. Griffith, Feb 2008, added BIPV and inverter to one-diode model
+  !       RE-ENGINEERED  na
 
-          ! PURPOSE OF THIS MODULE:
-          ! This data-only module is a repository for the variables that relate specifically
-          ! to the native EnergyPlus photovoltaics simulation.
+  ! PURPOSE OF THIS MODULE:
+  ! This data-only module is a repository for the variables that relate specifically
+  ! to the native EnergyPlus photovoltaics simulation.
 
-          ! METHODOLOGY EMPLOYED:
+  ! METHODOLOGY EMPLOYED:
 
-          ! REFERENCES:
-          ! na
+  ! REFERENCES:
+  ! na
 
-          ! OTHER NOTES:
-          ! na
+  ! OTHER NOTES:
+  ! na
 
-          ! USE STATEMENTS:
+  ! USE STATEMENTS:
   USE DataPrecisionGlobals
   USE DataGlobals_HPSimIntegrated, ONLY: MaxNameLength
 
   IMPLICIT NONE   ! Enforce explicit typing of all variables
 
   PUBLIC          ! By definition, all variables which are placed in this data
-              ! -only module should be available to other modules and routines.
-              ! Thus, all variables in this module must be PUBLIC.
+  ! -only module should be available to other modules and routines.
+  ! Thus, all variables in this module must be PUBLIC.
 
-        ! MODULE PARAMETER DEFINITIONS:
+  ! MODULE PARAMETER DEFINITIONS:
   CHARACTER(len=*), PARAMETER :: cPVGeneratorObjectName       = 'Generator:Photovoltaic'
   CHARACTER(len=*), PARAMETER :: cPVSimplePerfObjectName      = 'PhotovoltaicPerformance:Simple'
   CHARACTER(len=*), PARAMETER :: cPVEquiv1DiodePerfObjectName = 'PhotovoltaicPerformance:EquivalentOne-Diode'
@@ -55,14 +55,14 @@ MODULE DataPhotovoltaics      ! Data-Only Module for native EnergyPlus Photovolt
   INTEGER, PARAMETER :: AmorphousSiPVCells      = 2
 
   REAL(r64),    PARAMETER :: MinIrradiance = 0.3d0  ![W/m2] Assume no operation if Ic is below this number (W/m2)
-        ! DERIVED TYPE DEFINITIONS
+  ! DERIVED TYPE DEFINITIONS
   TYPE SimplePVParamsStruct
-      CHARACTER(len=MaxNameLength) :: Name=' ' ! name as identified in Sandia database
-      REAL(r64)                    :: AreaCol = 0.0D0 ! effective area of solar collection
-      REAL(r64)                    :: ActiveFraction =0.0D0 ! fraction of parent surface that has active solar cells
-      INTEGER                      :: EfficencyInputMode = 0 ! to schedule or not
-      INTEGER                      :: EffSchedPtr    =0   ! index pointer for efficiency schedule
-      REAL(r64)                    :: PVEfficiency   =0.0D0 ! fixed or current PV efficiency
+    CHARACTER(len=MaxNameLength) :: Name=' ' ! name as identified in Sandia database
+    REAL(r64)                    :: AreaCol = 0.0D0 ! effective area of solar collection
+    REAL(r64)                    :: ActiveFraction =0.0D0 ! fraction of parent surface that has active solar cells
+    INTEGER                      :: EfficencyInputMode = 0 ! to schedule or not
+    INTEGER                      :: EffSchedPtr    =0   ! index pointer for efficiency schedule
+    REAL(r64)                    :: PVEfficiency   =0.0D0 ! fixed or current PV efficiency
   END TYPE SimplePVParamsStruct
 
   TYPE TRNSYSPVModuleParamsStruct    !  for  GENERATOR:PV:Equivalent One-Diode Model
@@ -114,22 +114,22 @@ MODULE DataPhotovoltaics      ! Data-Only Module for native EnergyPlus Photovolt
     REAL(r64)    :: aIsc            =0.0D0 ! Normalized temperature coefficient for Isc (Amps/degC) Isc temperature coeff
     REAL(r64)    :: aImp            =0.0D0 ! Normalized temperature coefficient for Imp (1/degC) Imp temperature coeff
     REAL(r64)    :: c_0             =0.0D0 ! Empirical coefficients relating Imp to Ee (unitless)
-                                         !   coefficient relating Imp to irradiance
+    !   coefficient relating Imp to irradiance
     REAL(r64)    :: c_1             =0.0D0 ! Empirical coefficients relating Imp to Ee (unitless)
-                                         !   coefficient relating Voc to irradiance
+    !   coefficient relating Voc to irradiance
     REAL(r64)    :: BVoc0           =0.0D0 ! Temperature coefficient for module open-circuit-voltage at reference conditions
-                                         !   (Volts/degC)
+    !   (Volts/degC)
     REAL(r64)    :: mBVoc           =0.0D0 ! Coefficient for irradiance dependence of open-circuit-voltage-temperature
-                                         !  coefficient  (V/°C)
+    !  coefficient  (V/ï¿½C)
     REAL(r64)    :: BVmp0           =0.0D0 ! Temperature coefficient for module maximum-power-voltage at reference conditions
-                                         !   (V/°C)
+    !   (V/ï¿½C)
     REAL(r64)    :: mBVmp           =0.0D0 ! Cofficient for irradiance dependence of maximum-power-voltage-temperature
-                                         !   coefficient (V/°C)
+    !   coefficient (V/ï¿½C)
     REAL(r64)    :: DiodeFactor     =0.0D0 ! Empirically determined 'diode factor' for individual cells (unitless)
     REAL(r64)    :: c_2             =0.0D0 ! Empirical coefficients relating Vmp to Ee (unitless)
-                                         !   (coefficient relating Vmp to irradiance)
+    !   (coefficient relating Vmp to irradiance)
     REAL(r64)    :: c_3             =0.0D0 ! Empirical coefficients relating Vmp to Ee (unitless)
-                                         !   (coefficient relating Vmp to irradiance)
+    !   (coefficient relating Vmp to irradiance)
     REAL(r64)    :: a_0             =0.0D0 ! Empirical coefficients for f1(AMa) polynomial (unitless)
     REAL(r64)    :: a_1             =0.0D0 ! Empirical coefficients for f1(AMa) polynomial (unitless)
     REAL(r64)    :: a_2             =0.0D0 ! Empirical coefficients for f1(AMa) polynomial (unitless)
@@ -141,13 +141,13 @@ MODULE DataPhotovoltaics      ! Data-Only Module for native EnergyPlus Photovolt
     REAL(r64)    :: b_3             =0.0D0 ! Empirical coefficients for f1(AOI) polynomial (unitless)
     REAL(r64)    :: b_4             =0.0D0 ! Empirical coefficients for f1(AOI) polynomial (unitless)
     REAL(r64)    :: b_5             =0.0D0 ! Empirical coefficients for f1(AOI) polynomial (unitless)
-    REAL(r64)    :: DT0             =0.0D0 ! Temperature difference between Tc and Tm at Eo (°C),
-                                         ! (This is d(Tc) in Sandia database)
+    REAL(r64)    :: DT0             =0.0D0 ! Temperature difference between Tc and Tm at Eo (ï¿½C),
+    ! (This is d(Tc) in Sandia database)
     REAL(r64)    :: fd              =0.0D0 ! Fraction of diffuse irradiance used by module (unitless)
     REAL(r64)    :: a               =0.0D0 ! Empirical coefficient for module temp.at low wind,
-                                         ! high solar irradiance (unitless)
+    ! high solar irradiance (unitless)
     REAL(r64)    :: b               =0.0D0 ! Empirical coefficient relating module temp.
-                                         ! decrease with increasing wind speed (unitless)
+    ! decrease with increasing wind speed (unitless)
     REAL(r64)    :: c_4             =0.0D0 ! Empirical coefficients relating Ix to Ee (unitless)
     REAL(r64)    :: c_5             =0.0D0 ! Empirical coefficients relating Ix to Ee (unitless)
     REAL(r64)    :: Ix0             =0.0D0 ! Current at V = 0.5 Voc and at reference conditions (Amps)
@@ -222,10 +222,10 @@ MODULE DataPhotovoltaics      ! Data-Only Module for native EnergyPlus Photovolt
     TYPE(SNLPVCalcStruct)             :: SNLPVCalc      ! calc'd data for GENERATOR:PV:Sandia model
 
   END TYPE PVArrayStruct
-        ! INTERFACE BLOCK SPECIFICATIONS
-        ! na
+  ! INTERFACE BLOCK SPECIFICATIONS
+  ! na
 
-        ! MODULE VARIABLE DECLARATIONS:
+  ! MODULE VARIABLE DECLARATIONS:
   INTEGER :: NumPVs        =0 ! count of number of PV generators
   INTEGER :: Num1DiodePVModuleTypes  = 0 ! count for Equivalent one-diode model
   INTEGER :: NumSimplePVModuleTypes  =0 ! count of number of input objs for simple model
@@ -235,40 +235,40 @@ MODULE DataPhotovoltaics      ! Data-Only Module for native EnergyPlus Photovolt
 
   REAL(r64)    :: ShuntResistance=0.0D0  ! old "RSH" in common block of trnsys code
 
-! ___________________________________________________________________________
+  ! ___________________________________________________________________________
 
-!     EnergyPlus V1.2 and beyond include models for photovoltaic calculations called
-!     Generator:Photovoltaic:Simple and Generator:PV:Sandia implemented by the Center for
-!     Buildings and Thermal Systems, National Renewable Energy Laboratory, 1617 Cole Blvd
-!     MS 2722, Golden, CO, 80401
-!
-!
-!     EnergyPlus v1.1.1 and beyond includes model for Photovoltaic calculations, now
-!     referred to as the Generator:PV:Equivalent One-Diode model developed by Thermal Energy
-!     System Specialists, 2916 Marketplace Drive, Suite 104, Madison, WI 53719;
-!     Tel: (608) 274-2577
+  !     EnergyPlus V1.2 and beyond include models for photovoltaic calculations called
+  !     Generator:Photovoltaic:Simple and Generator:PV:Sandia implemented by the Center for
+  !     Buildings and Thermal Systems, National Renewable Energy Laboratory, 1617 Cole Blvd
+  !     MS 2722, Golden, CO, 80401
+  !
+  !
+  !     EnergyPlus v1.1.1 and beyond includes model for Photovoltaic calculations, now
+  !     referred to as the Generator:PV:Equivalent One-Diode model developed by Thermal Energy
+  !     System Specialists, 2916 Marketplace Drive, Suite 104, Madison, WI 53719;
+  !     Tel: (608) 274-2577
 
-!     NOTICE
-!
-!     Copyright © 1996-2012 The Board of Trustees of the University of Illinois
-!     and The Regents of the University of California through Ernest Orlando Lawrence
-!     Berkeley National Laboratory.  All rights reserved.
-!
-!     Portions of the EnergyPlus software package have been developed and copyrighted
-!     by other individuals, companies and institutions.  These portions have been
-!     incorporated into the EnergyPlus software package under license.   For a complete
-!     list of contributors, see "Notice" located in EnergyPlus.f90.
-!
-!     NOTICE: The U.S. Government is granted for itself and others acting on its
-!     behalf a paid-up, nonexclusive, irrevocable, worldwide license in this data to
-!     reproduce, prepare derivative works, and perform publicly and display publicly.
-!     Beginning five (5) years after permission to assert copyright is granted,
-!     subject to two possible five year renewals, the U.S. Government is granted for
-!     itself and others acting on its behalf a paid-up, non-exclusive, irrevocable
-!     worldwide license in this data to reproduce, prepare derivative works,
-!     distribute copies to the public, perform publicly and display publicly, and to
-!     permit others to do so.
-!
-!     TRADEMARKS: EnergyPlus is a trademark of the US Department of Energy.
-!
+  !     NOTICE
+  !
+  !     Copyright ï¿½ 1996-2012 The Board of Trustees of the University of Illinois
+  !     and The Regents of the University of California through Ernest Orlando Lawrence
+  !     Berkeley National Laboratory.  All rights reserved.
+  !
+  !     Portions of the EnergyPlus software package have been developed and copyrighted
+  !     by other individuals, companies and institutions.  These portions have been
+  !     incorporated into the EnergyPlus software package under license.   For a complete
+  !     list of contributors, see "Notice" located in EnergyPlus.f90.
+  !
+  !     NOTICE: The U.S. Government is granted for itself and others acting on its
+  !     behalf a paid-up, nonexclusive, irrevocable, worldwide license in this data to
+  !     reproduce, prepare derivative works, and perform publicly and display publicly.
+  !     Beginning five (5) years after permission to assert copyright is granted,
+  !     subject to two possible five year renewals, the U.S. Government is granted for
+  !     itself and others acting on its behalf a paid-up, non-exclusive, irrevocable
+  !     worldwide license in this data to reproduce, prepare derivative works,
+  !     distribute copies to the public, perform publicly and display publicly, and to
+  !     permit others to do so.
+  !
+  !     TRADEMARKS: EnergyPlus is a trademark of the US Department of Energy.
+  !
 END MODULE DataPhotovoltaics
