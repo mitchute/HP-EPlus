@@ -7242,13 +7242,13 @@ FUNCTION PsyWFnTdbHLocal(TDB,H) RESULT(W)    !RS: Debugging: Adding in condenser
   !CP-------- here is 1.2, 1200., 1.004, or 1004.  --------
   W=(H-1.00484d3*TDB)/(2.50094d6+1.85895d3*TDB)
   !
-  #ifdef EP_psych_stats
+#ifdef EP_psych_stats
   NumTimesCalled(iPsyWFnTdbH)=NumTimesCalled(iPsyWFnTdbH)+1
-  #endif
+#endif
 
   !                                      VALIDITY TEST.
   IF (W < 0.0d0) THEN
-    #ifdef EP_psych_errors
+#ifdef EP_psych_errors
     IF (W < -.0001d0) THEN
       IF (.not. WarmupFlag) THEN
         IF (iPsyErrIndex(iPsyWFnTdbH) == 0) THEN
@@ -7267,7 +7267,7 @@ FUNCTION PsyWFnTdbHLocal(TDB,H) RESULT(W)    !RS: Debugging: Adding in condenser
         !  iPsyErrIndex(iPsyWFnTdbH),ReportMinOf=W,ReportMaxOf=W,ReportMinUnits='[]',ReportMaxUnits='[]')
       ENDIF
     ENDIF
-    #endif
+#endif
     W=1.d-5
   ENDIF
 

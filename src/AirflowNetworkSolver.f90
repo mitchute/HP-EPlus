@@ -78,10 +78,10 @@ MODULE AirflowNetworkSolver
   REAL(r64), ALLOCATABLE, DIMENSION(:) :: AD
   REAL(r64), ALLOCATABLE, DIMENSION(:) :: AU
 
-  #ifdef SKYLINE_MATRIX_REMOVE_ZERO_COLUMNS
+#ifdef SKYLINE_MATRIX_REMOVE_ZERO_COLUMNS
   INTEGER, ALLOCATABLE, DIMENSION(:) :: newIK   !noel
   REAL(r64), ALLOCATABLE, DIMENSION(:) :: newAU !noel
-  #endif
+#endif
 
   !REAL(r64), ALLOCATABLE, DIMENSION(:) :: AL
   REAL(r64), ALLOCATABLE, DIMENSION(:) :: SUMF
@@ -176,9 +176,9 @@ CONTAINS
 
     ALLOCATE(ID(NetworkNumOfNodes))
     ALLOCATE(IK(NetworkNumOfNodes+1))
-    #ifdef SKYLINE_MATRIX_REMOVE_ZERO_COLUMNS
+#ifdef SKYLINE_MATRIX_REMOVE_ZERO_COLUMNS
     ALLOCATE(newIK(NetworkNumOfNodes+1))
-    #endif
+#endif
     ALLOCATE(AD(NetworkNumOfNodes))
     ALLOCATE(SUMF(NetworkNumOfNodes))
 
@@ -265,7 +265,7 @@ CONTAINS
         CALL SETSKY
 
         !SETSKY figures out the IK stuff -- which is why E+ doesn't allocate AU until here
-        #ifdef SKYLINE_MATRIX_REMOVE_ZERO_COLUMNS
+#ifdef SKYLINE_MATRIX_REMOVE_ZERO_COLUMNS
         !   ! only printing to screen, can be commented
         !   print*, "SKYLINE_MATRIX_REMOVE_ZERO_COLUMNS is defined"
         !
@@ -275,7 +275,7 @@ CONTAINS
         !
         ! allocate same size as others -- this will be maximum  !noel
         ALLOCATE(newAU(IK(NetworkNumOfNodes+1)))
-        #endif
+#endif
 
         ! noel, GNU says the AU is indexed above its upper bound
         !ALLOCATE(AU(IK(NetworkNumOfNodes+1)-1))
@@ -678,13 +678,13 @@ CONTAINS
                                     CALL DUMPVR('AF:',SUMF,NetworkNumOfNodes,Unit21)
                                   END IF
                                   ! Solve linear system for approximate PZ.
-                                  #ifdef SKYLINE_MATRIX_REMOVE_ZERO_COLUMNS
+#ifdef SKYLINE_MATRIX_REMOVE_ZERO_COLUMNS
                                   CALL FACSKY(newAU,AD,newAU,newIK,NetworkNumOfNodes,NSYM) !noel
                                   CALL SLVSKY(newAU,AD,newAU,PZ,newIK,NetworkNumOfNodes,NSYM) !noel
-                                  #else
+#else
                                   CALL FACSKY(AU,AD,AU,IK,NetworkNumOfNodes,NSYM)
                                   CALL SLVSKY(AU,AD,AU,PZ,IK,NetworkNumOfNodes,NSYM)
-                                  #endif
+#endif
                                   IF(LIST.GE.2) CALL DUMPVD('PZ:',PZ,NetworkNumOfNodes,Unit21)
                                 END IF
                                 ! Solve nonlinear airflow network equations by modified Newton's method.
@@ -725,13 +725,13 @@ CONTAINS
                                     DO 70 N=1,NetworkNumOfNodes
                                       CCF(N) = SUMF(N)
                                       70     CONTINUE
-                                      #ifdef SKYLINE_MATRIX_REMOVE_ZERO_COLUMNS
+#ifdef SKYLINE_MATRIX_REMOVE_ZERO_COLUMNS
                                       CALL FACSKY(newAU,AD,newAU,newIK,NetworkNumOfNodes,NSYM) !noel
                                       CALL SLVSKY(newAU,AD,newAU,CCF,newIK,NetworkNumOfNodes,NSYM) !noel
-                                      #else
+#else
                                       CALL FACSKY(AU,AD,AU,IK,NetworkNumOfNodes,NSYM)
                                       CALL SLVSKY(AU,AD,AU,CCF,IK,NetworkNumOfNodes,NSYM)
-                                      #endif
+#endif
                                       ! Revise PZ (Steffensen iteration on the N-R correction factors to handle oscillating corrections).
                                       IF(ACCEL.EQ.1) THEN
                                         ACCEL = 0
@@ -840,11 +840,11 @@ CONTAINS
                                         ! NF      - number of flows, 1 or 2.
                                         !
                                         INTEGER  I, J, M, N, FLAG, NF
-                                        #ifdef SKYLINE_MATRIX_REMOVE_ZERO_COLUMNS
+#ifdef SKYLINE_MATRIX_REMOVE_ZERO_COLUMNS
                                         INTEGER LHK,JHK,JHK1, newsum,newh, ispan, thisIK !noel !Nzeros,  !RS: Debugging: Extraneous
                                         LOGICAL allZero ! noel
                                         !       LOGICAL, save :: firsttime=.true. ! noel    !RS: Debugging: Extraneous
-                                        #endif
+#endif
                                         REAL(r64)     X(4)
                                         REAL(r64) DP, F(2), DF(2)
 
@@ -960,7 +960,7 @@ CONTAINS
                                               40 END DO
                                               901 FORMAT(A5,3I3,4E16.7)
 
-                                              #ifdef SKYLINE_MATRIX_REMOVE_ZERO_COLUMNS
+#ifdef SKYLINE_MATRIX_REMOVE_ZERO_COLUMNS
 
                                               ! After the matrix values have been set, we can look at them and see if any columns are filled with zeros.
                                               ! If they are, let's remove them from the matrix -- but only for the purposes of doing the solve.
@@ -1029,7 +1029,7 @@ CONTAINS
                                                 enddo
 
                                               enddo
-                                              #endif
+#endif
 
                                               RETURN
                                             END SUBROUTINE FILJAC

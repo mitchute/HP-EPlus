@@ -82,9 +82,9 @@ CONTAINS
     ! na
 
     ! USE STATEMENTS:
-    #if defined (_OPENMP) && defined(TIMER_OMP_GET_WTIME)
+#if defined (_OPENMP) && defined(TIMER_OMP_GET_WTIME)
     use omp_lib ! only here for OMP timer
-    #endif
+#endif
 
     IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
 
@@ -105,10 +105,10 @@ CONTAINS
     !INTEGER :: loop  ! testing if already in structure   !RS: Debugging: Extraneous
     !INTEGER :: found ! indicator for element !RS: Debugging: Extraneous
 
-    #ifdef EP_NO_Timings
+#ifdef EP_NO_Timings
     RETURN
-    #endif
-    #ifdef EP_Timings
+#endif
+#ifdef EP_Timings
     IF (NumTimingElements == 0) THEN
       MaxTimingElements=250
       ALLOCATE(Timing(MaxTimingElements))
@@ -138,7 +138,7 @@ CONTAINS
     Timing(found)%calls=Timing(found)%calls+1
 
     RETURN
-    #endif
+#endif
 
   END SUBROUTINE epStartTime
 
@@ -162,9 +162,9 @@ CONTAINS
 
     ! USE STATEMENTS:
 
-    #if defined (_OPENMP) && defined(TIMER_OMP_GET_WTIME)
+#if defined (_OPENMP) && defined(TIMER_OMP_GET_WTIME)
     use omp_lib ! only here for OMP timer
-    #endif
+#endif
     !USE UtilityRoutines, ONLY: ShowFatalError !RS Comment: DataInterfaces was originally used, but ShowFatalError had been removed from it in this version. (7/23/12)
 
     IMPLICIT NONE ! Enforce explicit typing of all variables in this routine
@@ -188,10 +188,10 @@ CONTAINS
     !INTEGER :: found ! indicator for element !RS: Debugging: Extraneous
     !REAL(r64) :: stoptime    !RS: Debugging: Extraneous
 
-    #ifdef EP_NO_Timings
+#ifdef EP_NO_Timings
     RETURN
-    #endif
-    #ifdef EP_Timings
+#endif
+#ifdef EP_Timings
     found=0
     DO loop=1,NumTimingElements
       IF (Timing(loop)%Element /= ctimingElementstring) cycle
@@ -240,7 +240,7 @@ CONTAINS
     ENDIF
 
     RETURN
-    #endif
+#endif
 
   END SUBROUTINE epStopTime
 
@@ -284,10 +284,10 @@ CONTAINS
     !INTEGER :: EchoInputFile !RS: Debugging: Extraneous
     INTEGER, EXTERNAL :: FindUnitNumber
 
-    #ifdef EP_NO_Timings
+#ifdef EP_NO_Timings
     RETURN
-    #endif
-    #ifdef EP_Timings
+#endif
+#ifdef EP_Timings
     EchoInputFile=FindUnitNumber('eplusout.audit')
     WRITE(EchoInputFile,fmta) 'Timing Element'//tabchar//'# calls'//tabchar//'Time {s}'//tabchar//'Time {s} (per call)'
 
@@ -306,7 +306,7 @@ CONTAINS
 
     RETURN
 
-    #endif
+#endif
 
   END SUBROUTINE epSummaryTimes
 
